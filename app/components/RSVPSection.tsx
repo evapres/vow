@@ -1,0 +1,299 @@
+"use client";
+
+import { useState } from "react";
+import { supabase } from "../../lib/supabase";
+import OutlineSilkButton from "./OutlineSilkButton";
+import SolidSilkButton from "./SolidSilkButton";
+import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
+
+type RSVPSectionProps = {
+  rsvpDeadline: string;
+  weddingId: string;
+  householdId: string;
+  householdName: string;
+};
+
+export default function RSVPSection({
+  rsvpDeadline: rsvpDeadline,
+  weddingId,
+  householdId,
+  householdName,
+}: RSVPSectionProps) {
+  const [response, setResponse] = useState<"yes" | "no" | null>(null);
+  const [yesStep, setYesStep] = useState<"details" | "thankyou">("details");
+  const [attendingCountInput, setAttendingCountInput] = useState("1");
+  const [notes, setNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [guestCountError, setGuestCountError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const saveRsvp = async (payload: {
+    response: "yes" | "no";
+    notes: string;
+    attendingCount: number | null;
+  }) => {
+    setIsSaving(true);
+    setSubmitError(null);
+  
+    const { error } = await supabase.from("rsvps").upsert(
+      {
+        wedding_id: weddingId,
+        household_id: householdId,
+        attending: payload.response === "yes",
+        number_attending: payload.response === "yes" ? payload.attendingCount : 0,
+        note: payload.notes.trim(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "household_id",
+      }
+    );
+  
+    setIsSaving(false);
+  
+    if (error) {
+      console.error("Error saving RSVP:", error);
+      setSubmitError(error.message);
+      return false;
+    }
+  
+    return true;
+  };
+
+  const handleChooseResponse = (value: "yes" | "no") => {
+    setResponse(value);
+    setSubmitted(false);
+    setGuestCountError(null);
+    setSubmitError(null);
+
+    if (value === "yes") {
+      setYesStep("details");
+      setAttendingCountInput("1");
+      setNotes("");
+    }
+  };
+
+  const handleYesDetailsSubmit = async () => {
+    const parsed = parseInt(attendingCountInput, 10);
+
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      setGuestCountError("Please enter at least 1 guest.");
+      return;
+    }
+
+    setGuestCountError(null);
+
+    const ok = await saveRsvp({
+      response: "yes",
+      notes,
+      attendingCount: parsed,
+    });
+
+    if (!ok) return;
+
+    setYesStep("thankyou");
+    setSubmitted(true);
+  };
+
+  const handleNoSubmit = async () => {
+    if (response !== "no") return;
+
+    const ok = await saveRsvp({
+      response: "no",
+      notes,
+      attendingCount: null,
+    });
+
+    if (!ok) return;
+
+    setSubmitted(true);
+  };
+
+  return (
+    <section
+      id="rsvp"
+      aria-label="RSVP"
+      className="w-[calc(100%+2*var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px)))] max-w-none -mx-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
+    >
+      <div className="h-10 w-full shrink-0 bg-transparent" aria-hidden />
+      <div
+        className="w-full p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] text-[#FCFCF6]"
+        style={invitationRsvpBandStyle}
+      >
+        <div className="mx-auto max-w-[520px] text-center">
+          {response === null ? (
+            <>
+              <div className="flex flex-col gap-[16px]">
+                <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
+                  WE WOULD LOVE FOR YOU TO JOIN US
+                </p>
+
+                <h3
+                  className="text-[40px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  Will you attend?
+                </h3>
+
+                <p
+                  className="text-[32px] leading-[32px] tracking-[0.04em] text-[#FAF6F2]/85"
+                  style={{ fontFamily: "var(--font-special)" }}
+                >
+                  Please respond by {rsvpDeadline}
+                </p>
+              </div>
+
+              <div className="mt-[56px] flex flex-col items-center gap-4">
+                <SolidSilkButton
+                  type="button"
+                  onClick={() => handleChooseResponse("yes")}
+                  wrapperClassName="h-[52px] w-full max-w-[360px]"
+                >
+                  CONFIRM ATTENDANCE
+                </SolidSilkButton>
+
+                <OutlineSilkButton
+                  type="button"
+                  onClick={() => handleChooseResponse("no")}
+                  wrapperClassName="h-[52px] w-full max-w-[360px]"
+                  buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
+                >
+                  UNABLE TO ATTEND
+                </OutlineSilkButton>
+              </div>
+            </>
+          ) : response === "yes" && yesStep === "details" ? (
+            <div className="mx-auto w-[360px] max-w-full text-left">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">
+                ALMOST THERE
+              </p>
+              <h3
+                className="mt-6 font-serif text-[40px] font-normal leading-[0.95] tracking-[0.01em] text-[#FCFCF6]"
+                style={{
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                How many guests will attend?
+              </h3>
+              <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">
+                Include everyone in your party, including yourself.
+              </p>
+
+              <label
+                htmlFor="rsvp-guest-count"
+                className="mt-8 block text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FCFCF6]/70"
+              >
+                Number of guests
+              </label>
+              <input
+                id="rsvp-guest-count"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={attendingCountInput}
+                onChange={(e) => {
+                  setAttendingCountInput(e.target.value);
+                  setGuestCountError(null);
+                }}
+                className="mt-3 h-[46px] w-full border border-[#FCFCF6]/30 bg-transparent px-4 text-[15px] text-[#FCFCF6] outline-none focus:border-[#FCFCF6]/55"
+              />
+              {guestCountError ? (
+                <p className="mt-2 text-[12px] text-[#FCFCF6]/85">{guestCountError}</p>
+              ) : null}
+
+              <label
+                htmlFor="rsvp-notes-yes"
+                className="mt-6 block text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FCFCF6]/70"
+              >
+                Message for the hosts (optional)
+              </label>
+              <textarea
+                id="rsvp-notes-yes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add a note for the couple..."
+                rows={4}
+                className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55"
+              />
+
+              {submitError ? (
+                <p className="mt-3 text-[12px] text-[#FCFCF6]/85">{submitError}</p>
+              ) : null}
+
+              <SolidSilkButton
+                type="button"
+                onClick={handleYesDetailsSubmit}
+                disabled={isSaving}
+                wrapperClassName="mt-6 h-[46px] w-[220px] max-w-full"
+              >
+                {isSaving ? "Saving…" : "Submit response"}
+              </SolidSilkButton>
+            </div>
+          ) : response === "yes" && yesStep === "thankyou" ? (
+            <div className="mx-auto w-[360px] max-w-full text-center">
+              <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
+                Thank you for your response
+              </p>
+              <p
+                className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                We look forward to seeing you
+              </p>
+              <p className="mt-6 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
+                Your response has been sent to the host.
+              </p>
+            </div>
+          ) : (
+            <div className="mx-auto w-[360px] max-w-full text-center">
+              <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
+                Thank you for your response
+              </p>
+              <p
+                className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                We are going to miss you
+              </p>
+              <label
+                htmlFor="rsvp-notes"
+                className="mt-4 block text-left text-[11px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/65"
+              >
+                Write the host a message (optional)
+              </label>
+              <textarea
+                id="rsvp-notes"
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Add a note for the couple..."
+                rows={4}
+                disabled={submitted || isSaving}
+                className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-left text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55 disabled:opacity-60"
+              />
+
+              {submitError ? (
+                <p className="mt-3 text-left text-[12px] text-[#FCFCF6]/85">{submitError}</p>
+              ) : null}
+
+              {submitted ? (
+                <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
+                  Your response has been sent to the host.
+                </p>
+              ) : (
+                <SolidSilkButton
+                  type="button"
+                  onClick={handleNoSubmit}
+                  disabled={isSaving}
+                  wrapperClassName="mt-4 h-[46px] w-[220px] max-w-full"
+                >
+                  {isSaving ? "Saving…" : "Submit response"}
+                </SolidSilkButton>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
