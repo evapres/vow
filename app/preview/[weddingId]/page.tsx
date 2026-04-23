@@ -35,7 +35,7 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
   if (!user) {
     return (
       <main className="full-width-section min-h-screen bg-transparent text-[#1A1A1A]">
-        <div className="main-content py-8">Sign in to preview your invitation.</div>
+        <div className="main-content pb-8 pt-0 sm:py-8">Sign in to preview your invitation.</div>
       </main>
     );
   }
@@ -50,13 +50,14 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
   if (error || !wedding) {
     return (
       <main className="full-width-section min-h-screen bg-transparent text-[#1A1A1A]">
-        <div className="main-content py-8">Wedding not found.</div>
+        <div className="main-content pb-8 pt-0 sm:py-8">Wedding not found.</div>
       </main>
     );
   }
 
   return (
     <InvitationFrame
+      removeMobileTopPadding
       footer={<Footer coupleNames={wedding.couple_names} year={footerYear(wedding.wedding_date)} />}
     >
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">

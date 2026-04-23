@@ -23,7 +23,7 @@ export default async function Page({ params }: PageProps) {
   if (householdError || !household) {
     return (
       <main className="full-width-section min-h-screen bg-transparent text-[#181818]">
-        <div className="main-content py-8">Invitation not found.</div>
+        <div className="main-content pb-8 pt-0 sm:py-8">Invitation not found.</div>
       </main>
     );
   }
@@ -37,7 +37,7 @@ export default async function Page({ params }: PageProps) {
   if (weddingError || !wedding) {
     return (
       <main className="full-width-section min-h-screen bg-transparent text-[#181818]">
-        <div className="main-content py-8">Wedding not found.</div>
+        <div className="main-content pb-8 pt-0 sm:py-8">Wedding not found.</div>
       </main>
     );
   }

@@ -8,7 +8,7 @@ export default function Page() {
   const weddingDateIso = "2026-07-11T20:00:00";
 
   return (
-    <InvitationFrame footer={<Footer coupleNames="Ava & Luca" year="2026" />}>
+    <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames="Ava & Luca" year="2026" />}>
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
           <InvitationHero
