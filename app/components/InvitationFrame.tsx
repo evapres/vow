@@ -36,7 +36,7 @@ export default function InvitationFrame({
     <section
       className={
         removeMobileTopPadding
-          ? "full-width-section min-h-screen overflow-x-hidden pb-16 pt-0 text-[#181818] sm:py-16"
+          ? "full-width-section min-h-screen overflow-x-hidden pb-0 pt-0 text-[#181818] sm:py-16"
           : "full-width-section min-h-screen overflow-x-hidden py-16 text-[#181818]"
       }
       style={invitationPageCanvasStyle}

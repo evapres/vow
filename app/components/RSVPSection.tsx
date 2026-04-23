@@ -144,7 +144,7 @@ export default function RSVPSection({
                 </p>
               </div>
 
-              <div className="mt-[56px] flex flex-col items-center gap-4">
+              <div className="mt-8 flex flex-col items-center gap-4 sm:mt-[56px]">
                 <SolidSilkButton
                   type="button"
                   onClick={() => handleChooseResponse("yes")}
