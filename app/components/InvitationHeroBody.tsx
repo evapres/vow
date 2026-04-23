@@ -195,7 +195,7 @@ export default function InvitationHeroBody({
         </div>
 
         {/* Celebrate — centered */}
-        <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center">
+        <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center">
           <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.38em] text-[#FAF6F2]/70">
             Celebrate with us
           </p>
@@ -205,13 +205,13 @@ export default function InvitationHeroBody({
                 <>
                   <span
                     style={{ fontFamily: "var(--font-special)" }}
-                    className="text-[54px] font-normal leading-[1.12] tracking-[0.03em]"
+                    className="text-[40px] font-normal leading-[1.12] tracking-[0.03em] sm:text-[54px]"
                   >
                     {dateHead}
                   </span>
                   <span
                     style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[32px] font-normal leading-[32px] tracking-[-1px]"
+                    className="text-[26px] font-normal leading-[26px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
                   >
                     , {dateTail}
                   </span>
@@ -219,7 +219,7 @@ export default function InvitationHeroBody({
               ) : (
                 <span
                   style={{ fontFamily: "var(--font-heading)" }}
-                  className="text-[32px] font-normal leading-[32px] tracking-[-1px]"
+                  className="text-[26px] font-normal leading-[26px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
                 >
                   {detailsDateTime}
                 </span>
@@ -230,19 +230,19 @@ export default function InvitationHeroBody({
                 <>
                   <span
                     style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[32px] font-normal leading-[32px] tracking-[-1px]"
+                    className="text-[26px] font-normal leading-[26px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
                   >
                     {locLead}
                   </span>
                   <span
                     style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[32px] font-normal leading-[32px] tracking-[-1px]"
+                    className="text-[26px] font-normal leading-[26px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
                   >
                     ,{" "}
                   </span>
                   <span
                     style={{ fontFamily: "var(--font-special)" }}
-                    className="text-[54px] font-normal leading-[1.12] tracking-[0.03em]"
+                    className="text-[40px] font-normal leading-[1.12] tracking-[0.03em] sm:text-[54px]"
                   >
                     {locLast}
                   </span>
@@ -250,7 +250,7 @@ export default function InvitationHeroBody({
               ) : (
                 <span
                   style={{ fontFamily: "var(--font-heading)" }}
-                  className="text-[32px] font-normal leading-[32px] tracking-[-1px]"
+                  className="text-[26px] font-normal leading-[26px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
                 >
                   {detailsLocationDisplay}
                 </span>
