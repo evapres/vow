@@ -94,7 +94,7 @@ export default function InvitationHeroBody({
     >
       <div className="text-[#FAF6F2]" style={invitationHeroTextureStyle}>
         {/* Monogram: full wrapper width; texture bleeds edge-to-edge on the card */}
-        <div className="flex w-full flex-col items-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-4 pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)]">
+        <div className="flex w-full flex-col items-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-4 pt-14 sm:pb-4 sm:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)]">
           <p
             className="flex items-end justify-center gap-1 text-center font-normal tracking-normal text-[#FAF6F2] sm:gap-1.5"
             style={{ fontFamily: "var(--font-heading)" }}

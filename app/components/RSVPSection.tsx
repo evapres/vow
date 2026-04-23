@@ -130,7 +130,7 @@ export default function RSVPSection({
                 </p>
 
                 <h3
-                  className="text-[40px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
+                  className="text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   Will you attend?
