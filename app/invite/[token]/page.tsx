@@ -45,7 +45,7 @@ export default async function Page({ params }: PageProps) {
   const dateRaw = wedding.wedding_date;
 
   return (
-    <InvitationFrame footer={<Footer coupleNames={wedding.couple_names} year="2026" />}>
+    <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames={wedding.couple_names} year="2026" />}>
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
           <InvitationHero

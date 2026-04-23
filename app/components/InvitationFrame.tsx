@@ -6,6 +6,8 @@ type InvitationFrameProps = {
   children: ReactNode;
   /** Renders below the invitation column (transparent over the page canvas). */
   footer?: ReactNode;
+  /** When true, removes the 64px top padding on mobile only. */
+  removeMobileTopPadding?: boolean;
   /**
    * When true (default), adds `px-[var(--invite-gutter)]` so invitation/RSVP modules can bleed with negative margins.
    * Set false for app-style pages (e.g. admin) so horizontal inset is only `--page-padding`, matching perceived width on `/`.
@@ -24,13 +26,25 @@ const invitationFrameStyle = {
   "--invite-block-edge": "clamp(12px, calc(104 * 100vw / 1440), 104px)",
 } as CSSProperties;
 
-export default function InvitationFrame({ children, footer, includeInviteGutter = true }: InvitationFrameProps) {
+export default function InvitationFrame({
+  children,
+  footer,
+  removeMobileTopPadding = false,
+  includeInviteGutter = true,
+}: InvitationFrameProps) {
   return (
     <section
-      className="full-width-section min-h-screen py-16 text-[#181818]"
+      className={
+        removeMobileTopPadding
+          ? "full-width-section min-h-screen pb-16 pt-0 text-[#181818] sm:py-16"
+          : "full-width-section min-h-screen py-16 text-[#181818]"
+      }
       style={invitationPageCanvasStyle}
     >
-      <div className="main-content box-border w-full" style={invitationFrameStyle}>
+      <div
+        className="main-content box-border w-full [--page-padding:0px] sm:[--page-padding:10%]"
+        style={invitationFrameStyle}
+      >
         <div className="overflow-hidden bg-transparent">
           <div
             className={
