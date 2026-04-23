@@ -11,7 +11,8 @@ export const inviteHeroDefaultSrc = "/invite-hero-couple.png";
 
 /** 450×450px at 1920px viewport (1440px card); same scale as invitation gutters. */
 const polaroidPanelStyle = {
-  "--invite-polaroid": "clamp(12rem, calc(450 * 100vw / 1920), 450px)",
+  // Slightly larger minimum so the photo feels prominent on mobile.
+  "--invite-polaroid": "clamp(15.5rem, calc(450 * 100vw / 1920), 450px)",
 } as CSSProperties;
 
 /** Whole polaroid: 8° to the left (CCW). */
@@ -123,10 +124,10 @@ export default function InvitationHeroBody({
 
         {/* Hero: polaroid + copy — centered as a group; polaroid matches 450² at 1440 card width */}
         <div
-          className="flex w-full flex-col items-center justify-center gap-12 px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)] lg:flex-row lg:items-center lg:justify-center lg:gap-16 lg:pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] lg:pl-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+clamp(1.5rem,4vw,3rem))] lg:pr-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] lg:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)]"
+          className="flex w-full flex-col items-center justify-center gap-12 px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)] sm:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)] lg:flex-row lg:items-center lg:justify-center lg:gap-16 lg:pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] lg:pl-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+clamp(1.5rem,4vw,3rem))] lg:pr-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] lg:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)]"
           style={polaroidPanelStyle}
         >
-          <div className="flex shrink-0 justify-center">
+          <div className="flex shrink-0 justify-center translate-y-[10px] lg:translate-y-0">
             <div
               className="flex h-[var(--invite-polaroid)] w-[var(--invite-polaroid)] max-w-full shrink-0 flex-col shadow-[0_28px_64px_rgba(0,0,0,0.42)]"
               style={{ ...polaroidTiltStyle, ...invitationPolaroidPaperStyle }}
@@ -149,7 +150,7 @@ export default function InvitationHeroBody({
                       alt={photoAlt}
                       fill
                       priority
-                      sizes="(max-width: 1024px) 90vw, 450px"
+                      sizes="(max-width: 1024px) 94vw, 450px"
                       className="object-cover object-center grayscale"
                     />
                   )}
@@ -163,28 +164,28 @@ export default function InvitationHeroBody({
             </div>
           </div>
 
-          <div className="flex w-full max-w-xl min-w-0 flex-col items-start text-left">
+          <div className="flex w-full max-w-xl min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
             <p className="text-[clamp(1.4rem,3.4vw,2.05rem)] leading-[1.35] text-[#FAF6F2]">
               <span
                 style={{ fontFamily: "var(--font-heading)" }}
-                className="text-[40px] font-normal tracking-[-1px] text-[#FAF6F2]"
+                className="text-[30px] font-normal tracking-[-1px] text-[#FAF6F2] sm:text-[40px]"
               >
                 {namePair}
               </span>{" "}
               <span
                 style={{ fontFamily: "var(--font-special)" }}
-                className="mr-[0.35em] text-[54px] leading-[1.12] text-[#FAF6F2]"
+                className="mr-[0.35em] text-[40px] leading-[1.12] text-[#FAF6F2] sm:text-[54px]"
               >
                 invite you to attend
               </span>
               <span
                 style={{ fontFamily: "var(--font-heading)" }}
-                className="text-[40px] font-normal tracking-[-1px] text-[#FAF6F2]"
+                className="text-[30px] font-normal tracking-[-1px] text-[#FAF6F2] sm:text-[40px]"
               >
                 their wedding.
               </span>
             </p>
-            <KindlyRespondButton className="mt-10">
+            <KindlyRespondButton className="mt-6 sm:mt-10">
               <span aria-hidden="true" className="text-[15px] font-normal leading-none">
                 ↓
               </span>
@@ -194,7 +195,7 @@ export default function InvitationHeroBody({
         </div>
 
         {/* Celebrate — centered */}
-        <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center">
+        <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center">
           <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.38em] text-[#FAF6F2]/70">
             Celebrate with us
           </p>
