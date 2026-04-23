@@ -199,8 +199,8 @@ export default function InvitationHeroBody({
           <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.38em] text-[#FAF6F2]/70">
             Celebrate with us
           </p>
-          <p className="mt-2 w-full text-[#FAF6F2]">
-            <span className="block">
+          <div className="mt-2 w-full text-[#FAF6F2]">
+            <p className="leading-[1.15]">
               {dateHead ? (
                 <>
                   <span
@@ -224,8 +224,8 @@ export default function InvitationHeroBody({
                   {detailsDateTime}
                 </span>
               )}
-            </span>
-            <span className="block text-[#FAF6F2]/95">
+            </p>
+            <p className="mt-2 leading-[1.15] text-[#FAF6F2]/95">
               {locLast ? (
                 <>
                   <span
@@ -255,8 +255,8 @@ export default function InvitationHeroBody({
                   {detailsLocationDisplay}
                 </span>
               )}
-            </span>
-          </p>
+            </p>
+          </div>
           {note?.trim() ? (
             <p className={`mt-4 text-center ${inviteMetaCaptionClass}`}>{note.trim()}</p>
           ) : null}

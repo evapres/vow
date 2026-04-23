@@ -116,9 +116,9 @@ export default function RSVPSection({
       aria-label="RSVP"
       className="w-[calc(100%+2*var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px)))] max-w-none -mx-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
     >
-      <div className="h-10 w-full shrink-0 bg-transparent" aria-hidden />
+      <div className="h-0 w-full shrink-0 bg-transparent sm:h-10" aria-hidden />
       <div
-        className="w-full p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] text-[#FCFCF6]"
+        className="w-full px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] py-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] text-[#FCFCF6] sm:p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
         style={invitationRsvpBandStyle}
       >
         <div className="mx-auto max-w-[520px] text-center">
