@@ -13,12 +13,16 @@ export default function Footer({ coupleNames: _coupleNames, year: _year }: Foote
         <div className="mx-auto h-px w-full max-w-sm bg-[#181818]/18" />
 
         <div className="pt-8">
-          <p
-            className="text-[26px] font-normal tracking-[0.28em] text-[#2a2620]/90"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            VOW
-          </p>
+          <div className="mx-auto w-fit">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG wordmark */}
+            <img
+              src="/vow-footer-logo.svg"
+              alt="Vow"
+              className="h-[72px] w-auto"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
           <p className="mt-4 font-sans text-[10px] font-medium uppercase tracking-[0.28em] text-[#181818]/45">
             PRIVATE MODERN LOVE
           </p>

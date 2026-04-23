@@ -48,4 +48,21 @@ body {
     padding-left: var(--page-padding);
     padding-right: var(--page-padding);
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes invite-float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    .invite-float {
+      animation: invite-float 4.5s ease-in-out infinite;
+      will-change: transform;
+    }
+  }
 }
