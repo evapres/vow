@@ -18,7 +18,7 @@ export default function Footer({ coupleNames: _coupleNames, year: _year }: Foote
             <img
               src="/vow-footer-logo.svg"
               alt="Vow"
-              className="h-[72px] w-auto"
+              className="h-[72px] w-auto drop-shadow-sm contrast-110 saturate-110"
               loading="lazy"
               decoding="async"
             />
