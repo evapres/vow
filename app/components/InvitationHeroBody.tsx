@@ -25,7 +25,7 @@ const polaroidTiltStyle: CSSProperties = {
 
 /** Hero names block: 48px / 56px / 1px tracking. */
 const heroNamesClass =
-  "text-[36px] font-normal leading-[48px] tracking-[1.5px] sm:text-[48px] sm:leading-[64px]";
+  "text-[36px] font-normal leading-[64px] tracking-[0px] sm:text-[48px] sm:leading-[64px]";
 
 /** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
 const heroInviteLightClass =
@@ -216,7 +216,7 @@ export default function InvitationHeroBody({
             <p style={{ fontFamily: "var(--font-heading)" }}>
               {language === "el" ? (
                 <span className="inline-flex flex-col items-center gap-6">
-                  <span className="flex flex-col items-center uppercase tracking-[1.5px]">
+                  <span className="flex flex-col items-center uppercase tracking-[0px]">
                     <span className={heroNamesClass}>
                       {toAllCapsNoAccents(`Ο ${greekLeft}`)}
                     </span>
