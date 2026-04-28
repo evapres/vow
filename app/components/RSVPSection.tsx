@@ -150,13 +150,13 @@ export default function RSVPSection({
               {language === "el" ? (
                 <div className="flex flex-col items-center gap-8">
                   <h3
-                    className="text-[48px] font-normal leading-[56px] tracking-[0.5px]"
+                    className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {tEl.heading}
                   </h3>
                   <p
-                    className="whitespace-nowrap font-serif text-[16px] font-normal italic leading-[24px] tracking-[1px]"
+                    className="whitespace-nowrap font-serif text-[13px] font-normal italic leading-[20px] tracking-[1px] sm:text-[16px] sm:leading-[24px]"
                     style={{ fontStretch: "condensed" }}
                   >
                     {tEl.pleaseRespondBy(rsvpDeadline)}
