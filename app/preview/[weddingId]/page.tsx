@@ -2,7 +2,11 @@ import Footer from "@/app/components/Footer";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/InvitationHero";
 import { invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
-import { formatDetailsDateTime, formatHeaderDateLabel } from "@/lib/invitationDisplay";
+import {
+  formatDetailsDateTime,
+  formatHeaderDateLabel,
+  toAllCapsNoAccents,
+} from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
 
@@ -20,7 +24,7 @@ function topMonogramFromCoupleNames(names: string): { left: string; right: strin
   const parts = names.split("&").map((p) => p.trim());
   const left = parts[0]?.[0];
   const right = parts[1]?.[0];
-  if (left && right) return { left: left.toUpperCase(), right: right.toUpperCase() };
+  if (left && right) return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
   return { left: "A", right: "B" };
 }
 
@@ -55,6 +59,8 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
     );
   }
 
+  const language = (wedding.language === "el" ? "el" : "en") as "en" | "el";
+
   return (
     <InvitationFrame
       removeMobileTopPadding
@@ -64,11 +70,12 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
         <main className="flex-1">
           <InvitationHero
             coupleNames={wedding.couple_names}
-            eventDateLabel={formatHeaderDateLabel(wedding.wedding_date)}
+            language={language}
+            eventDateLabel={formatHeaderDateLabel(wedding.wedding_date, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
             topMonogramLetters={topMonogramFromCoupleNames(wedding.couple_names)}
-            detailsDateTime={formatDetailsDateTime(wedding.wedding_date)}
+            detailsDateTime={formatDetailsDateTime(wedding.wedding_date, language)}
             detailsLocation={detailsLocationFromWedding(wedding)}
             note={wedding.note}
           />
@@ -83,15 +90,19 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
               style={invitationRsvpBandStyle}
             >
               <div className="mx-auto max-w-md">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">Preview</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">
+                  {language === "el" ? "ΠΡΟΕΠΙΣΚΟΠΗΣΗ" : "Preview"}
+                </p>
                 <p
                   className="mt-6 text-[40px] font-normal leading-[0.95] tracking-[0.01em] text-[#FCFCF6] sm:text-[48px]"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
-                  RSVP area
+                  {language === "el" ? "Περιοχή RSVP" : "RSVP area"}
                 </p>
                 <p className="mt-4 text-[13px] leading-relaxed text-[#FCFCF6]/75">
-                  Guests submit RSVPs through their personal invite link. This area is not interactive in preview mode.
+                  {language === "el"
+                    ? "Οι καλεσμένοι επιβεβαιώνουν την παρουσία τους μέσω του προσωπικού τους συνδέσμου. Η περιοχή αυτή δεν είναι διαδραστική στην προεπισκόπηση."
+                    : "Guests submit RSVPs through their personal invite link. This area is not interactive in preview mode."}
                 </p>
               </div>
             </div>

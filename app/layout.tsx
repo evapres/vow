@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Serif_Display, Qwitcher_Grypen, Syne } from "next/font/google";
+import { Noto_Serif_Display, Syne } from "next/font/google";
 import "./globals.css";
 
 const bodyFont = Syne({
@@ -9,14 +9,8 @@ const bodyFont = Syne({
 
 const serifFont = Noto_Serif_Display({
   variable: "--font-heading",
-  weight: "400",
-  subsets: ["latin"],
-});
-
-const specialFont = Qwitcher_Grypen({
-  variable: "--font-special",
-  weight: "400",
-  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  subsets: ["latin", "greek"],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bodyFont.variable} ${serifFont.variable} ${specialFont.variable} h-full min-h-full antialiased`}
+      className={`${bodyFont.variable} ${serifFont.variable} h-full min-h-full antialiased`}
       style={{
         backgroundColor: "#FCFCF6",
       }}

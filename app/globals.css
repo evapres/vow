@@ -3,6 +3,7 @@
 :root {
   --background: #FCFCF6;
   --foreground: #181818;
+  /* Heading/accent — Noto Serif Display via `next/font` on `<html>` (`--font-heading`). */
   /**
    * Inner content horizontal inset (each side). Used only on `.main-content`, not on full-bleed wrappers.
    */

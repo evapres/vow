@@ -51,6 +51,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
   const locFields = hydrateLocationFormFields(wedding);
   const initial = {
     coupleNames: wedding.couple_names ?? "",
+    language: (wedding.language === "el" ? "el" : "en") as "en" | "el",
     weddingDate: date,
     weddingTime: time,
     venueName: locFields.venueName,

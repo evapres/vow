@@ -20,7 +20,10 @@ export default function Footer({ coupleNames: _coupleNames, year: _year }: Foote
             decoding="async"
           />
         </div>
-        <p className="mt-4 font-sans text-[10px] font-medium uppercase tracking-[0.28em] text-[#181818]/45">
+        <p
+          className="mt-4 font-serif text-[18px] font-normal uppercase tracking-[2px] text-[#AE9B91]"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
           PRIVATE MODERN LOVE
         </p>
       </div>

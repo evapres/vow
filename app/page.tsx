@@ -6,6 +6,7 @@ import { formatDetailsDateTime, formatHeaderDateLabel } from "../lib/invitationD
 
 export default function Page() {
   const weddingDateIso = "2026-07-11T20:00:00";
+  const language = "el" as const;
 
   return (
     <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames="Ava & Luca" year="2026" />}>
@@ -13,18 +14,20 @@ export default function Page() {
         <main className="flex-1">
           <InvitationHero
             coupleNames="Nestor & Evangelia"
-            eventDateLabel={formatHeaderDateLabel(weddingDateIso)}
+            language={language}
+            eventDateLabel={formatHeaderDateLabel(weddingDateIso, language)}
             venueLabel="GRAND RESORT"
-            detailsDateTime={formatDetailsDateTime(weddingDateIso)}
+            detailsDateTime={formatDetailsDateTime(weddingDateIso, language)}
             detailsLocation="Agios Dimitrios, Grand Resort, Lagonisi, Attica"
-            note="Reception to follow"
+            note="ΘΑ ΑΚΟΛΟΥΘΗΣΕΙ ΔΕΞΙΩΣΗ ΣΤΟ ΧΩΡΟ ΤΟΥ ΞΕΝΟΔΟΧΕΙΟΥ"
           />
 
           <RSVPSection
-            rsvpDeadline="June 15th"
+            rsvpDeadline="15 Ιουνίου"
             weddingId="beb2f50a-672f-48f7-bcff-7cb72562c21a"
             householdId="40994c91-6916-433b-90a2-4e233b0024af"
             householdName="Test Household"
+            language={language}
           />
         </main>
       </div>

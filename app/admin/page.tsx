@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { createClient } from "@/lib/supabase/server";
@@ -40,6 +41,22 @@ export default async function AdminPage({ searchParams }: PageProps) {
         </div>
       </InvitationFrame>
     );
+  }
+
+  // If this user already has a wedding, land them on the edit screen after login.
+  // Keeps magic-link login behavior consistent across environments.
+  if (!created) {
+    const { data: latestWedding } = await supabase
+      .from("weddings")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestWedding?.id) {
+      redirect(`/admin/edit/${latestWedding.id}`);
+    }
   }
 
   return (

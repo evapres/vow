@@ -5,12 +5,18 @@ import { supabase } from "../../lib/supabase";
 import OutlineSilkButton from "./OutlineSilkButton";
 import SolidSilkButton from "./SolidSilkButton";
 import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
+import {
+  inviteMetaCaptionClass,
+  toAllCapsNoAccents,
+  type InvitationLanguage,
+} from "@/lib/invitationDisplay";
 
 type RSVPSectionProps = {
   rsvpDeadline: string;
   weddingId: string;
   householdId: string;
   householdName: string;
+  language?: InvitationLanguage;
 };
 
 export default function RSVPSection({
@@ -18,6 +24,7 @@ export default function RSVPSection({
   weddingId,
   householdId,
   householdName,
+  language = "en",
 }: RSVPSectionProps) {
   const [response, setResponse] = useState<"yes" | "no" | null>(null);
   const [yesStep, setYesStep] = useState<"details" | "thankyou">("details");
@@ -110,6 +117,22 @@ export default function RSVPSection({
     setSubmitted(true);
   };
 
+  const tEl = {
+    heading: "RSVP",
+    pleaseRespondBy: (d: string) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}`,
+    confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
+    unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
+  } as const;
+
+  const tEn = {
+    heading: "RSVP",
+    weWouldLove: "WE WOULD LOVE FOR YOU TO JOIN US",
+    willYouAttend: "Will you attend?",
+    pleaseRespondBy: (d: string) => `Please respond by ${d}`,
+    confirm: "CONFIRM ATTENDANCE",
+    unable: "UNABLE TO ATTEND",
+  } as const;
+
   return (
     <section
       id="rsvp"
@@ -118,31 +141,45 @@ export default function RSVPSection({
     >
       <div className="h-0 w-full shrink-0 bg-transparent sm:h-10" aria-hidden />
       <div
-        className="w-full px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] py-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] text-[#FCFCF6] sm:p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
+        className="w-full px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] py-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] text-[#FAF6F2]/85 sm:p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
         style={invitationRsvpBandStyle}
       >
         <div className="mx-auto max-w-[520px] text-center">
           {response === null ? (
             <>
-              <div className="flex flex-col gap-[16px]">
-                <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
-                  WE WOULD LOVE FOR YOU TO JOIN US
-                </p>
+              {language === "el" ? (
+                <div className="flex flex-col items-center gap-8">
+                  <h3
+                    className="text-[48px] font-normal leading-[56px] tracking-[0.5px]"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    {tEl.heading}
+                  </h3>
+                  <p
+                    className="whitespace-nowrap font-serif text-[16px] font-normal italic leading-[24px] tracking-[1px]"
+                    style={{ fontStretch: "condensed" }}
+                  >
+                    {tEl.pleaseRespondBy(rsvpDeadline)}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-[16px]">
+                  <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
+                    {toAllCapsNoAccents(tEn.weWouldLove)}
+                  </p>
 
-                <h3
-                  className="text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  Will you attend?
-                </h3>
+                  <h3
+                    className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    {tEn.willYouAttend}
+                  </h3>
 
-                <p
-                  className="text-[32px] leading-[32px] tracking-[0.04em] text-[#FAF6F2]/85"
-                  style={{ fontFamily: "var(--font-special)" }}
-                >
-                  Please respond by {rsvpDeadline}
-                </p>
-              </div>
+                  <p className={inviteMetaCaptionClass}>
+                    {toAllCapsNoAccents(tEn.pleaseRespondBy(rsvpDeadline))}
+                  </p>
+                </div>
+              )}
 
               <div className="mt-8 flex flex-col items-center gap-4 sm:mt-[56px]">
                 <SolidSilkButton
@@ -150,7 +187,7 @@ export default function RSVPSection({
                   onClick={() => handleChooseResponse("yes")}
                   wrapperClassName="h-[52px] w-full max-w-[360px]"
                 >
-                  CONFIRM ATTENDANCE
+                  {toAllCapsNoAccents(language === "el" ? tEl.confirm : tEn.confirm)}
                 </SolidSilkButton>
 
                 <OutlineSilkButton
@@ -159,7 +196,7 @@ export default function RSVPSection({
                   wrapperClassName="h-[52px] w-full max-w-[360px]"
                   buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
                 >
-                  UNABLE TO ATTEND
+                  {toAllCapsNoAccents(language === "el" ? tEl.unable : tEn.unable)}
                 </OutlineSilkButton>
               </div>
             </>

@@ -4,6 +4,8 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 
 import KindlyRespondButton from "./KindlyRespondButton";
+import { toAllCapsNoAccents, type InvitationLanguage } from "@/lib/invitationDisplay";
+import { invitationLocationDisplayForLanguage } from "@/lib/weddingLocation";
 import { invitationHeroTextureStyle, invitationPolaroidPaperStyle } from "./invitationDarkBandStyle";
 
 /** Default hero image in the polaroid (public path). */
@@ -21,12 +23,33 @@ const polaroidTiltStyle: CSSProperties = {
   transformOrigin: "center center",
 };
 
-/** Small caps line under date/venue (e.g. optional reception note). */
-const inviteMetaCaptionClass =
-  "font-sans text-[10px] font-semibold uppercase tracking-[0.14em] text-[#FAF6F2]/88";
+/** Hero names block: 48px / 56px / 1px tracking. */
+const heroNamesClass =
+  "text-[36px] font-normal leading-[48px] tracking-[1.5px] sm:text-[48px] sm:leading-[64px]";
+
+/** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
+const heroInviteLightClass =
+  "text-[32px] font-light leading-[48px] tracking-normal";
+
+/** Top meta bar (date + venue): Noto Serif Display 18px with 2px tracking. */
+const inviteHeroTopBarClass =
+  "font-serif text-[14px] font-normal uppercase tracking-[2px] sm:text-[18px]";
+
+/** Reception note (hero): small, sentence-case, italic. */
+const inviteHeroNoteClass =
+  "font-serif text-[13px] font-normal italic leading-[18px] tracking-[1px] sm:text-[16px] sm:leading-[20px]";
+
+/** Hero subline + location lines: Noto Serif Display 24/32, medium, 0.5px tracking. */
+const heroSecondarySerifClass =
+  "font-serif text-[18px] font-normal leading-[26px] tracking-[0.5px] sm:text-[24px] sm:leading-[32px]";
+
+/** Celebrate / details: Noto (date tail, address lead). */
+const detailsNotoClass =
+  "text-[24px] font-normal leading-[32px] tracking-[0.5px] sm:text-[32px] sm:leading-[40px]";
 
 export type InvitationHeroBodyProps = {
   coupleNames: string;
+  language?: InvitationLanguage;
   eventDateLabel: string;
   venueLabel: string;
   /** Wedding hero URL or public path; defaults to invite couple photo. */
@@ -50,11 +73,12 @@ function monogramInitials(coupleNames: string): { left: string; right: string } 
   const left = parts[0]?.[0] ?? "";
   const right = parts[1]?.[0] ?? "";
   if (!left || !right) return null;
-  return { left: left.toUpperCase(), right: right.toUpperCase() };
+  return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
 }
 
 export default function InvitationHeroBody({
   coupleNames,
+  language = "en",
   eventDateLabel,
   venueLabel,
   photoSrc = inviteHeroDefaultSrc,
@@ -82,31 +106,57 @@ export default function InvitationHeroBody({
   const dateHead = dateComma >= 0 ? detailsDateTime.slice(0, dateComma).trim() : "";
   const dateTail = dateComma >= 0 ? detailsDateTime.slice(dateComma + 1).trim() : detailsDateTime;
 
-  const detailsLocationDisplay = detailsLocation.replace(/\bLagonissi\b/g, "Lagonisi");
+  const detailsLocationDisplay = invitationLocationDisplayForLanguage(
+    detailsLocation,
+    language,
+  );
   const locParts = detailsLocationDisplay.split(",").map((s) => s.trim());
   const locLast = locParts.length > 1 ? locParts.pop() : "";
   const locLead = locParts.join(", ");
+
+  const t =
+    language === "el"
+      ? {
+          kindlyRespondBelow: "ΕΠΙΒΕΒΑΙΩΣΗ ΠΑΡΟΥΣΙΑΣ",
+        }
+      : {
+          inviteYouToAttend: "invite you to attend ",
+          kindlyRespondBelow: "Kindly respond below",
+        };
+
+  const namePartsForGreek = coupleNames
+    .split("&")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const namesLower = coupleNames.toLowerCase();
+  const isNestorEvangeliaDemo =
+    namePartsForGreek.length === 2 &&
+    namesLower.includes("nestor") &&
+    namesLower.includes("evangelia");
+
+  const greekLeft = isNestorEvangeliaDemo ? "Νέστορας" : namePartsForGreek[0] || coupleNames || "Μας";
+  const greekRight = isNestorEvangeliaDemo ? "Ευαγγελία" : namePartsForGreek[1] || "";
 
   return (
     <section
       aria-label="Invitation"
       className="w-[calc(100%+2*var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px)))] max-w-none -mx-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
     >
-      <div className="text-[#FAF6F2]" style={invitationHeroTextureStyle}>
+      <div className="text-[#FAF6F2]/85" style={invitationHeroTextureStyle}>
         {/* Monogram: full wrapper width; texture bleeds edge-to-edge on the card */}
         <div className="flex w-full flex-col items-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-4 pt-14 sm:pb-4 sm:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)]">
           <p
-            className="flex items-end justify-center gap-1 text-center font-normal tracking-normal text-[#FAF6F2] sm:gap-1.5"
+            className="flex items-end justify-center gap-1 text-center font-normal tracking-normal sm:gap-1.5"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {topMonogram ? (
               <>
-                <span className="text-[64px] leading-none">{topMonogram.left}</span>
-                <span className="text-[32px] leading-none">&</span>
-                <span className="text-[64px] leading-none">{topMonogram.right}</span>
+                <span className="text-[48px] leading-none sm:text-[64px]">{topMonogram.left}</span>
+                <span className="text-[24px] leading-none sm:text-[32px]">&</span>
+                <span className="text-[48px] leading-none sm:text-[64px]">{topMonogram.right}</span>
               </>
             ) : (
-              <span className="text-[64px] leading-none">{coupleNames}</span>
+              <span className="text-[48px] leading-none sm:text-[64px]">{coupleNames}</span>
             )}
           </p>
         </div>
@@ -114,11 +164,9 @@ export default function InvitationHeroBody({
         {/* Rule + meta: inset by invitation gutter only; line spans full width between gutters */}
         <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-2">
           <div className="h-px w-full bg-[#FAF6F2]/12" />
-          <div
-            className={`mt-5 flex w-full items-center justify-between gap-6 ${inviteMetaCaptionClass}`}
-          >
+          <div className={`mt-5 flex w-full items-center justify-between gap-6 ${inviteHeroTopBarClass}`}>
             <span className="min-w-0 text-left">{eventDateLabel}</span>
-            <span className="min-w-0 text-right">{venueLabel}</span>
+            <span className="min-w-0 text-right">{toAllCapsNoAccents(venueLabel)}</span>
           </div>
         </div>
 
@@ -164,101 +212,82 @@ export default function InvitationHeroBody({
             </div>
           </div>
 
-          <div className="flex w-full max-w-xl min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
-            <p className="text-[clamp(1.4rem,3.4vw,2.05rem)] leading-[1.35] text-[#FAF6F2]">
-              <span
-                style={{ fontFamily: "var(--font-heading)" }}
-                className="text-[32px] font-normal tracking-[-1px] text-[#FAF6F2] sm:text-[40px]"
-              >
-                {namePair}
-              </span>{" "}
-              <span
-                style={{ fontFamily: "var(--font-special)" }}
-                className="mr-[0.35em] text-[40px] leading-[1.12] text-[#FAF6F2] sm:text-[54px]"
-              >
-                invite you to attend
-              </span>
-              <span
-                style={{ fontFamily: "var(--font-heading)" }}
-                className="text-[32px] font-normal tracking-[-1px] text-[#FAF6F2] sm:text-[40px]"
-              >
-                their wedding.
-              </span>
+          <div className="flex w-full max-w-xl min-w-0 flex-col items-center text-center">
+            <p style={{ fontFamily: "var(--font-heading)" }}>
+              {language === "el" ? (
+                <span className="inline-flex flex-col items-center gap-6">
+                  <span className="flex flex-col items-center uppercase tracking-[1.5px]">
+                    <span className={heroNamesClass}>
+                      {toAllCapsNoAccents(`Ο ${greekLeft}`)}
+                    </span>
+                    {greekRight ? (
+                      <>
+                        <span className={heroNamesClass}>&</span>
+                        <span className={heroNamesClass}>
+                          {toAllCapsNoAccents(`Η ${greekRight}`)}
+                        </span>
+                      </>
+                    ) : null}
+                  </span>
+                  <span className={heroSecondarySerifClass}>
+                    σας προσκαλούν στο γάμο τους.
+                  </span>
+                </span>
+              ) : (
+                <>
+                  <span className={heroNamesClass}>{namePair}</span>{" "}
+                  <span className={heroInviteLightClass}>
+                    {t.inviteYouToAttend}their wedding.
+                  </span>
+                </>
+              )}
             </p>
-            <KindlyRespondButton className="mt-6 sm:mt-10">
-              <span aria-hidden="true" className="text-[15px] font-normal leading-none">
+            <KindlyRespondButton className="mt-10 sm:mt-14">
+              <span aria-hidden="true" className="text-[16px] font-normal leading-none">
                 ↓
               </span>
-              Kindly respond below
+              {toAllCapsNoAccents(t.kindlyRespondBelow)}
             </KindlyRespondButton>
           </div>
         </div>
 
         {/* Celebrate — centered */}
         <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center">
-          <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.38em] text-[#FAF6F2]/70">
-            Celebrate with us
-          </p>
-          <div className="mt-2 w-full text-[#FAF6F2]">
-            <p className="leading-[1.15]">
+          <div className="mt-2 w-full">
+            <p>
               {dateHead ? (
                 <>
-                  <span
-                    style={{ fontFamily: "var(--font-special)" }}
-                    className="text-[40px] font-normal leading-[1.12] tracking-[0.03em] sm:text-[54px]"
-                  >
-                    {dateHead}
-                  </span>
-                  <span
-                    style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[24px] font-normal leading-[24px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
-                  >
-                    , {dateTail}
+                  <span style={{ fontFamily: "var(--font-heading)" }} className={detailsNotoClass}>
+                    {toAllCapsNoAccents(dateHead)}, {toAllCapsNoAccents(dateTail)}
                   </span>
                 </>
               ) : (
-                <span
-                  style={{ fontFamily: "var(--font-heading)" }}
-                  className="text-[24px] font-normal leading-[24px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
-                >
-                  {detailsDateTime}
+                <span style={{ fontFamily: "var(--font-heading)" }} className={detailsNotoClass}>
+                  {toAllCapsNoAccents(detailsDateTime)}
                 </span>
               )}
             </p>
-            <p className="mt-2 leading-[1.15] text-[#FAF6F2]/95">
+            <p className="mt-6">
               {locLast ? (
                 <>
-                  <span
-                    style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[24px] font-normal leading-[24px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
-                  >
-                    {locLead}
-                  </span>
-                  <span
-                    style={{ fontFamily: "var(--font-heading)" }}
-                    className="text-[24px] font-normal leading-[24px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
-                  >
-                    ,{" "}
-                  </span>
-                  <span
-                    style={{ fontFamily: "var(--font-special)" }}
-                    className="text-[40px] font-normal leading-[1.12] tracking-[0.03em] sm:text-[54px]"
-                  >
-                    {locLast}
+                  <span style={{ fontFamily: "var(--font-heading)" }} className={heroSecondarySerifClass}>
+                    {locLead}, {locLast}
                   </span>
                 </>
               ) : (
-                <span
-                  style={{ fontFamily: "var(--font-heading)" }}
-                  className="text-[24px] font-normal leading-[24px] tracking-[-1px] sm:text-[32px] sm:leading-[32px]"
-                >
+                <span style={{ fontFamily: "var(--font-heading)" }} className={heroSecondarySerifClass}>
                   {detailsLocationDisplay}
                 </span>
               )}
             </p>
           </div>
           {note?.trim() ? (
-            <p className={`mt-4 text-center ${inviteMetaCaptionClass}`}>{note.trim()}</p>
+            <p
+              className={`mt-12 text-center ${inviteHeroNoteClass}`}
+              style={{ fontStretch: "condensed" }}
+            >
+              {note.trim().toLowerCase()}
+            </p>
           ) : null}
         </div>
       </div>

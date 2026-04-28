@@ -1,3 +1,5 @@
+import { toAllCapsNoAccents } from "@/lib/invitationDisplay";
+
 type EditorialDetailsProps = {
   coupleNames: string;
   dateTime: string;
@@ -35,9 +37,9 @@ export default function EditorialDetails({
                 fontFamily: "var(--font-heading)",
               }}
             >
-              <div>{left.toUpperCase()}</div>
+              <div>{toAllCapsNoAccents(left)}</div>
               <div className="-mt-1">&</div>
-              <div>{right.toUpperCase()}</div>
+              <div>{toAllCapsNoAccents(right)}</div>
             </div>
 
             <div className="mt-6 text-[14px] font-normal leading-6 text-[#181818]/75">{dateTime}</div>

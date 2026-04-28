@@ -12,6 +12,8 @@ import {
   combineWeddingDateAndTime,
   formatDetailsDateTime,
   formatHeaderDateLabel,
+  inviteMetaCaptionClass,
+  toAllCapsNoAccents,
 } from "@/lib/invitationDisplay";
 import { celebrateLocationLineFromParts } from "@/lib/weddingLocation";
 
@@ -19,6 +21,7 @@ import { createWedding, updateWedding } from "./actions";
 
 export type AdminWeddingFormInitial = {
   coupleNames: string;
+  language: "en" | "el";
   weddingDate: string;
   weddingTime: string;
   venueName: string;
@@ -48,7 +51,7 @@ function previewTopMonogramFromCoupleNames(names: string): { left: string; right
   const left = parts[0]?.[0];
   const right = parts[1]?.[0];
   if (left && right) {
-    return { left: left.toUpperCase(), right: right.toUpperCase() };
+    return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
   }
   return { left: "A", right: "B" };
 }
@@ -74,6 +77,7 @@ function initialHeroSrc(initial: AdminWeddingFormInitial | undefined): string {
 export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNewWeddingFormProps) {
   const isEdit = Boolean(editWeddingId);
   const [coupleNames, setCoupleNames] = useState(initial?.coupleNames ?? "");
+  const [language, setLanguage] = useState<"en" | "el">(initial?.language ?? "en");
   const [weddingDate, setWeddingDate] = useState(initial?.weddingDate ?? "");
   const [weddingTime, setWeddingTime] = useState(initial?.weddingTime ?? "20:00");
   const [venueName, setVenueName] = useState(initial?.venueName ?? "");
@@ -106,19 +110,38 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   );
 
   const previewDetailsDateTime = weddingDateTimeIso
-    ? formatDetailsDateTime(weddingDateTimeIso)
+    ? formatDetailsDateTime(weddingDateTimeIso, language)
     : PREVIEW_SAMPLE_DETAILS_DATETIME;
   const previewCelebrateLine = celebrateLocationLineFromParts(churchName, venueName, streetAddress);
   const previewDetailsLocation =
     previewCelebrateLine ||
     celebrateLocationLineFromParts("", PREVIEW_SAMPLE_VENUE, PREVIEW_SAMPLE_DETAILS_LOCATION);
   const previewEventDateLabel = weddingDate.trim()
-    ? formatHeaderDateLabel(weddingDate)
-    : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER);
+    ? formatHeaderDateLabel(weddingDate, language)
+    : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
   const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
 
   const rsvpLine = useMemo(() => formatRsvpDeadlineLine(rsvpDeadline), [rsvpDeadline]);
   const previewTopMonogram = useMemo(() => previewTopMonogramFromCoupleNames(coupleNames), [coupleNames]);
+
+  const previewT =
+    language === "el"
+      ? {
+          weWouldLove: "ΘΑ ΧΑΡΟΥΜΕ ΠΟΛΥ ΝΑ ΕΙΣΤΕ ΜΑΖΙ ΜΑΣ",
+          willYouAttend: "Επιβεβαιώστε την παρουσία σας",
+          pleaseRespondBy: `Παρακαλούμε απαντήστε έως ${rsvpLine}`,
+          previewOnly: "Μόνο προεπισκόπηση — το RSVP δεν αποθηκεύεται από εδώ",
+          confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
+          unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
+        }
+      : {
+          weWouldLove: "WE WOULD LOVE FOR YOU TO JOIN US",
+          willYouAttend: "Will you attend?",
+          pleaseRespondBy: `Please respond by ${rsvpLine}`,
+          previewOnly: "Preview only — RSVP is not saved from here",
+          confirm: "CONFIRM ATTENDANCE",
+          unable: "UNABLE TO ATTEND",
+        };
 
   const clearHeroImage = () => {
     if (heroBlobUrlRef.current) {
@@ -155,6 +178,25 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
       >
         {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}
         {isEdit ? <input type="hidden" name="clear_hero" value={clearHeroForSubmit ? "1" : "0"} /> : null}
+        <div>
+          <label
+            htmlFor="language"
+            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
+          >
+            Language
+          </label>
+          <select
+            id="language"
+            name="language"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value === "el" ? "el" : "en")}
+            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+          >
+            <option value="en">English</option>
+            <option value="el">Greek</option>
+          </select>
+        </div>
+
         <div>
           <label
             htmlFor="couple_names"
@@ -358,6 +400,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
           <div className="w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
             <InvitationHeroBody
               coupleNames={coupleNames}
+              language={language}
               eventDateLabel={previewEventDateLabel}
               venueLabel={previewVenueLabel}
               photoSrc={photoSrc}
@@ -380,34 +423,31 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
                 <div className="mx-auto max-w-[520px] text-center">
                   <div className="flex flex-col gap-[16px]">
                     <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
-                      WE WOULD LOVE FOR YOU TO JOIN US
+                      {toAllCapsNoAccents(previewT.weWouldLove)}
                     </p>
                     <h3
                       className="text-[clamp(28px,6vw,40px)] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
                       style={{ fontFamily: "var(--font-heading)" }}
                     >
-                      Will you attend?
+                      {previewT.willYouAttend}
                     </h3>
-                    <p
-                      className="text-[clamp(22px,5vw,32px)] leading-[1.1] tracking-[0.04em] text-[#FAF6F2]/85"
-                      style={{ fontFamily: "var(--font-special)" }}
-                    >
-                      Please respond by {rsvpLine}
+                    <p className={inviteMetaCaptionClass}>
+                      {toAllCapsNoAccents(previewT.pleaseRespondBy)}
                     </p>
                   </div>
                   <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/55">
-                    Preview only — RSVP is not saved from here
+                    {toAllCapsNoAccents(previewT.previewOnly)}
                   </p>
                   <div className="pointer-events-none mt-8 flex flex-col items-center gap-4 opacity-[0.72]">
                     <SolidSilkButton type="button" wrapperClassName="h-[52px] w-full max-w-[360px]">
-                      CONFIRM ATTENDANCE
+                      {toAllCapsNoAccents(previewT.confirm)}
                     </SolidSilkButton>
                     <OutlineSilkButton
                       type="button"
                       wrapperClassName="h-[52px] w-full max-w-[360px]"
                       buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
                     >
-                      UNABLE TO ATTEND
+                      {toAllCapsNoAccents(previewT.unable)}
                     </OutlineSilkButton>
                   </div>
                 </div>

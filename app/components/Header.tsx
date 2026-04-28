@@ -1,3 +1,5 @@
+import { toAllCapsNoAccents } from "@/lib/invitationDisplay";
+
 type HeaderProps = {
   coupleNames: string;
   eventDate: string;
@@ -9,7 +11,7 @@ function monogramInitials(coupleNames: string): { left: string; right: string } 
   const left = parts[0]?.[0] ?? "";
   const right = parts[1]?.[0] ?? "";
   if (!left || !right) return null;
-  return { left: left.toUpperCase(), right: right.toUpperCase() };
+  return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
 }
 
 export default function Header({ coupleNames, eventDate, location }: HeaderProps) {

@@ -43,6 +43,7 @@ export default async function Page({ params }: PageProps) {
   }
 
   const dateRaw = wedding.wedding_date;
+  const language = (wedding.language === "el" ? "el" : "en") as "en" | "el";
 
   return (
     <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames={wedding.couple_names} year="2026" />}>
@@ -50,10 +51,11 @@ export default async function Page({ params }: PageProps) {
         <main className="flex-1">
           <InvitationHero
             coupleNames={wedding.couple_names}
-            eventDateLabel={formatHeaderDateLabel(dateRaw)}
+            language={language}
+            eventDateLabel={formatHeaderDateLabel(dateRaw, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
-            detailsDateTime={formatDetailsDateTime(dateRaw)}
+            detailsDateTime={formatDetailsDateTime(dateRaw, language)}
             detailsLocation={detailsLocationFromWedding(wedding)}
             note={wedding.note}
           />
@@ -63,6 +65,7 @@ export default async function Page({ params }: PageProps) {
             weddingId={wedding.id}
             householdId={household.id}
             householdName={household.household_name}
+            language={language}
           />
         </main>
       </div>

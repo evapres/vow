@@ -36,6 +36,7 @@ export async function createWedding(formData: FormData) {
   }
 
   const coupleNames = String(formData.get("couple_names") ?? "").trim();
+  const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
 
   if (!coupleNames) {
     redirect("/admin?error=" + encodeURIComponent("Couple names are required."));
@@ -74,6 +75,7 @@ export async function createWedding(formData: FormData) {
     .insert({
       user_id: user.id,
       couple_names: coupleNames,
+      language,
       wedding_date: weddingDate,
       venue_name,
       church_name,
@@ -124,6 +126,7 @@ export async function updateWedding(formData: FormData) {
   }
 
   const coupleNames = String(formData.get("couple_names") ?? "").trim();
+  const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
   if (!coupleNames) {
     redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent("Couple names are required."));
   }
@@ -145,6 +148,7 @@ export async function updateWedding(formData: FormData) {
 
   const patch: Record<string, unknown> = {
     couple_names: coupleNames,
+    language,
     wedding_date: weddingDate,
     venue_name,
     church_name,
