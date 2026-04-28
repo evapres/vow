@@ -155,12 +155,6 @@ export default function RSVPSection({
                   >
                     {tEl.heading}
                   </h3>
-                  <p
-                    className="whitespace-nowrap font-serif text-[13px] font-normal italic leading-[20px] tracking-[1px] sm:text-[16px] sm:leading-[24px]"
-                    style={{ fontStretch: "condensed" }}
-                  >
-                    {tEl.pleaseRespondBy(rsvpDeadline)}
-                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-[16px]">
@@ -182,6 +176,14 @@ export default function RSVPSection({
               )}
 
               <div className="mt-8 flex flex-col items-center gap-4 sm:mt-[56px]">
+                {language === "el" ? (
+                  <p
+                    className="w-full whitespace-normal px-4 text-center font-serif text-[13px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px]"
+                    style={{ fontStretch: "condensed" }}
+                  >
+                    {tEl.pleaseRespondBy(rsvpDeadline)}
+                  </p>
+                ) : null}
                 <SolidSilkButton
                   type="button"
                   onClick={() => handleChooseResponse("yes")}

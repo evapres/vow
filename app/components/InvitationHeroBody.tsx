@@ -277,7 +277,7 @@ export default function InvitationHeroBody({
                 </span>
               )}
             </p>
-            <p className="mt-6">
+            <p className="mt-4 sm:mt-6">
               {locLast ? (
                 <>
                   <span style={{ fontFamily: "var(--font-heading)" }} className={heroSecondarySerifClass}>
