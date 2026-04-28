@@ -18,7 +18,8 @@ export default function LoginForm() {
     // Prefer an explicit site URL (Vercel/prod) so magic links never point at localhost.
     const siteOrigin =
       (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || window.location.origin).trim();
-    const redirectTo = `${siteOrigin}/auth/callback?next=/admin`;
+    // Wedding id isn't available here; callback will resolve the latest wedding for this user.
+    const redirectTo = `${siteOrigin}/auth/callback?next=/admin/edit`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
