@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 /** Secondary: plain text button (no border, no fill). */
 const outlineSecondaryClass =
-  "flex h-full w-full cursor-pointer items-center justify-center border-0 bg-transparent p-0 font-sans text-[12px] font-bold uppercase tracking-[0.09em] transition-colors disabled:pointer-events-none disabled:opacity-60";
+  "flex h-full w-full cursor-pointer items-center justify-center border-0 bg-transparent p-0 font-sans text-[11px] font-bold uppercase tracking-[0.09em] transition-colors disabled:pointer-events-none disabled:opacity-60 sm:text-[12px]";
 
 export type OutlineSilkButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "style"> & {
   wrapperClassName?: string;

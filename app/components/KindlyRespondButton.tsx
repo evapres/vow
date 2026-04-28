@@ -14,7 +14,7 @@ export default function KindlyRespondButton({ className, children }: KindlyRespo
       onClick={() =>
         document.getElementById("rsvp")?.scrollIntoView({ behavior: "smooth", block: "start" })
       }
-      className={`invite-float inline-flex items-center justify-center gap-3 border-0 bg-transparent px-3 py-2 font-sans text-[12px] font-bold uppercase tracking-[2px] text-[#FAF6F2]/85 transition-colors hover:text-[#FAF6F2] ${className ?? ""}`.trim()}
+      className={`invite-float inline-flex items-center justify-center gap-3 border-0 bg-transparent px-3 py-2 font-sans text-[11px] font-bold uppercase tracking-[2px] text-[#FAF6F2]/85 transition-colors hover:text-[#FAF6F2] sm:text-[12px] ${className ?? ""}`.trim()}
     >
       {children}
     </button>
