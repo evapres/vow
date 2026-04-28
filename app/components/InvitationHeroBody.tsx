@@ -25,7 +25,7 @@ const polaroidTiltStyle: CSSProperties = {
 
 /** Hero names block: 48px / 56px / 1px tracking. */
 const heroNamesClass =
-  "text-[56px] font-normal leading-[64px] tracking-[0px]";
+  "text-[32px] font-normal leading-[40px] tracking-[0px] sm:text-[56px] sm:leading-[64px]";
 
 /** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
 const heroInviteLightClass =
