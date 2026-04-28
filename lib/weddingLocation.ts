@@ -2,6 +2,8 @@
  * Invitation location: venue (top-right), optional church, street — plus legacy `location` string.
  */
 
+import type { InvitationLanguage } from "@/lib/invitationDisplay";
+
 export type WeddingLocationFields = {
   venue_name?: string | null;
   church_name?: string | null;
@@ -67,4 +69,27 @@ export function hydrateLocationFormFields(w: WeddingLocationFields): {
   if (!loc) return { venueName: "", churchName: "", streetAddress: "" };
   const { first, rest } = firstCommaSegment(loc);
   return { venueName: first, churchName: "", streetAddress: rest };
+}
+
+export function invitationLocationDisplayForLanguage(
+  location: string | null | undefined,
+  language: InvitationLanguage,
+) {
+  const raw = (location ?? "").trim();
+  if (!raw) return "";
+  if (language !== "el") return raw;
+
+  const oneSpace = raw.replace(/\s+/g, " ");
+  if (/^agios dimitrios,\s*grand resort,\s*lagonisi,\s*attica$/i.test(oneSpace)) {
+    return "Άγιος Δημήτριος, Grand Resort, Λαγονήσι, Αττικής";
+  }
+  if (/^agios dimitrios,\s*grand resort,\s*lagonissi,\s*attica$/i.test(oneSpace)) {
+    return "Άγιος Δημήτριος, Grand Resort, Λαγονήσι, Αττικής";
+  }
+
+  return raw
+    .replace(/\bAgios\s+Dimitrios\b/gi, "Άγιος Δημήτριος")
+    .replace(/\bLagonissi\b/gi, "Λαγονήσι")
+    .replace(/\bLagonisi\b/gi, "Λαγονήσι")
+    .replace(/\bAttica\b/gi, "Αττικής");
 }

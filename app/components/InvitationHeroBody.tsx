@@ -25,7 +25,7 @@ const polaroidTiltStyle: CSSProperties = {
 
 /** Hero names block: 48px / 56px / 1px tracking. */
 const heroNamesClass =
-  "text-[36px] font-normal leading-[64px] tracking-[0px] sm:text-[48px] sm:leading-[64px]";
+  "text-[56px] font-normal leading-[64px] tracking-[0px]";
 
 /** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
 const heroInviteLightClass =
@@ -117,7 +117,7 @@ export default function InvitationHeroBody({
   const t =
     language === "el"
       ? {
-          kindlyRespondBelow: "ΕΠΙΒΕΒΑΙΩΣΗ ΠΑΡΟΥΣΙΑΣ",
+          kindlyRespondBelow: "RSVP",
         }
       : {
           inviteYouToAttend: "invite you to attend ",
@@ -242,13 +242,23 @@ export default function InvitationHeroBody({
                 </>
               )}
             </p>
-            <KindlyRespondButton className="mt-10 sm:mt-14">
+            <KindlyRespondButton className="mt-10 sm:mt-14 lg:hidden">
               <span aria-hidden="true" className="text-[16px] font-normal leading-none">
                 ↓
               </span>
               {toAllCapsNoAccents(t.kindlyRespondBelow)}
             </KindlyRespondButton>
           </div>
+        </div>
+
+        {/* Desktop CTA: centered above details section */}
+        <div className="hidden w-full justify-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-6 lg:flex">
+          <KindlyRespondButton>
+            <span aria-hidden="true" className="text-[16px] font-normal leading-none">
+              ↓
+            </span>
+            {toAllCapsNoAccents(t.kindlyRespondBelow)}
+          </KindlyRespondButton>
         </div>
 
         {/* Celebrate — centered */}

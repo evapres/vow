@@ -1,16 +1,31 @@
+export type InvitationLanguage = "en" | "el";
+
 /** Format wedding date for the invitation header row (e.g. 11 JULY 2026). */
-export function formatHeaderDateLabel(input: string | null | undefined): string {
+export function formatHeaderDateLabel(
+  input: string | null | undefined,
+  language?: InvitationLanguage,
+): string {
   if (!input) return "";
   const d = new Date(input);
   if (Number.isNaN(d.getTime())) return String(input).toUpperCase();
-  return new Intl.DateTimeFormat("en-GB", {
+  const locale = language === "el" ? "el-GR" : "en-GB";
+  const formatted = new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
-  })
-    .format(d)
+  }).format(d);
+  return language === "el" ? toAllCapsNoAccents(formatted) : formatted.toUpperCase();
+}
+
+export function toAllCapsNoAccents(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase();
 }
+
+export const inviteMetaCaptionClass =
+  "text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70";
 
 /**
  * Build a local datetime string from a date-only field (`YYYY-MM-DD`) and optional `HH:MM`.
@@ -46,22 +61,31 @@ export function splitWeddingDateTimeForForm(
 }
 
 /** e.g. Saturday, July 11, 2026 at 8:00 PM (omits time when local midnight) */
-export function formatDetailsDateTime(input: string | null | undefined): string {
+export function formatDetailsDateTime(
+  input: string | null | undefined,
+  language?: InvitationLanguage,
+): string {
   if (!input) return "";
   const d = new Date(input);
   if (Number.isNaN(d.getTime())) return String(input);
-  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(d);
+  const isGreek = language === "el";
+  const weekday = new Intl.DateTimeFormat(isGreek ? "el-GR" : "en-US", { weekday: "long" }).format(d);
   const hasTime =
     d.getHours() !== 0 || d.getMinutes() !== 0 || d.getSeconds() !== 0;
-  const datePart = new Intl.DateTimeFormat("en-US", {
+  const datePart = new Intl.DateTimeFormat(isGreek ? "el-GR" : "en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   }).format(d);
   if (!hasTime) return `${weekday}, ${datePart}`;
-  const timePart = new Intl.DateTimeFormat("en-US", {
+  let timePart = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
   }).format(d);
+  if (isGreek) {
+    // Match the reference copy: ΣΑΒΒΑΤΟ, 11 ΙΟΥΛΙΟΥ 2026 ΣΤΙΣ 8:00 Μ.Μ.
+    timePart = timePart.replace(/\bPM\b/i, "Μ.Μ.").replace(/\bAM\b/i, "Π.Μ.");
+    return `${toAllCapsNoAccents(weekday)}, ${toAllCapsNoAccents(datePart)} ΣΤΙΣ ${timePart}`;
+  }
   return `${weekday}, ${datePart} at ${timePart}`;
 }
