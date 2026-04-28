@@ -19,7 +19,7 @@ export default function Page() {
             venueLabel="GRAND RESORT"
             detailsDateTime={formatDetailsDateTime(weddingDateIso, language)}
             detailsLocation="Agios Dimitrios, Grand Resort, Lagonisi, Attica"
-            note="ΘΑ ΑΚΟΛΟΥΘΗΣΕΙ ΔΕΞΙΩΣΗ ΣΤΟ ΧΩΡΟ ΤΟΥ ΞΕΝΟΔΟΧΕΙΟΥ"
+            note="Θα ακολουθήσει δεξίωση στο χώρο του ξενοδοχείου."
           />
 
           <RSVPSection
