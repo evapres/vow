@@ -37,7 +37,7 @@ const inviteHeroTopBarClass =
 
 /** Reception note (hero): small, sentence-case, italic. */
 const inviteHeroNoteClass =
-  "font-serif text-[13px] font-normal italic leading-[18px] tracking-[1px] sm:text-[16px] sm:leading-[20px]";
+  "font-serif text-[14px] font-normal italic leading-[18px] tracking-[1px] sm:text-[16px] sm:leading-[20px]";
 
 /** Hero subline + location lines: Noto Serif Display 24/32, medium, 0.5px tracking. */
 const heroSecondarySerifClass =

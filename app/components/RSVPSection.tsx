@@ -178,7 +178,7 @@ export default function RSVPSection({
               <div className="mt-6 flex flex-col items-center gap-4 sm:mt-[48px]">
                 {language === "el" ? (
                   <p
-                    className="mb-8 w-full whitespace-normal px-4 text-center font-serif text-[13px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px]"
+                    className="mb-8 w-full whitespace-normal px-4 text-center font-serif text-[14px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px]"
                     style={{ fontStretch: "condensed" }}
                   >
                     {tEl.pleaseRespondBy(rsvpDeadline)}
