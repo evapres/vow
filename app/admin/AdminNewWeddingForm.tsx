@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import InvitationHeroBody, { inviteHeroDefaultSrc } from "@/app/components/InvitationHeroBody";
 import OutlineSilkButton from "@/app/components/OutlineSilkButton";
 import SolidSilkButton from "@/app/components/SolidSilkButton";
-import { invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
+import { invitationPageCanvasStripStyle, invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
 import {
   combineWeddingDateAndTime,
   formatDetailsDateTime,
@@ -127,16 +127,14 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const previewT =
     language === "el"
       ? {
-          weWouldLove: "ΘΑ ΧΑΡΟΥΜΕ ΠΟΛΥ ΝΑ ΕΙΣΤΕ ΜΑΖΙ ΜΑΣ",
-          willYouAttend: "Επιβεβαιώστε την παρουσία σας",
+          willYouAttend: "RSVP",
           pleaseRespondBy: `Παρακαλούμε απαντήστε έως ${rsvpLine}`,
           previewOnly: "Μόνο προεπισκόπηση — το RSVP δεν αποθηκεύεται από εδώ",
           confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
           unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
         }
       : {
-          weWouldLove: "WE WOULD LOVE FOR YOU TO JOIN US",
-          willYouAttend: "Will you attend?",
+          willYouAttend: "RSVP",
           pleaseRespondBy: `Please respond by ${rsvpLine}`,
           previewOnly: "Preview only — RSVP is not saved from here",
           confirm: "CONFIRM ATTENDANCE",
@@ -396,63 +394,66 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
 
       <div className="min-w-0 lg:sticky lg:top-8">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/55">Live preview</p>
-        <div className="max-h-[min(85vh,920px)] min-h-[280px] w-full overflow-y-auto overflow-x-hidden rounded-sm border border-[#181818]/20 bg-[#FDFCF9] shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
-          <div className="w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
-            <InvitationHeroBody
-              coupleNames={coupleNames}
-              language={language}
-              eventDateLabel={previewEventDateLabel}
-              venueLabel={previewVenueLabel}
-              photoSrc={photoSrc}
-              topMonogramLetters={previewTopMonogram}
-              detailsDateTime={previewDetailsDateTime}
-              detailsLocation={previewDetailsLocation}
-              note={note.trim() || undefined}
-            />
+        <div
+          className="max-h-[min(85vh,920px)] min-h-[280px] w-full overflow-y-auto overflow-x-hidden rounded-sm border border-[#181818]/20 shadow-[0_12px_40px_rgba(0,0,0,0.06)]"
+          style={invitationPageCanvasStripStyle}
+        >
+          {/* Scale-down preview: identical design, smaller viewport */}
+          <div className="w-full origin-top scale-[0.72] px-4 pb-8 pt-4 [width:calc(100%/0.72)]">
+            <div className="w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
+              <InvitationHeroBody
+                coupleNames={coupleNames}
+                language={language}
+                eventDateLabel={previewEventDateLabel}
+                venueLabel={previewVenueLabel}
+                photoSrc={photoSrc}
+                topMonogramLetters={previewTopMonogram}
+                detailsDateTime={previewDetailsDateTime}
+                detailsLocation={previewDetailsLocation}
+                note={note.trim() || undefined}
+              />
 
-            <section
-              id="rsvp"
-              aria-label="RSVP preview"
-              className="w-[calc(100%+2*var(--invite-gutter,12px))] max-w-none -mx-[var(--invite-gutter,12px)]"
-            >
-              <div className="h-6 w-full shrink-0 bg-transparent" aria-hidden />
-              <div
-                className="w-full p-[var(--invite-gutter,12px)] pb-12 text-[#FCFCF6]"
-                style={invitationRsvpBandStyle}
+              <section
+                id="rsvp"
+                aria-label="RSVP preview"
+                className="w-[calc(100%+2*var(--invite-gutter,12px))] max-w-none -mx-[var(--invite-gutter,12px)]"
               >
-                <div className="mx-auto max-w-[520px] text-center">
-                  <div className="flex flex-col gap-[16px]">
-                    <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
-                      {toAllCapsNoAccents(previewT.weWouldLove)}
+                <div className="h-6 w-full shrink-0 bg-transparent" aria-hidden />
+                <div
+                  className="w-full p-[var(--invite-gutter,12px)] pb-12 text-[#FCFCF6]"
+                  style={invitationRsvpBandStyle}
+                >
+                  <div className="mx-auto max-w-[520px] text-center">
+                    <div className="flex flex-col gap-[16px]">
+                      <h3
+                        className="text-[clamp(28px,6vw,40px)] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        {previewT.willYouAttend}
+                      </h3>
+                      <p className={inviteMetaCaptionClass}>
+                        {toAllCapsNoAccents(previewT.pleaseRespondBy)}
+                      </p>
+                    </div>
+                    <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/55">
+                      {toAllCapsNoAccents(previewT.previewOnly)}
                     </p>
-                    <h3
-                      className="text-[clamp(28px,6vw,40px)] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      {previewT.willYouAttend}
-                    </h3>
-                    <p className={inviteMetaCaptionClass}>
-                      {toAllCapsNoAccents(previewT.pleaseRespondBy)}
-                    </p>
-                  </div>
-                  <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/55">
-                    {toAllCapsNoAccents(previewT.previewOnly)}
-                  </p>
-                  <div className="pointer-events-none mt-8 flex flex-col items-center gap-4 opacity-[0.72]">
-                    <SolidSilkButton type="button" wrapperClassName="h-[52px] w-full max-w-[360px]">
-                      {toAllCapsNoAccents(previewT.confirm)}
-                    </SolidSilkButton>
-                    <OutlineSilkButton
-                      type="button"
-                      wrapperClassName="h-[52px] w-full max-w-[360px]"
-                      buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
-                    >
-                      {toAllCapsNoAccents(previewT.unable)}
-                    </OutlineSilkButton>
+                    <div className="pointer-events-none mt-8 flex flex-col items-center gap-4 opacity-[0.72]">
+                      <SolidSilkButton type="button" wrapperClassName="h-[52px] w-full max-w-[360px]">
+                        {toAllCapsNoAccents(previewT.confirm)}
+                      </SolidSilkButton>
+                      <OutlineSilkButton
+                        type="button"
+                        wrapperClassName="h-[52px] w-full max-w-[360px]"
+                        buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
+                      >
+                        {toAllCapsNoAccents(previewT.unable)}
+                      </OutlineSilkButton>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
         </div>
       </div>

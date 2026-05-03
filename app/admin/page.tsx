@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { createClient } from "@/lib/supabase/server";
+import AdminBurgerMenu from "@/app/components/AdminBurgerMenu";
 
 import AdminNewWeddingForm from "./AdminNewWeddingForm";
 
 type PageProps = {
-  searchParams: Promise<{ created?: string; error?: string }>;
+  searchParams: Promise<{ created?: string; error?: string; new?: string }>;
 };
 
 function safeDecodeParam(value: string) {
@@ -19,7 +20,8 @@ function safeDecodeParam(value: string) {
 }
 
 export default async function AdminPage({ searchParams }: PageProps) {
-  const { created, error } = await searchParams;
+  const { created, error, new: newParam } = await searchParams;
+  const forceNew = newParam === "1";
 
   const supabase = await createClient();
   const {
@@ -45,7 +47,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
 
   // If this user already has a wedding, land them on the edit screen after login.
   // Keeps magic-link login behavior consistent across environments.
-  if (!created) {
+  if (!created && !forceNew) {
     const { data: latestWedding } = await supabase
       .from("weddings")
       .select("id")
@@ -63,6 +65,9 @@ export default async function AdminPage({ searchParams }: PageProps) {
     <InvitationFrame includeInviteGutter={false}>
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1 py-10">
+          <div className="mb-6 flex items-center justify-end">
+            <AdminBurgerMenu />
+          </div>
           <div className="mb-8 border-b border-[#181818]/20 pb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/60">
               Admin

@@ -126,8 +126,6 @@ export default function RSVPSection({
 
   const tEn = {
     heading: "RSVP",
-    weWouldLove: "WE WOULD LOVE FOR YOU TO JOIN US",
-    willYouAttend: "Will you attend?",
     pleaseRespondBy: (d: string) => `Please respond by ${d}`,
     confirm: "CONFIRM ATTENDANCE",
     unable: "UNABLE TO ATTEND",
@@ -158,15 +156,11 @@ export default function RSVPSection({
                 </div>
               ) : (
                 <div className="flex flex-col gap-[16px]">
-                  <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.32em] text-[#FCFCF6]/65">
-                    {toAllCapsNoAccents(tEn.weWouldLove)}
-                  </p>
-
                   <h3
                     className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    {tEn.willYouAttend}
+                    {tEn.heading}
                   </h3>
 
                   <p className={inviteMetaCaptionClass}>
@@ -178,7 +172,7 @@ export default function RSVPSection({
               <div className="mt-6 flex flex-col items-center gap-4 sm:mt-[48px]">
                 {language === "el" ? (
                   <p
-                    className="mb-8 w-full whitespace-normal px-4 text-center font-serif text-[14px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px]"
+                    className="mb-8 w-full whitespace-normal px-4 text-center text-[14px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px] [font-family:var(--font-source-serif)]"
                     style={{ fontStretch: "condensed" }}
                   >
                     {tEl.pleaseRespondBy(rsvpDeadline)}

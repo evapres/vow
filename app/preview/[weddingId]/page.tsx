@@ -1,4 +1,5 @@
 import Footer from "@/app/components/Footer";
+import AdminBurgerMenu from "@/app/components/AdminBurgerMenu";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/InvitationHero";
 import { invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
@@ -68,6 +69,9 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
     >
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
+          <div className="flex justify-end px-[var(--invite-gutter,12px)] pt-4">
+            <AdminBurgerMenu weddingId={weddingId} />
+          </div>
           <InvitationHero
             coupleNames={wedding.couple_names}
             language={language}

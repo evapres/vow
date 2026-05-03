@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Serif_Display, Syne } from "next/font/google";
+import { Noto_Serif_Display, Source_Serif_4, Syne } from "next/font/google";
 import "./globals.css";
 
 const bodyFont = Syne({
@@ -10,6 +10,13 @@ const bodyFont = Syne({
 const serifFont = Noto_Serif_Display({
   variable: "--font-heading",
   weight: ["300", "400", "500"],
+  subsets: ["latin", "greek"],
+});
+
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
+  weight: ["400"],
+  style: ["normal", "italic"],
   subsets: ["latin", "greek"],
 });
 
@@ -31,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bodyFont.variable} ${serifFont.variable} h-full min-h-full antialiased`}
+      className={`${bodyFont.variable} ${serifFont.variable} ${sourceSerif.variable} h-full min-h-full antialiased`}
       style={{
         backgroundColor: "#FCFCF6",
       }}

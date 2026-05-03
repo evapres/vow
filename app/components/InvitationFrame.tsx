@@ -8,6 +8,8 @@ type InvitationFrameProps = {
   footer?: ReactNode;
   /** When true, removes the 64px top padding on mobile only. */
   removeMobileTopPadding?: boolean;
+  /** Override the page canvas background (defaults to invitation image). */
+  canvasStyle?: CSSProperties;
   /**
    * When true (default), adds `px-[var(--invite-gutter)]` so invitation/RSVP modules can bleed with negative margins.
    * Set false for app-style pages (e.g. admin) so horizontal inset is only `--page-padding`, matching perceived width on `/`.
@@ -31,6 +33,7 @@ export default function InvitationFrame({
   footer,
   removeMobileTopPadding = false,
   includeInviteGutter = true,
+  canvasStyle,
 }: InvitationFrameProps) {
   return (
     <section
@@ -39,7 +42,7 @@ export default function InvitationFrame({
           ? "full-width-section min-h-screen overflow-x-hidden pb-0 pt-0 text-[#181818] sm:py-16"
           : "full-width-section min-h-screen overflow-x-hidden py-16 text-[#181818]"
       }
-      style={invitationPageCanvasStyle}
+      style={canvasStyle ?? invitationPageCanvasStyle}
     >
       <div
         className="main-content box-border w-full [--page-padding:0px] sm:[--page-padding:10%]"

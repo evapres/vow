@@ -8,6 +8,11 @@ export const invitationPageCanvasStyle: CSSProperties = {
   backgroundAttachment: "fixed",
 };
 
+/** Monochrome light canvas (no image) — used for admin steps. */
+export const invitationPageCanvasMonochromeStyle: CSSProperties = {
+  backgroundColor: "#FCFCF6",
+};
+
 /**
  * Page image only, painted in normal document flow (no `fixed` attachment).
  * Use for strips inside the invitation card so the texture isn’t doubled or misaligned with the shell.

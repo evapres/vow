@@ -25,7 +25,7 @@ const polaroidTiltStyle: CSSProperties = {
 
 /** Hero names block: 48px / 56px / 1px tracking. */
 const heroNamesClass =
-  "text-[32px] font-normal leading-[40px] tracking-[0px] sm:text-[56px] sm:leading-[64px]";
+  "font-serif text-[54px] font-normal leading-[64px] tracking-[1px]";
 
 /** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
 const heroInviteLightClass =
@@ -37,11 +37,11 @@ const inviteHeroTopBarClass =
 
 /** Reception note (hero): small, sentence-case, italic. */
 const inviteHeroNoteClass =
-  "font-serif text-[14px] font-normal italic leading-[18px] tracking-[1px] sm:text-[16px] sm:leading-[20px]";
+  "text-[14px] font-normal italic leading-[18px] tracking-[1px] sm:text-[16px] sm:leading-[20px] [font-family:var(--font-source-serif)]";
 
 /** Hero subline + location lines: Noto Serif Display 24/32, medium, 0.5px tracking. */
 const heroSecondarySerifClass =
-  "font-serif text-[18px] font-normal leading-[26px] tracking-[0.5px] sm:text-[24px] sm:leading-[32px]";
+  "text-[18px] font-normal leading-[26px] tracking-[-1px] sm:text-[24px] sm:leading-[32px] [font-family:var(--font-source-serif)]";
 
 /** Celebrate / details: Noto (date tail, address lead). */
 const detailsNotoClass =
@@ -121,7 +121,7 @@ export default function InvitationHeroBody({
         }
       : {
           inviteYouToAttend: "invite you to attend ",
-          kindlyRespondBelow: "Kindly respond below",
+          kindlyRespondBelow: "RSVP",
         };
 
   const namePartsForGreek = coupleNames
@@ -216,7 +216,7 @@ export default function InvitationHeroBody({
             <p style={{ fontFamily: "var(--font-heading)" }}>
               {language === "el" ? (
                 <span className="inline-flex flex-col items-center gap-6">
-                  <span className="flex flex-col items-center uppercase tracking-[0px]">
+                  <span className="flex flex-col items-center uppercase tracking-[1px]">
                     <span className={heroNamesClass}>
                       {toAllCapsNoAccents(`Ο ${greekLeft}`)}
                     </span>
@@ -280,12 +280,12 @@ export default function InvitationHeroBody({
             <p className="mt-4 sm:mt-6">
               {locLast ? (
                 <>
-                  <span style={{ fontFamily: "var(--font-heading)" }} className={heroSecondarySerifClass}>
+                  <span className={heroSecondarySerifClass}>
                     {locLead}, {locLast}
                   </span>
                 </>
               ) : (
-                <span style={{ fontFamily: "var(--font-heading)" }} className={heroSecondarySerifClass}>
+                <span className={heroSecondarySerifClass}>
                   {detailsLocationDisplay}
                 </span>
               )}
