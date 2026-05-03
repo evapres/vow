@@ -42,11 +42,23 @@ export default function RSVPSection({
   }) => {
     setIsSaving(true);
     setSubmitError(null);
-  
+
+    const { data: household, error: householdError } = await supabase
+      .from("households")
+      .select("id, wedding_id")
+      .eq("id", householdId)
+      .single();
+
+    if (householdError || !household) {
+      setIsSaving(false);
+      setSubmitError(householdError?.message ?? "Household not found.");
+      return false;
+    }
+
     const { error } = await supabase.from("rsvps").upsert(
       {
-        wedding_id: weddingId,
-        household_id: householdId,
+        household_id: household.id,
+        wedding_id: household.wedding_id,
         attending: payload.response === "yes",
         number_attending: payload.response === "yes" ? payload.attendingCount : 0,
         note: payload.notes.trim(),
