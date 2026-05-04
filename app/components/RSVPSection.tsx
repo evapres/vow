@@ -61,7 +61,7 @@ export default function RSVPSection({
     const { error } = await supabase.from("rsvps").insert({
       household_id: household.id,
       wedding_id: household.wedding_id,
-      response,
+      attending: response === "yes",
       notes,
     });
   
