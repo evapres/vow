@@ -10,7 +10,7 @@ export type DashboardHouseholdRow = {
   inviteToken: string | null;
   emailSentAt: string | null;
   status: HouseholdRsvpStatus;
-  /** Raw note from `rsvps.note` when an RSVP exists; otherwise null. */
+  /** Raw note from `rsvps.notes` when an RSVP exists; otherwise null. */
   rsvpNote: string | null;
   attendingCount: number | null;
   submittedAt: string | null;
@@ -18,9 +18,7 @@ export type DashboardHouseholdRow = {
 
 type RsvpEmbed = {
   attending: boolean;
-  note: string | null;
-  number_attending: number | null;
-  submitted_at: string;
+  notes: string | null;
 };
 
 type HouseholdQueryRow = {
@@ -61,9 +59,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       email_sent_at,
       rsvps (
         attending,
-        note,
-        number_attending,
-        submitted_at
+        notes
       )
     `,
     )
@@ -86,9 +82,9 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       inviteToken: row.invite_token ?? null,
       emailSentAt: row.email_sent_at ?? null,
       status: statusFromRsvp(rsvp),
-      rsvpNote: rsvp?.note ?? null,
-      attendingCount: rsvp?.number_attending ?? null,
-      submittedAt: rsvp?.submitted_at ?? null,
+      rsvpNote: rsvp?.notes ?? null,
+      attendingCount: null,
+      submittedAt: null,
     };
   });
 }
