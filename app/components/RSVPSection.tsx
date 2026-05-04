@@ -55,19 +55,15 @@ export default function RSVPSection({
       return false;
     }
 
-    const { error } = await supabase.from("rsvps").upsert(
-      {
-        household_id: household.id,
-        wedding_id: household.wedding_id,
-        attending: payload.response === "yes",
-        number_attending: payload.response === "yes" ? payload.attendingCount : 0,
-        note: payload.notes.trim(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "household_id",
-      }
-    );
+    const response = payload.response;
+    const notes = payload.notes.trim();
+
+    const { error } = await supabase.from("rsvps").insert({
+      household_id: household.id,
+      wedding_id: household.wedding_id,
+      response,
+      notes,
+    });
   
     setIsSaving(false);
   
