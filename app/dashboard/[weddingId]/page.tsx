@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getDashboardHouseholdRows } from "../../../lib/rsvps/dashboard";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ weddingId: string }>;
   searchParams: Promise<{

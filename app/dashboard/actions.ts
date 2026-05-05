@@ -175,7 +175,11 @@ export async function deleteHousehold(formData: FormData) {
   }
 
   // Delete RSVPs first to avoid FK violations (if any).
-  const { error: rsvpsError } = await supabase.from("rsvps").delete().eq("household_id", householdId);
+  const { error: rsvpsError } = await supabase
+    .from("rsvps")
+    .delete()
+    .eq("household_id", householdId)
+    .eq("wedding_id", weddingId);
   if (rsvpsError) {
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(rsvpsError.message));
   }
