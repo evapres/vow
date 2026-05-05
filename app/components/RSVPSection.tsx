@@ -10,6 +10,7 @@ import {
   toAllCapsNoAccents,
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
+import { revalidateWeddingDashboard } from "@/app/invite/revalidateDashboard";
 
 type RSVPSectionProps = {
   rsvpDeadline: string;
@@ -58,21 +59,26 @@ export default function RSVPSection({
     const response = payload.response;
     const notes = payload.notes.trim();
 
-    const { error } = await supabase.from("rsvps").insert({
-      household_id: household.id,
-      wedding_id: household.wedding_id,
-      attending: response === "yes",
-      notes,
-    });
-  
+    const { error } = await supabase.from("rsvps").upsert(
+      {
+        household_id: household.id,
+        wedding_id: household.wedding_id,
+        attending: response === "yes",
+        notes,
+      },
+      { onConflict: "household_id" },
+    );
+
     setIsSaving(false);
-  
+
     if (error) {
       console.error("Error saving RSVP:", error);
       setSubmitError(error.message);
       return false;
     }
-  
+
+    await revalidateWeddingDashboard(household.wedding_id);
+
     return true;
   };
 
@@ -285,6 +291,20 @@ export default function RSVPSection({
               <p className="mt-6 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
                 Your response has been sent to the host.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setResponse(null);
+                  setSubmitted(false);
+                  setYesStep("details");
+                  setNotes("");
+                  setSubmitError(null);
+                  setGuestCountError(null);
+                }}
+                className="mt-6 text-[12px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/80 underline underline-offset-4 hover:text-[#FCFCF6]"
+              >
+                Change my response
+              </button>
             </div>
           ) : (
             <div className="mx-auto w-[360px] max-w-full text-center">
@@ -318,9 +338,23 @@ export default function RSVPSection({
               ) : null}
 
               {submitted ? (
-                <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
-                  Your response has been sent to the host.
-                </p>
+                <>
+                  <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
+                    Your response has been sent to the host.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResponse(null);
+                      setSubmitted(false);
+                      setNotes("");
+                      setSubmitError(null);
+                    }}
+                    className="mt-6 text-[12px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/80 underline underline-offset-4 hover:text-[#FCFCF6]"
+                  >
+                    Change my response
+                  </button>
+                </>
               ) : (
                 <SolidSilkButton
                   type="button"
