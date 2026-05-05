@@ -1,8 +1,7 @@
 import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
-import RemoveHouseholdForm from "./RemoveHouseholdForm";
-import { sendHouseholdInvitationEmail, updateHousehold } from "./actions";
+import { deleteHousehold, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
 import type { DashboardHouseholdRow, HouseholdRsvpStatus } from "../../lib/rsvps/dashboard";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
@@ -45,14 +44,13 @@ export default function RsvpsDashboardView({
   newInviteToken,
   inviteBaseUrl,
 }: RsvpsDashboardViewProps) {
-  /** Guest headcount for “yes” RSVPs (1 per household until `number_attending` is stored). */
   const counts = households.reduce(
     (acc, row) => {
-      if (row.status === "attending") acc.coming += row.attendingCount ?? 1;
-      if (row.status === "not_attending") acc.declined += 1;
+      if (row.status === "attending") acc.yes += 1;
+      if (row.status === "not_attending") acc.no += 1;
       return acc;
     },
-    { coming: 0, declined: 0 },
+    { yes: 0, no: 0 },
   );
 
   return (
@@ -122,12 +120,12 @@ export default function RsvpsDashboardView({
             <p className="mt-2 text-2xl font-semibold">{households.length}</p>
           </div>
           <div className="border border-[#181818]/20 bg-white/70 p-4 backdrop-blur-[2px]">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#1A1A1A]/60">Attending (guests)</p>
-            <p className="mt-2 text-2xl font-semibold">{counts.coming}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#1A1A1A]/60">Attending</p>
+            <p className="mt-2 text-2xl font-semibold">{counts.yes}</p>
           </div>
           <div className="border border-[#181818]/20 bg-white/70 p-4 backdrop-blur-[2px]">
-            <p className="text-xs uppercase tracking-[0.12em] text-[#1A1A1A]/60">Declined (households)</p>
-            <p className="mt-2 text-2xl font-semibold">{counts.declined}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-[#1A1A1A]/60">Not attending</p>
+            <p className="mt-2 text-2xl font-semibold">{counts.no}</p>
           </div>
         </div>
 
@@ -237,7 +235,16 @@ export default function RsvpsDashboardView({
                             </p>
                           ) : null}
 
-                          <RemoveHouseholdForm weddingId={weddingId} householdId={row.householdId} />
+                          <form action={deleteHousehold}>
+                            <input type="hidden" name="wedding_id" value={weddingId} />
+                            <input type="hidden" name="household_id" value={row.householdId} />
+                            <button
+                              type="submit"
+                              className="inline-flex h-9 w-full items-center justify-center border border-red-300 bg-red-50 px-4 text-sm font-medium text-red-900 hover:bg-red-100"
+                            >
+                              Remove
+                            </button>
+                          </form>
                         </div>
                       </td>
                     </tr>
