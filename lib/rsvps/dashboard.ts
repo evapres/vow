@@ -16,65 +16,70 @@ export type DashboardHouseholdRow = {
   submittedAt: string | null;
 };
 
-type RsvpEmbed = {
-  attending: boolean;
-  notes: string | null;
-};
-
-type HouseholdQueryRow = {
+type HouseholdRow = {
   id: string;
   household_name: string;
   invite_token: string | null;
   email: string | null;
   email_sent_at: string | null;
-  rsvps: RsvpEmbed[] | RsvpEmbed | null;
 };
 
-function firstRsvp(embed: HouseholdQueryRow["rsvps"]): RsvpEmbed | null {
-  if (embed == null) return null;
-  if (Array.isArray(embed)) return embed[0] ?? null;
-  return embed;
-}
+type RsvpRow = {
+  household_id: string;
+  attending: boolean;
+  notes: string | null;
+};
 
-function statusFromRsvp(rsvp: RsvpEmbed | null): HouseholdRsvpStatus {
+function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
   if (!rsvp) return "pending";
-  return rsvp.attending ? "attending" : "not_attending";
+  if (rsvp.attending === true) return "attending";
+  if (rsvp.attending === false) return "not_attending";
+  return "pending";
 }
 
 /**
- * All households for a wedding with their latest RSVP (one row per household).
- * Expects `households.wedding_id` and `rsvps.household_id` FK; embed is a left join.
+ * All households for a wedding with RSVP status (one row per household).
+ * Fetches households and RSVPs in two queries, then maps by `household_id`.
  */
 export async function getDashboardHouseholdRows(weddingId: string): Promise<DashboardHouseholdRow[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("households")
-    .select(
-      `
-      id,
-      household_name,
-      invite_token,
-      email,
-      email_sent_at,
-      rsvps (
-        attending,
-        notes
-      )
-    `,
-    )
-    .eq("wedding_id", weddingId)
-    .order("household_name", { ascending: true });
+  const [householdsResult, rsvpsResult] = await Promise.all([
+    supabase
+      .from("households")
+      .select("id, household_name, invite_token, email, email_sent_at")
+      .eq("wedding_id", weddingId)
+      .order("household_name", { ascending: true }),
+    supabase
+      .from("rsvps")
+      .select("household_id, attending, notes")
+      .eq("wedding_id", weddingId)
+      .order("id", { ascending: false }),
+  ]);
 
-  if (error) {
-    console.error("Household + RSVP fetch error:", error.message);
+  if (householdsResult.error) {
+    console.error("Household fetch error:", householdsResult.error.message);
     return [];
   }
 
-  const rows = (data ?? []) as HouseholdQueryRow[];
+  if (rsvpsResult.error) {
+    console.error("RSVP fetch error:", rsvpsResult.error.message);
+    return [];
+  }
 
-  return rows.map((row) => {
-    const rsvp = firstRsvp(row.rsvps);
+  const householdRows = (householdsResult.data ?? []) as HouseholdRow[];
+  const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
+
+  /** Newest RSVP per household (query ordered by `id` descending; keep first seen). */
+  const rsvpByHouseholdId = new Map<string, RsvpRow>();
+  for (const r of rsvpRows) {
+    if (r.household_id && !rsvpByHouseholdId.has(r.household_id)) {
+      rsvpByHouseholdId.set(r.household_id, r);
+    }
+  }
+
+  return householdRows.map((row) => {
+    const rsvp = rsvpByHouseholdId.get(row.id);
     return {
       householdId: row.id,
       householdName: row.household_name ?? "Unnamed household",
