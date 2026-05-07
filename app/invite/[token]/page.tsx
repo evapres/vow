@@ -4,6 +4,7 @@ import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/Invitatio
 import RSVPSection from "@/app/components/RSVPSection";
 import { formatDetailsDateTime, formatHeaderDateLabel } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
+import { isHouseholdRsvpRecorded } from "@/lib/invite/householdRsvpRecorded";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
 
 type PageProps = {
@@ -44,6 +45,7 @@ export default async function Page({ params }: PageProps) {
 
   const dateRaw = wedding.wedding_date;
   const language = (wedding.language === "el" ? "el" : "en") as "en" | "el";
+  const rsvpAlreadyRecorded = await isHouseholdRsvpRecorded(wedding.id, household.id);
 
   return (
     <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames={wedding.couple_names} year="2026" />}>
@@ -66,6 +68,7 @@ export default async function Page({ params }: PageProps) {
             householdId={household.id}
             householdName={household.household_name}
             language={language}
+            rsvpAlreadyRecorded={rsvpAlreadyRecorded}
           />
         </main>
       </div>

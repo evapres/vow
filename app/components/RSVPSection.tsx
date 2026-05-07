@@ -17,6 +17,8 @@ type RSVPSectionProps = {
   householdId: string;
   householdName: string;
   language?: InvitationLanguage;
+  /** When true (invite URL), hides RSVP buttons — guest has already responded. */
+  rsvpAlreadyRecorded?: boolean;
 };
 
 export default function RSVPSection({
@@ -25,6 +27,7 @@ export default function RSVPSection({
   householdId,
   householdName,
   language = "en",
+  rsvpAlreadyRecorded = false,
 }: RSVPSectionProps) {
   const [response, setResponse] = useState<"yes" | "no" | null>(null);
   const [yesStep, setYesStep] = useState<"details" | "thankyou">("details");
@@ -137,7 +140,44 @@ export default function RSVPSection({
         style={invitationRsvpBandStyle}
       >
         <div className="mx-auto max-w-[520px] text-center">
-          {response === null ? (
+          {rsvpAlreadyRecorded ? (
+            <>
+              {language === "el" ? (
+                <div className="flex flex-col items-center gap-6">
+                  <h3
+                    className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    RSVP
+                  </h3>
+                  <p className="text-[17px] font-medium leading-snug tracking-[0.06em] text-[#FAF6F2]/95">
+                    Η απάντησή σας εστάλη
+                  </p>
+                  <p
+                    className="max-w-[360px] text-center text-[14px] font-normal italic leading-relaxed tracking-[1px] sm:text-[16px]"
+                    style={{ fontFamily: "var(--font-source-serif)", fontStretch: "condensed" }}
+                  >
+                    Έχουμε ήδη λάβει την απάντησή σας. Σας ευχαριστούμε.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-[16px]">
+                  <h3
+                    className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    RSVP
+                  </h3>
+
+                  <p className={`${inviteMetaCaptionClass} mb-4`}>{toAllCapsNoAccents("RSVP sent")}</p>
+
+                  <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">
+                    We&apos;ve already received your reply. Thank you.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : response === null ? (
             <>
               {language === "el" ? (
                 <div className="flex flex-col items-center gap-8">
@@ -271,20 +311,6 @@ export default function RSVPSection({
               <p className="mt-6 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
                 Your response has been sent to the host.
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setResponse(null);
-                  setSubmitted(false);
-                  setYesStep("details");
-                  setNotes("");
-                  setSubmitError(null);
-                  setGuestCountError(null);
-                }}
-                className="mt-6 text-[12px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/80 underline underline-offset-4 hover:text-[#FCFCF6]"
-              >
-                Change my response
-              </button>
             </div>
           ) : (
             <div className="mx-auto w-[360px] max-w-full text-center">
@@ -322,18 +348,6 @@ export default function RSVPSection({
                   <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
                     Your response has been sent to the host.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResponse(null);
-                      setSubmitted(false);
-                      setNotes("");
-                      setSubmitError(null);
-                    }}
-                    className="mt-6 text-[12px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/80 underline underline-offset-4 hover:text-[#FCFCF6]"
-                  >
-                    Change my response
-                  </button>
                 </>
               ) : (
                 <SolidSilkButton

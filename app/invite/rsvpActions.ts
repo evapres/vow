@@ -48,6 +48,17 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
       return { ok: false, error: householdError?.message ?? "Household not found." };
     }
 
+    const { data: existingRsvp } = await supabase
+      .from("rsvps")
+      .select("household_id")
+      .eq("household_id", household.id)
+      .eq("wedding_id", household.wedding_id)
+      .maybeSingle();
+
+    if (existingRsvp) {
+      return { ok: false, error: "Your response has already been recorded." };
+    }
+
     const { error: rsvpError } = await supabase.from("rsvps").upsert(
       {
         household_id: household.id,
