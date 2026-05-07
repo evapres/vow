@@ -16,7 +16,6 @@ type RsvpUiCopy = {
   pleaseRespondBy: (deadline: string) => string;
   confirm: string;
   unable: string;
-  rsvpSentHeadline: string;
   rsvpSentBody: string;
   almostThere: string;
   howManyGuests: string;
@@ -40,7 +39,6 @@ const RSVP_COPY_EL: RsvpUiCopy = {
   pleaseRespondBy: (d) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}`,
   confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
   unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
-  rsvpSentHeadline: "Η απάντησή σας εστάλη",
   rsvpSentBody: "Έχουμε λάβει την απάντησή σας. Σας ευχαριστούμε.",
   almostThere: "ΣΧΕΔΟΝ ΕΤΟΙΜΟΙ",
   howManyGuests: "Πόσα άτομα θα παρευρεθούν;",
@@ -64,7 +62,6 @@ const RSVP_COPY_EN: RsvpUiCopy = {
   pleaseRespondBy: (d) => `Please respond by ${d}`,
   confirm: "CONFIRM ATTENDANCE",
   unable: "UNABLE TO ATTEND",
-  rsvpSentHeadline: "RSVP sent",
   rsvpSentBody: "We have received your response. Thank you.",
   almostThere: "ALMOST THERE",
   howManyGuests: "How many guests will attend?",
@@ -210,9 +207,6 @@ export default function RSVPSection({
                   >
                     {copy.heading}
                   </h3>
-                  <p className="text-[17px] font-medium leading-snug tracking-[0.06em] text-[#FAF6F2]/95">
-                    {copy.rsvpSentHeadline}
-                  </p>
                   <p
                     className="max-w-[360px] text-center text-[14px] font-normal italic leading-relaxed tracking-[1px] sm:text-[16px]"
                     style={{ fontFamily: "var(--font-source-serif)", fontStretch: "condensed" }}
@@ -228,8 +222,6 @@ export default function RSVPSection({
                   >
                     {copy.heading}
                   </h3>
-
-                  <p className={`${inviteMetaCaptionClass} mb-4`}>{toAllCapsNoAccents(copy.rsvpSentHeadline)}</p>
 
                   <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">{copy.rsvpSentBody}</p>
                 </div>
