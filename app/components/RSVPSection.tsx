@@ -11,6 +11,78 @@ import {
 } from "@/lib/invitationDisplay";
 import { submitRsvp } from "@/app/invite/rsvpActions";
 
+type RsvpUiCopy = {
+  heading: string;
+  pleaseRespondBy: (deadline: string) => string;
+  confirm: string;
+  unable: string;
+  rsvpSentHeadline: string;
+  rsvpSentBody: string;
+  almostThere: string;
+  howManyGuests: string;
+  includeEveryoneInParty: string;
+  numberOfGuests: string;
+  messageHostsOptional: string;
+  notePlaceholder: string;
+  submitResponse: string;
+  saving: string;
+  guestMinError: string;
+  saveFailed: string;
+  thankYouForResponse: string;
+  lookForwardSeeingYou: string;
+  willMissYou: string;
+  responseSentToHost: string;
+  writeHostMessageOptional: string;
+};
+
+const RSVP_COPY_EL: RsvpUiCopy = {
+  heading: "RSVP",
+  pleaseRespondBy: (d) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}`,
+  confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
+  unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
+  rsvpSentHeadline: "Η απάντησή σας εστάλη",
+  rsvpSentBody: "Έχουμε λάβει την απάντησή σας. Σας ευχαριστούμε.",
+  almostThere: "ΣΧΕΔΟΝ ΕΤΟΙΜΟΙ",
+  howManyGuests: "Πόσα άτομα θα παρευρεθούν;",
+  includeEveryoneInParty: "Συμπεριλάβετε όλα τα μέλη της παρέας σας, συμπεριλαμβανομένου εσάς.",
+  numberOfGuests: "Αριθμός ατόμων",
+  messageHostsOptional: "Μήνυμα για το ζευγάρι (προαιρετικά)",
+  notePlaceholder: "Προσθέστε μια σημείωση για το ζευγάρι…",
+  submitResponse: "Υποβολή απάντησης",
+  saving: "Αποθήκευση…",
+  guestMinError: "Παρακαλούμε εισάγετε τουλάχιστον ένα άτομο.",
+  saveFailed: "Δεν ήταν δυνατή η αποθήκευση του RSVP.",
+  thankYouForResponse: "Ευχαριστούμε για την απάντησή σας",
+  lookForwardSeeingYou: "Ανυπομονούμε να σας δούμε",
+  willMissYou: "Θα μας λείψετε",
+  responseSentToHost: "Η απάντησή σας εστάλη στο ζευγάρι.",
+  writeHostMessageOptional: "Γράψτε ένα μήνυμα στο ζευγάρι (προαιρετικά)",
+};
+
+const RSVP_COPY_EN: RsvpUiCopy = {
+  heading: "RSVP",
+  pleaseRespondBy: (d) => `Please respond by ${d}`,
+  confirm: "CONFIRM ATTENDANCE",
+  unable: "UNABLE TO ATTEND",
+  rsvpSentHeadline: "RSVP sent",
+  rsvpSentBody: "We have received your response. Thank you.",
+  almostThere: "ALMOST THERE",
+  howManyGuests: "How many guests will attend?",
+  includeEveryoneInParty: "Include everyone in your party, including yourself.",
+  numberOfGuests: "Number of guests",
+  messageHostsOptional: "Message for the hosts (optional)",
+  notePlaceholder: "Add a note for the couple...",
+  submitResponse: "Submit response",
+  saving: "Saving…",
+  guestMinError: "Please enter at least 1 guest.",
+  saveFailed: "Failed to save RSVP.",
+  thankYouForResponse: "Thank you for your response",
+  lookForwardSeeingYou: "We look forward to seeing you",
+  willMissYou: "We are going to miss you",
+  responseSentToHost: "Your response has been sent to the host.",
+  writeHostMessageOptional: "Write the host a message (optional)",
+};
+
 type RSVPSectionProps = {
   rsvpDeadline: string;
   weddingId: string;
@@ -38,6 +110,8 @@ export default function RSVPSection({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const copy = language === "el" ? RSVP_COPY_EL : RSVP_COPY_EN;
+
   const saveRsvp = async (payload: {
     response: "yes" | "no";
     notes: string;
@@ -58,7 +132,7 @@ export default function RSVPSection({
       return true;
     } catch (e) {
       console.error("Error saving RSVP:", e);
-      setSubmitError(e instanceof Error ? e.message : "Failed to save RSVP.");
+      setSubmitError(e instanceof Error ? e.message : copy.saveFailed);
       return false;
     } finally {
       setIsSaving(false);
@@ -82,7 +156,7 @@ export default function RSVPSection({
     const parsed = parseInt(attendingCountInput, 10);
 
     if (!Number.isFinite(parsed) || parsed < 1) {
-      setGuestCountError("Please enter at least 1 guest.");
+      setGuestCountError(copy.guestMinError);
       return;
     }
 
@@ -114,20 +188,6 @@ export default function RSVPSection({
     setSubmitted(true);
   };
 
-  const tEl = {
-    heading: "RSVP",
-    pleaseRespondBy: (d: string) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}`,
-    confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
-    unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
-  } as const;
-
-  const tEn = {
-    heading: "RSVP",
-    pleaseRespondBy: (d: string) => `Please respond by ${d}`,
-    confirm: "CONFIRM ATTENDANCE",
-    unable: "UNABLE TO ATTEND",
-  } as const;
-
   return (
     <section
       id="rsvp"
@@ -148,16 +208,16 @@ export default function RSVPSection({
                     className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    RSVP
+                    {copy.heading}
                   </h3>
                   <p className="text-[17px] font-medium leading-snug tracking-[0.06em] text-[#FAF6F2]/95">
-                    Η απάντησή σας εστάλη
+                    {copy.rsvpSentHeadline}
                   </p>
                   <p
                     className="max-w-[360px] text-center text-[14px] font-normal italic leading-relaxed tracking-[1px] sm:text-[16px]"
                     style={{ fontFamily: "var(--font-source-serif)", fontStretch: "condensed" }}
                   >
-                    Έχουμε ήδη λάβει την απάντησή σας. Σας ευχαριστούμε.
+                    {copy.rsvpSentBody}
                   </p>
                 </div>
               ) : (
@@ -166,14 +226,12 @@ export default function RSVPSection({
                     className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    RSVP
+                    {copy.heading}
                   </h3>
 
-                  <p className={`${inviteMetaCaptionClass} mb-4`}>{toAllCapsNoAccents("RSVP sent")}</p>
+                  <p className={`${inviteMetaCaptionClass} mb-4`}>{toAllCapsNoAccents(copy.rsvpSentHeadline)}</p>
 
-                  <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">
-                    We&apos;ve already received your reply. Thank you.
-                  </p>
+                  <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">{copy.rsvpSentBody}</p>
                 </div>
               )}
             </>
@@ -185,7 +243,7 @@ export default function RSVPSection({
                     className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    {tEl.heading}
+                    {copy.heading}
                   </h3>
                 </div>
               ) : (
@@ -194,11 +252,11 @@ export default function RSVPSection({
                     className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    {tEn.heading}
+                    {copy.heading}
                   </h3>
 
                   <p className={inviteMetaCaptionClass}>
-                    {toAllCapsNoAccents(tEn.pleaseRespondBy(rsvpDeadline))}
+                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadline))}
                   </p>
                 </div>
               )}
@@ -209,7 +267,7 @@ export default function RSVPSection({
                     className="mb-8 w-full whitespace-normal px-4 text-center text-[14px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px] [font-family:var(--font-source-serif)]"
                     style={{ fontStretch: "condensed" }}
                   >
-                    {tEl.pleaseRespondBy(rsvpDeadline)}
+                    {copy.pleaseRespondBy(rsvpDeadline)}
                   </p>
                 ) : null}
                 <SolidSilkButton
@@ -217,7 +275,7 @@ export default function RSVPSection({
                   onClick={() => handleChooseResponse("yes")}
                   wrapperClassName="h-[52px] w-full max-w-[360px]"
                 >
-                  {toAllCapsNoAccents(language === "el" ? tEl.confirm : tEn.confirm)}
+                  {toAllCapsNoAccents(copy.confirm)}
                 </SolidSilkButton>
 
                 <OutlineSilkButton
@@ -226,14 +284,14 @@ export default function RSVPSection({
                   wrapperClassName="h-[52px] w-full max-w-[360px]"
                   buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
                 >
-                  {toAllCapsNoAccents(language === "el" ? tEl.unable : tEn.unable)}
+                  {toAllCapsNoAccents(copy.unable)}
                 </OutlineSilkButton>
               </div>
             </>
           ) : response === "yes" && yesStep === "details" ? (
             <div className="mx-auto w-[360px] max-w-full text-left">
               <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">
-                ALMOST THERE
+                {toAllCapsNoAccents(copy.almostThere)}
               </p>
               <h3
                 className="mt-6 font-serif text-[40px] font-normal leading-[0.95] tracking-[0.01em] text-[#FCFCF6]"
@@ -241,17 +299,15 @@ export default function RSVPSection({
                   fontFamily: "var(--font-heading)",
                 }}
               >
-                How many guests will attend?
+                {copy.howManyGuests}
               </h3>
-              <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">
-                Include everyone in your party, including yourself.
-              </p>
+              <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">{copy.includeEveryoneInParty}</p>
 
               <label
                 htmlFor="rsvp-guest-count"
                 className="mt-8 block text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FCFCF6]/70"
               >
-                Number of guests
+                {toAllCapsNoAccents(copy.numberOfGuests)}
               </label>
               <input
                 id="rsvp-guest-count"
@@ -273,13 +329,13 @@ export default function RSVPSection({
                 htmlFor="rsvp-notes-yes"
                 className="mt-6 block text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FCFCF6]/70"
               >
-                Message for the hosts (optional)
+                {toAllCapsNoAccents(copy.messageHostsOptional)}
               </label>
               <textarea
                 id="rsvp-notes-yes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add a note for the couple..."
+                placeholder={copy.notePlaceholder}
                 rows={4}
                 className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55"
               />
@@ -294,46 +350,46 @@ export default function RSVPSection({
                 disabled={isSaving}
                 wrapperClassName="mt-6 h-[46px] w-[220px] max-w-full"
               >
-                {isSaving ? "Saving…" : "Submit response"}
+                {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}
               </SolidSilkButton>
             </div>
           ) : response === "yes" && yesStep === "thankyou" ? (
             <div className="mx-auto w-[360px] max-w-full text-center">
               <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
-                Thank you for your response
+                {toAllCapsNoAccents(copy.thankYouForResponse)}
               </p>
               <p
                 className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                We look forward to seeing you
+                {copy.lookForwardSeeingYou}
               </p>
               <p className="mt-6 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
-                Your response has been sent to the host.
+                {copy.responseSentToHost}
               </p>
             </div>
           ) : (
             <div className="mx-auto w-[360px] max-w-full text-center">
               <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
-                Thank you for your response
+                {toAllCapsNoAccents(copy.thankYouForResponse)}
               </p>
               <p
                 className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                We are going to miss you
+                {copy.willMissYou}
               </p>
               <label
                 htmlFor="rsvp-notes"
                 className="mt-4 block text-left text-[11px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/65"
               >
-                Write the host a message (optional)
+                {toAllCapsNoAccents(copy.writeHostMessageOptional)}
               </label>
               <textarea
                 id="rsvp-notes"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Add a note for the couple..."
+                placeholder={copy.notePlaceholder}
                 rows={4}
                 disabled={submitted || isSaving}
                 className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-left text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55 disabled:opacity-60"
@@ -346,7 +402,7 @@ export default function RSVPSection({
               {submitted ? (
                 <>
                   <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
-                    Your response has been sent to the host.
+                    {copy.responseSentToHost}
                   </p>
                 </>
               ) : (
@@ -356,7 +412,7 @@ export default function RSVPSection({
                   disabled={isSaving}
                   wrapperClassName="mt-4 h-[46px] w-[220px] max-w-full"
                 >
-                  {isSaving ? "Saving…" : "Submit response"}
+                  {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}
                 </SolidSilkButton>
               )}
             </div>

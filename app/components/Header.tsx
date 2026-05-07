@@ -47,10 +47,10 @@ export default function Header({ coupleNames, eventDate, location }: HeaderProps
 
             <div className="flex w-full items-center justify-between pb-4">
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#181818]/80">
-                {eventDate}
+                {toAllCapsNoAccents(eventDate)}
               </p>
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#181818]/80">
-                {location}
+                {toAllCapsNoAccents(location)}
               </p>
             </div>
           </div>

@@ -165,7 +165,7 @@ export default function InvitationHeroBody({
         <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-2">
           <div className="h-px w-full bg-[#FAF6F2]/12" />
           <div className={`mt-5 flex w-full items-center justify-between gap-6 ${inviteHeroTopBarClass}`}>
-            <span className="min-w-0 text-left">{eventDateLabel}</span>
+            <span className="min-w-0 text-left">{toAllCapsNoAccents(eventDateLabel)}</span>
             <span className="min-w-0 text-right">{toAllCapsNoAccents(venueLabel)}</span>
           </div>
         </div>

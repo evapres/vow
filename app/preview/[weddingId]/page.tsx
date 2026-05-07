@@ -95,7 +95,7 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
             >
               <div className="mx-auto max-w-md">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">
-                  {language === "el" ? "ΠΡΟΕΠΙΣΚΟΠΗΣΗ" : "Preview"}
+                  {language === "el" ? toAllCapsNoAccents("Προεπισκόπηση") : toAllCapsNoAccents("Preview")}
                 </p>
                 <p
                   className="mt-6 text-[40px] font-normal leading-[0.95] tracking-[0.01em] text-[#FCFCF6] sm:text-[48px]"

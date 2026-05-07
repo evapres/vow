@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { toAllCapsNoAccents } from "@/lib/invitationDisplay";
+
 type HeroSplitProps = {
   kicker: string;
   title: string;
@@ -55,7 +57,7 @@ export default function HeroSplit({
             <span aria-hidden="true" className="text-base leading-none text-[#FCFCF6]/70">
               ↓
             </span>
-            Kindly Respond Below
+            {toAllCapsNoAccents("Kindly Respond Below")}
           </a>
         </div>
       </div>

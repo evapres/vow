@@ -7,20 +7,22 @@ export function formatHeaderDateLabel(
 ): string {
   if (!input) return "";
   const d = new Date(input);
-  if (Number.isNaN(d.getTime())) return String(input).toUpperCase();
+  if (Number.isNaN(d.getTime())) return toAllCapsNoAccents(String(input));
   const locale = language === "el" ? "el-GR" : "en-GB";
   const formatted = new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(d);
-  return language === "el" ? toAllCapsNoAccents(formatted) : formatted.toUpperCase();
+  // Strip combining marks before uppercase so CSS uppercase never leaves stray accents.
+  return toAllCapsNoAccents(formatted);
 }
 
+/** Uppercase display helper: remove all Unicode combining marks (accents), then uppercase. */
 export function toAllCapsNoAccents(value: string | null | undefined) {
   return (value ?? "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\p{M}+/gu, "")
     .toUpperCase();
 }
 
