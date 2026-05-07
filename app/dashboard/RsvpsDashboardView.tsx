@@ -223,9 +223,10 @@ export default function RsvpsDashboardView({
                               <input type="hidden" name="household_id" value={row.householdId} />
                               <button
                                 type="submit"
+                                title={row.emailSentAt ? "Send the invitation email again" : undefined}
                                 className="inline-flex h-9 w-full items-center justify-center border border-[#1A1A1A]/30 bg-transparent px-4 text-sm font-medium text-[#1A1A1A] transition-colors hover:border-[#1A1A1A]/50 hover:bg-[#1A1A1A]/[0.03]"
                               >
-                                Send invitation
+                                {row.emailSentAt ? "Invitation sent" : "Send invitation"}
                               </button>
                             </form>
                           ) : (

@@ -4,8 +4,28 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/server";
 import { sendInvitationEmail } from "@/lib/email/sendInvitationEmail";
+
+function getServiceRoleClientOrNull() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  if (!url?.trim() || !serviceKey.trim()) return null;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
+ * After auth + ownership checks via the user JWT client, writes should use this when
+ * `SUPABASE_SERVICE_ROLE_KEY` is set so household/rsvp mutations aren't blocked by RLS.
+ */
+function dbAfterAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
+  return getServiceRoleClientOrNull() ?? supabase;
+}
 
 /** Inserts a row into `households` for the wedding the current user owns. */
 export async function createHousehold(formData: FormData) {
@@ -124,7 +144,8 @@ export async function updateHousehold(formData: FormData) {
     );
   }
 
-  const { error: updateError } = await supabase
+  const mutate = dbAfterAuth(supabase);
+  const { error: updateError } = await mutate
     .from("households")
     .update({ household_name: householdName, email })
     .eq("id", householdId)
@@ -174,13 +195,14 @@ export async function deleteHousehold(formData: FormData) {
     );
   }
 
-  // Delete RSVPs first to avoid FK violations (if any).
-  const { error: rsvpsError } = await supabase.from("rsvps").delete().eq("household_id", householdId);
+  const mutate = dbAfterAuth(supabase);
+
+  const { error: rsvpsError } = await mutate.from("rsvps").delete().eq("household_id", householdId);
   if (rsvpsError) {
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(rsvpsError.message));
   }
 
-  const { error: deleteError } = await supabase
+  const { error: deleteError } = await mutate
     .from("households")
     .delete()
     .eq("id", householdId)
@@ -281,7 +303,8 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
   }
 
   const sentAt = new Date().toISOString();
-  const { error: updateError } = await supabase
+  const mutate = dbAfterAuth(supabase);
+  const { error: updateError } = await mutate
     .from("households")
     .update({ email_sent_at: sentAt })
     .eq("id", householdId)
