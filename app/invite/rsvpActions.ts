@@ -25,40 +25,47 @@ function getServiceRoleClient() {
   });
 }
 
-export async function submitRsvp(input: SubmitRsvpInput): Promise<void> {
-  const householdId = input.householdId.trim();
-  const response = input.response;
-  const notes = input.notes.trim();
+export type SubmitRsvpResult = { ok: true } | { ok: false; error: string };
 
-  if (!householdId) throw new Error("householdId is required");
-  if (response !== "yes" && response !== "no") throw new Error("response must be yes|no");
+export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResult> {
+  try {
+    const householdId = input.householdId.trim();
+    const response = input.response;
+    const notes = input.notes.trim();
 
-  const supabase = getServiceRoleClient();
+    if (!householdId) return { ok: false, error: "householdId is required" };
+    if (response !== "yes" && response !== "no") return { ok: false, error: "response must be yes|no" };
 
-  const { data: household, error: householdError } = await supabase
-    .from("households")
-    .select("id, wedding_id")
-    .eq("id", householdId)
-    .single();
+    const supabase = getServiceRoleClient();
 
-  if (householdError || !household) {
-    throw new Error(householdError?.message ?? "Household not found.");
+    const { data: household, error: householdError } = await supabase
+      .from("households")
+      .select("id, wedding_id")
+      .eq("id", householdId)
+      .single();
+
+    if (householdError || !household) {
+      return { ok: false, error: householdError?.message ?? "Household not found." };
+    }
+
+    const { error: rsvpError } = await supabase.from("rsvps").upsert(
+      {
+        household_id: household.id,
+        wedding_id: household.wedding_id,
+        attending: response === "yes",
+        notes,
+      },
+      { onConflict: "household_id,wedding_id" },
+    );
+
+    if (rsvpError) {
+      return { ok: false, error: rsvpError.message };
+    }
+
+    revalidatePath(`/dashboard/${household.wedding_id}`);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed to save RSVP." };
   }
-
-  const { error: rsvpError } = await supabase.from("rsvps").upsert(
-    {
-      household_id: household.id,
-      wedding_id: household.wedding_id,
-      attending: response === "yes",
-      notes,
-    },
-    { onConflict: "household_id,wedding_id" },
-  );
-
-  if (rsvpError) {
-    throw new Error(rsvpError.message);
-  }
-
-  revalidatePath(`/dashboard/${household.wedding_id}`);
 }
 

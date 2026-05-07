@@ -47,7 +47,11 @@ export default function RSVPSection({
     const notes = payload.notes.trim();
 
     try {
-      await submitRsvp({ householdId, response, notes });
+      const res = await submitRsvp({ householdId, response, notes });
+      if (!res.ok) {
+        setSubmitError(res.error);
+        return false;
+      }
       return true;
     } catch (e) {
       console.error("Error saving RSVP:", e);
