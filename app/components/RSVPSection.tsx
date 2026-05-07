@@ -66,7 +66,7 @@ export default function RSVPSection({
         attending: response === "yes",
         notes,
       },
-      { onConflict: "household_id" },
+      { onConflict: "household_id,wedding_id" },
     );
 
     setIsSaving(false);
