@@ -44,42 +44,54 @@ function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
 export async function getDashboardHouseholdRows(weddingId: string): Promise<DashboardHouseholdRow[]> {
   const supabase = await createClient();
 
-  const [householdsResult, rsvpsResult] = await Promise.all([
-    supabase
-      .from("households")
-      .select("id, household_name, invite_token, email, email_sent_at")
-      .eq("wedding_id", weddingId)
-      .order("household_name", { ascending: true }),
-    supabase
-      .from("rsvps")
-      .select("household_id, attending, notes")
-      .eq("wedding_id", weddingId)
-      .order("id", { ascending: false }),
-  ]);
+  const householdsResult = await supabase
+    .from("households")
+    .select("id, household_name, invite_token, email, email_sent_at")
+    .eq("wedding_id", weddingId)
+    .order("household_name", { ascending: true });
 
   if (householdsResult.error) {
     console.error("Household fetch error:", householdsResult.error.message);
     return [];
   }
 
-  if (rsvpsResult.error) {
-    console.error("RSVP fetch error:", rsvpsResult.error.message);
-    return [];
-  }
-
   const householdRows = (householdsResult.data ?? []) as HouseholdRow[];
-  const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
+  const householdIds = householdRows.map((h) => String(h.id));
 
-  /** Newest RSVP per household (query ordered by `id` descending; keep first seen). */
   const rsvpByHouseholdId = new Map<string, RsvpRow>();
-  for (const r of rsvpRows) {
-    if (r.household_id && !rsvpByHouseholdId.has(r.household_id)) {
-      rsvpByHouseholdId.set(r.household_id, r);
+  if (householdIds.length > 0) {
+    const rsvpsResult = await supabase
+      .from("rsvps")
+      .select("household_id, attending, notes")
+      .eq("wedding_id", weddingId)
+      .in("household_id", householdIds);
+
+    if (rsvpsResult.error) {
+      console.error("RSVP fetch error:", rsvpsResult.error.message);
+      // Still return households so the dashboard remains usable.
+      return householdRows.map((row) => ({
+        householdId: row.id,
+        householdName: row.household_name ?? "Unnamed household",
+        email: row.email ?? null,
+        inviteToken: row.invite_token ?? null,
+        emailSentAt: row.email_sent_at ?? null,
+        status: "pending",
+        rsvpNote: null,
+        attendingCount: null,
+        submittedAt: null,
+      }));
+    }
+
+    const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
+    // If multiple rows exist per household, last row wins.
+    for (const r of rsvpRows) {
+      const key = String(r.household_id);
+      if (key) rsvpByHouseholdId.set(key, r);
     }
   }
 
   return householdRows.map((row) => {
-    const rsvp = rsvpByHouseholdId.get(row.id);
+    const rsvp = rsvpByHouseholdId.get(String(row.id));
     return {
       householdId: row.id,
       householdName: row.household_name ?? "Unnamed household",
