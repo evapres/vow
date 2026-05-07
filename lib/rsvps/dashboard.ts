@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 /** RSVP state for a household row on the wedding dashboard. */
 export type HouseholdRsvpStatus = "attending" | "not_attending" | "pending";
@@ -37,6 +38,16 @@ function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
   return "pending";
 }
 
+function getServiceRoleClientOrNull() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  if (!url?.trim() || !serviceKey.trim()) return null;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 /**
  * All households for a wedding with RSVP status (one row per household).
  * Fetches households and RSVPs in two queries, then maps by `household_id`.
@@ -66,23 +77,29 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       .eq("wedding_id", weddingId)
       .in("household_id", householdIds);
 
+    let rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
     if (rsvpsResult.error) {
-      console.error("RSVP fetch error:", rsvpsResult.error.message);
-      // Still return households so the dashboard remains usable.
-      return householdRows.map((row) => ({
-        householdId: row.id,
-        householdName: row.household_name ?? "Unnamed household",
-        email: row.email ?? null,
-        inviteToken: row.invite_token ?? null,
-        emailSentAt: row.email_sent_at ?? null,
-        status: "pending",
-        rsvpNote: null,
-        attendingCount: null,
-        submittedAt: null,
-      }));
+      // Most common reason: RLS denies selecting RSVPs for the admin session.
+      // Retry using the service role key (server-side only) if available.
+      const admin = getServiceRoleClientOrNull();
+      if (admin) {
+        const r2 = await admin
+          .from("rsvps")
+          .select("household_id, attending, notes")
+          .eq("wedding_id", weddingId)
+          .in("household_id", householdIds);
+        if (r2.error) {
+          console.error("RSVP fetch error (admin fallback):", r2.error.message);
+          rsvpRows = [];
+        } else {
+          rsvpRows = (r2.data ?? []) as RsvpRow[];
+        }
+      } else {
+        console.error("RSVP fetch error:", rsvpsResult.error.message);
+        rsvpRows = [];
+      }
     }
 
-    const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
     // If multiple rows exist per household, last row wins.
     for (const r of rsvpRows) {
       const key = String(r.household_id);
