@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
 import OutlineSilkButton from "./OutlineSilkButton";
 import SolidSilkButton from "./SolidSilkButton";
 import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
@@ -10,7 +9,7 @@ import {
   toAllCapsNoAccents,
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
-import { revalidateWeddingDashboard } from "@/app/invite/revalidateDashboard";
+import { submitRsvp } from "@/app/invite/rsvpActions";
 
 type RSVPSectionProps = {
   rsvpDeadline: string;
@@ -44,42 +43,19 @@ export default function RSVPSection({
     setIsSaving(true);
     setSubmitError(null);
 
-    const { data: household, error: householdError } = await supabase
-      .from("households")
-      .select("id, wedding_id")
-      .eq("id", householdId)
-      .single();
-
-    if (householdError || !household) {
-      setIsSaving(false);
-      setSubmitError(householdError?.message ?? "Household not found.");
-      return false;
-    }
-
     const response = payload.response;
     const notes = payload.notes.trim();
 
-    const { error } = await supabase.from("rsvps").upsert(
-      {
-        household_id: household.id,
-        wedding_id: household.wedding_id,
-        attending: response === "yes",
-        notes,
-      },
-      { onConflict: "household_id,wedding_id" },
-    );
-
-    setIsSaving(false);
-
-    if (error) {
-      console.error("Error saving RSVP:", error);
-      setSubmitError(error.message);
+    try {
+      await submitRsvp({ householdId, response, notes });
+      return true;
+    } catch (e) {
+      console.error("Error saving RSVP:", e);
+      setSubmitError(e instanceof Error ? e.message : "Failed to save RSVP.");
       return false;
+    } finally {
+      setIsSaving(false);
     }
-
-    await revalidateWeddingDashboard(household.wedding_id);
-
-    return true;
   };
 
   const handleChooseResponse = (value: "yes" | "no") => {
