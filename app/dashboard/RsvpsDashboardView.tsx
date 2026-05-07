@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
 import { deleteHousehold, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
+import RsvpRealtimeRefresh from "./RsvpRealtimeRefresh";
 import type { DashboardHouseholdRow, HouseholdRsvpStatus } from "../../lib/rsvps/dashboard";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
@@ -57,6 +58,7 @@ export default function RsvpsDashboardView({
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1 py-10">
+        <RsvpRealtimeRefresh weddingId={weddingId} />
         <div className="mb-6 flex items-center justify-end">
           <AdminBurgerMenu weddingId={weddingId} />
         </div>

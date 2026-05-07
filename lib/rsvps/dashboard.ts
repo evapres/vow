@@ -71,34 +71,31 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
 
   const rsvpByHouseholdId = new Map<string, RsvpRow>();
   if (householdIds.length > 0) {
-    const rsvpsResult = await supabase
+    // Prefer service-role reads when available to avoid admin-session RLS returning empty sets.
+    const rsvpClient = getServiceRoleClientOrNull() ?? supabase;
+    const rsvpsResult = await rsvpClient
       .from("rsvps")
       .select("household_id, attending, notes")
       .eq("wedding_id", weddingId)
       .in("household_id", householdIds);
 
-    let rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
     if (rsvpsResult.error) {
-      // Most common reason: RLS denies selecting RSVPs for the admin session.
-      // Retry using the service role key (server-side only) if available.
-      const admin = getServiceRoleClientOrNull();
-      if (admin) {
-        const r2 = await admin
-          .from("rsvps")
-          .select("household_id, attending, notes")
-          .eq("wedding_id", weddingId)
-          .in("household_id", householdIds);
-        if (r2.error) {
-          console.error("RSVP fetch error (admin fallback):", r2.error.message);
-          rsvpRows = [];
-        } else {
-          rsvpRows = (r2.data ?? []) as RsvpRow[];
-        }
-      } else {
-        console.error("RSVP fetch error:", rsvpsResult.error.message);
-        rsvpRows = [];
-      }
+      console.error("RSVP fetch error:", rsvpsResult.error.message);
+      // Still return households so the dashboard remains usable.
+      return householdRows.map((row) => ({
+        householdId: row.id,
+        householdName: row.household_name ?? "Unnamed household",
+        email: row.email ?? null,
+        inviteToken: row.invite_token ?? null,
+        emailSentAt: row.email_sent_at ?? null,
+        status: "pending",
+        rsvpNote: null,
+        attendingCount: null,
+        submittedAt: null,
+      }));
     }
+
+    const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
 
     // If multiple rows exist per household, last row wins.
     for (const r of rsvpRows) {
