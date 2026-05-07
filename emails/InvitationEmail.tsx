@@ -156,7 +156,7 @@ function defaultMapUrl(venueName: string, venueAddress: string): string {
 
 export default function InvitationEmail({
   householdName,
-  coupleNames = "Nestor & Evangelia",
+  coupleNames = "Couple",
   backgroundImageAbsoluteUrl,
   heroImageAbsoluteUrl,
   weddingDate = "Saturday, June 14",

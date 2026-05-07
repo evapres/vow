@@ -258,7 +258,7 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
 
   const { data: household, error: householdError } = await supabase
     .from("households")
-    .select("id, email, invite_token")
+    .select("id, email, invite_token, household_name")
     .eq("id", householdId)
     .eq("wedding_id", weddingId)
     .maybeSingle();
@@ -292,6 +292,7 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
   try {
     await sendInvitationEmail({
       to: email,
+      householdName: household.household_name,
       coupleNames: (wedding.couple_names ?? "").trim() || "Couple",
       weddingDate: wedding.wedding_date ?? undefined,
       location: wedding.location?.trim() || undefined,

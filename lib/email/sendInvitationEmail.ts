@@ -6,6 +6,8 @@ import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
 
 export type SendInvitationEmailProps = {
   to: string;
+  /** Guest household label — shown after “For:”. */
+  householdName?: string | null;
   coupleNames: string;
   weddingDate?: string;
   location?: string;
@@ -53,6 +55,7 @@ function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps 
   const backgroundImageAbsoluteUrl = origin ? `${origin}/email-fabric-background.png` : undefined;
 
   return {
+    householdName: input.householdName?.trim() || undefined,
     coupleNames: names,
     inviteUrl,
     backgroundImageAbsoluteUrl,
