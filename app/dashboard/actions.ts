@@ -33,6 +33,11 @@ export async function createHousehold(formData: FormData) {
   const householdName = String(formData.get("household_name") ?? "").trim();
   const emailRaw = String(formData.get("email") ?? "").trim();
   const email = emailRaw.length > 0 ? emailRaw : null;
+  const invitedCountRaw = String(formData.get("invited_count") ?? "").trim();
+  const invited_count =
+    invitedCountRaw.length > 0 && Number.isFinite(Number(invitedCountRaw))
+      ? Math.max(1, Math.floor(Number(invitedCountRaw)))
+      : null;
   const inviteTokenInput = String(formData.get("invite_token") ?? "").trim();
 
   if (!weddingId || !householdName) {
@@ -71,6 +76,7 @@ export async function createHousehold(formData: FormData) {
     wedding_id: weddingId,
     household_name: householdName,
     email,
+    invited_count,
     invite_token,
   });
 
@@ -96,6 +102,11 @@ export async function updateHousehold(formData: FormData) {
   const householdId = String(formData.get("household_id") ?? "").trim();
   const householdName = String(formData.get("household_name") ?? "").trim();
   const email = optionalText(formData.get("email"));
+  const invitedCountRaw = String(formData.get("invited_count") ?? "").trim();
+  const invited_count =
+    invitedCountRaw.length > 0 && Number.isFinite(Number(invitedCountRaw))
+      ? Math.max(1, Math.floor(Number(invitedCountRaw)))
+      : null;
 
   if (!weddingId || !householdId || !householdName) {
     redirect(
@@ -147,7 +158,7 @@ export async function updateHousehold(formData: FormData) {
   const mutate = dbAfterAuth(supabase);
   const { error: updateError } = await mutate
     .from("households")
-    .update({ household_name: householdName, email })
+    .update({ household_name: householdName, email, invited_count })
     .eq("id", householdId)
     .eq("wedding_id", weddingId);
 

@@ -8,6 +8,7 @@ type SubmitRsvpInput = {
   householdId: string;
   response: "yes" | "no";
   notes: string;
+  attendingCount?: number | null;
 };
 
 function getServiceRoleClient() {
@@ -32,9 +33,14 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
     const householdId = input.householdId.trim();
     const response = input.response;
     const notes = input.notes.trim();
+    const attendingCountRaw = input.attendingCount;
 
     if (!householdId) return { ok: false, error: "householdId is required" };
     if (response !== "yes" && response !== "no") return { ok: false, error: "response must be yes|no" };
+    if (response === "yes") {
+      const n = attendingCountRaw == null ? NaN : Number(attendingCountRaw);
+      if (!Number.isFinite(n) || n < 1) return { ok: false, error: "attendingCount must be >= 1" };
+    }
 
     const supabase = getServiceRoleClient();
 
@@ -65,6 +71,7 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
         wedding_id: household.wedding_id,
         attending: response === "yes",
         notes,
+        attending_count: response === "yes" ? Math.floor(Number(attendingCountRaw)) : null,
       },
       { onConflict: "household_id,wedding_id" },
     );

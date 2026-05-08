@@ -44,7 +44,7 @@ export default function HeroSplit({
 
         <div className="flex min-w-0 flex-1 flex-col justify-center px-[var(--invite-gutter,12px)] py-14 text-[#FCFCF6] lg:py-16 lg:pl-0 lg:pr-[var(--invite-gutter,12px)]">
           <p
-            className="max-w-xl text-[54px] leading-[1.12] text-[#FCFCF6]/90"
+            className="max-w-xl text-[40px] leading-[1.12] text-[#FCFCF6]/90 sm:text-[54px]"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {`${kicker} ${title} ${subtitle}`}

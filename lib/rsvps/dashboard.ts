@@ -10,6 +10,7 @@ export type DashboardHouseholdRow = {
   email: string | null;
   inviteToken: string | null;
   emailSentAt: string | null;
+  invitedCount: number | null;
   status: HouseholdRsvpStatus;
   /** Raw note from `rsvps.notes` when an RSVP exists; otherwise null. */
   rsvpNote: string | null;
@@ -23,12 +24,14 @@ type HouseholdRow = {
   invite_token: string | null;
   email: string | null;
   email_sent_at: string | null;
+  invited_count: number | null;
 };
 
 type RsvpRow = {
   household_id: string;
   attending: boolean;
   notes: string | null;
+  attending_count: number | null;
 };
 
 function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
@@ -57,7 +60,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
 
   const householdsResult = await supabase
     .from("households")
-    .select("id, household_name, invite_token, email, email_sent_at")
+    .select("id, household_name, invite_token, email, email_sent_at, invited_count")
     .eq("wedding_id", weddingId)
     .order("household_name", { ascending: true });
 
@@ -75,7 +78,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
     const rsvpClient = getServiceRoleClientOrNull() ?? supabase;
     const rsvpsResult = await rsvpClient
       .from("rsvps")
-      .select("household_id, attending, notes")
+      .select("household_id, attending, notes, attending_count")
       .eq("wedding_id", weddingId)
       .in("household_id", householdIds);
 
@@ -88,6 +91,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
         email: row.email ?? null,
         inviteToken: row.invite_token ?? null,
         emailSentAt: row.email_sent_at ?? null,
+        invitedCount: row.invited_count ?? null,
         status: "pending",
         rsvpNote: null,
         attendingCount: null,
@@ -112,9 +116,10 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       email: row.email ?? null,
       inviteToken: row.invite_token ?? null,
       emailSentAt: row.email_sent_at ?? null,
+      invitedCount: row.invited_count ?? null,
       status: statusFromRsvp(rsvp),
       rsvpNote: rsvp?.notes ?? null,
-      attendingCount: null,
+      attendingCount: rsvp?.attending_count ?? null,
       submittedAt: null,
     };
   });

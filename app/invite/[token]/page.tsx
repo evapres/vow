@@ -69,6 +69,7 @@ export default async function Page({ params }: PageProps) {
             householdName={household.household_name}
             language={language}
             rsvpAlreadyRecorded={rsvpAlreadyRecorded}
+            invitedCount={household.invited_count ?? null}
           />
         </main>
       </div>

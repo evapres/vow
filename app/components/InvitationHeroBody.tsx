@@ -25,11 +25,11 @@ const polaroidTiltStyle: CSSProperties = {
 
 /** Hero names block: 48px / 56px / 1px tracking. */
 const heroNamesClass =
-  "font-serif text-[54px] font-normal leading-[64px] tracking-[1px]";
+  "font-serif text-[40px] font-normal leading-[48px] tracking-[1px] sm:text-[54px] sm:leading-[64px]";
 
 /** Invitation hero body copy — 32px light; pair with {@link heroNamesClass} for names. */
 const heroInviteLightClass =
-  "text-[32px] font-light leading-[48px] tracking-normal";
+  "text-[22px] font-light leading-[32px] tracking-normal sm:text-[32px] sm:leading-[48px]";
 
 /** Top meta bar (date + venue): Noto Serif Display 18px with 2px tracking. */
 const inviteHeroTopBarClass =
@@ -151,12 +151,12 @@ export default function InvitationHeroBody({
           >
             {topMonogram ? (
               <>
-                <span className="text-[48px] leading-none sm:text-[64px]">{topMonogram.left}</span>
+                <span className="text-[40px] leading-none sm:text-[64px]">{topMonogram.left}</span>
                 <span className="text-[24px] leading-none sm:text-[32px]">&</span>
-                <span className="text-[48px] leading-none sm:text-[64px]">{topMonogram.right}</span>
+                <span className="text-[40px] leading-none sm:text-[64px]">{topMonogram.right}</span>
               </>
             ) : (
-              <span className="text-[48px] leading-none sm:text-[64px]">{coupleNames}</span>
+              <span className="text-[40px] leading-none sm:text-[64px]">{coupleNames}</span>
             )}
           </p>
         </div>

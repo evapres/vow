@@ -74,6 +74,27 @@ export default function AddGuestForm({ weddingId }: AddGuestFormProps) {
 
         <div>
           <label
+            htmlFor="invited_count"
+            className="block text-[11px] font-medium uppercase tracking-[0.12em] text-[#1A1A1A]/70"
+          >
+            Invited guests
+          </label>
+          <p className="mt-1 text-[11px] text-[#1A1A1A]/55">
+            How many people are invited in this household (including the primary guest).
+          </p>
+          <input
+            id="invited_count"
+            name="invited_count"
+            type="number"
+            min={1}
+            defaultValue={1}
+            inputMode="numeric"
+            className="mt-2 w-full border border-[#1A1A1A]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#1A1A1A]/45"
+          />
+        </div>
+
+        <div>
+          <label
             htmlFor="invite_token"
             className="block text-[11px] font-medium uppercase tracking-[0.12em] text-[#1A1A1A]/70"
           >

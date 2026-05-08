@@ -88,6 +88,8 @@ type RSVPSectionProps = {
   language?: InvitationLanguage;
   /** When true (invite URL), hides RSVP buttons — guest has already responded. */
   rsvpAlreadyRecorded?: boolean;
+  /** How many people are invited in this household/party. */
+  invitedCount?: number | null;
 };
 
 export default function RSVPSection({
@@ -97,10 +99,15 @@ export default function RSVPSection({
   householdName,
   language = "en",
   rsvpAlreadyRecorded = false,
+  invitedCount = null,
 }: RSVPSectionProps) {
   const [response, setResponse] = useState<"yes" | "no" | null>(null);
   const [yesStep, setYesStep] = useState<"details" | "thankyou">("details");
-  const [attendingCountInput, setAttendingCountInput] = useState("1");
+  const initialInvitedCount = Math.max(
+    1,
+    Number.isFinite(Number(invitedCount)) ? Math.floor(Number(invitedCount)) : 1,
+  );
+  const [attendingCountInput, setAttendingCountInput] = useState(String(initialInvitedCount));
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [guestCountError, setGuestCountError] = useState<string | null>(null);
@@ -121,7 +128,12 @@ export default function RSVPSection({
     const notes = payload.notes.trim();
 
     try {
-      const res = await submitRsvp({ householdId, response, notes });
+      const res = await submitRsvp({
+        householdId,
+        response,
+        notes,
+        attendingCount: payload.attendingCount,
+      });
       if (!res.ok) {
         setSubmitError(res.error);
         return false;
@@ -144,7 +156,7 @@ export default function RSVPSection({
 
     if (value === "yes") {
       setYesStep("details");
-      setAttendingCountInput("1");
+      setAttendingCountInput(String(initialInvitedCount));
       setNotes("");
     }
   };
@@ -154,6 +166,14 @@ export default function RSVPSection({
 
     if (!Number.isFinite(parsed) || parsed < 1) {
       setGuestCountError(copy.guestMinError);
+      return;
+    }
+    if (invitedCount != null && parsed > initialInvitedCount) {
+      setGuestCountError(
+        language === "el"
+          ? `Παρακαλούμε εισάγετε έως ${initialInvitedCount} άτομα.`
+          : `Please enter up to ${initialInvitedCount} guests.`,
+      );
       return;
     }
 
@@ -202,7 +222,7 @@ export default function RSVPSection({
               {language === "el" ? (
                 <div className="flex flex-col items-center gap-6">
                   <h3
-                    className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+                    className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -217,7 +237,7 @@ export default function RSVPSection({
               ) : (
                 <div className="flex flex-col gap-[16px]">
                   <h3
-                    className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+                    className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -232,7 +252,7 @@ export default function RSVPSection({
               {language === "el" ? (
                 <div className="flex flex-col items-center gap-8">
                   <h3
-                    className="text-[32px] font-normal leading-[40px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+                    className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -241,7 +261,7 @@ export default function RSVPSection({
               ) : (
                 <div className="flex flex-col gap-[16px]">
                   <h3
-                    className="mb-2 text-[32px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+                    className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -286,13 +306,20 @@ export default function RSVPSection({
                 {toAllCapsNoAccents(copy.almostThere)}
               </p>
               <h3
-                className="mt-6 font-serif text-[40px] font-normal leading-[0.95] tracking-[0.01em] text-[#FCFCF6]"
+                className="mt-6 font-serif text-[34px] font-normal leading-[0.98] tracking-[0.01em] text-[#FCFCF6] sm:text-[40px]"
                 style={{
                   fontFamily: "var(--font-heading)",
                 }}
               >
                 {copy.howManyGuests}
               </h3>
+              {invitedCount != null ? (
+                <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">
+                  {language === "el"
+                    ? `Έχετε προσκληθεί για ${initialInvitedCount} άτομα.`
+                    : `You are invited for ${initialInvitedCount} guests.`}
+                </p>
+              ) : null}
               <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">{copy.includeEveryoneInParty}</p>
 
               <label
@@ -306,6 +333,7 @@ export default function RSVPSection({
                 type="number"
                 inputMode="numeric"
                 min={1}
+                max={invitedCount != null ? initialInvitedCount : undefined}
                 value={attendingCountInput}
                 onChange={(e) => {
                   setAttendingCountInput(e.target.value);
@@ -351,7 +379,7 @@ export default function RSVPSection({
                 {toAllCapsNoAccents(copy.thankYouForResponse)}
               </p>
               <p
-                className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
+                className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {copy.lookForwardSeeingYou}
@@ -366,7 +394,7 @@ export default function RSVPSection({
                 {toAllCapsNoAccents(copy.thankYouForResponse)}
               </p>
               <p
-                className="mt-4 text-[40px] font-normal leading-[0.95] text-[#FCFCF6] sm:text-[48px]"
+                className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {copy.willMissYou}

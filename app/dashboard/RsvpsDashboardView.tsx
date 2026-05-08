@@ -166,6 +166,9 @@ export default function RsvpsDashboardView({
                         <div className="space-y-1">
                           <p>{row.householdName}</p>
                           {row.email ? <p className="text-xs font-normal text-[#1A1A1A]/60">{row.email}</p> : null}
+                          {row.invitedCount ? (
+                            <p className="text-xs font-normal text-[#1A1A1A]/55">Invited: {row.invitedCount}</p>
+                          ) : null}
                           {row.inviteToken ? (
                             <p className="break-all font-mono text-[11px] font-normal text-[#1A1A1A]/55">
                               {inviteBaseUrl ? `${inviteBaseUrl}/invite/${row.inviteToken}` : `/invite/${row.inviteToken}`}
@@ -204,6 +207,19 @@ export default function RsvpsDashboardView({
                                     type="email"
                                     defaultValue={row.email ?? ""}
                                     placeholder="guest@example.com"
+                                    className="mt-2 w-full border border-[#1A1A1A]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#1A1A1A]/45"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-medium uppercase tracking-[0.12em] text-[#1A1A1A]/70">
+                                    Invited guests
+                                  </label>
+                                  <input
+                                    name="invited_count"
+                                    type="number"
+                                    min={1}
+                                    inputMode="numeric"
+                                    defaultValue={row.invitedCount ?? 1}
                                     className="mt-2 w-full border border-[#1A1A1A]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#1A1A1A]/45"
                                   />
                                 </div>
