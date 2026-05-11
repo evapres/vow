@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
+import { generateEnvelopeInviteCardDataUrl } from "@/lib/email/generateEnvelopeInviteCard";
 import { formatDetailsDateTime } from "@/lib/invitationDisplay";
 import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
 
@@ -9,6 +10,7 @@ export type SendInvitationEmailProps = {
   /** Guest household label — shown after “For:”. */
   householdName?: string | null;
   coupleNames: string;
+  /** Saved `weddings.wedding_date` (ISO string) for the envelope card date overlay. */
   weddingDate?: string;
   location?: string;
   inviteUrl: string;
@@ -32,7 +34,7 @@ function siteOriginFromInviteUrl(inviteUrl: string): string {
   }
 }
 
-function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps {
+async function buildEmailProps(input: SendInvitationEmailProps): Promise<InvitationEmailProps> {
   const names = input.coupleNames.trim() || "Couple";
   const inviteUrl = input.inviteUrl.trim();
   const loc = input.location?.trim();
@@ -53,12 +55,19 @@ function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps 
 
   const origin = siteOriginFromInviteUrl(inviteUrl);
   const backgroundImageAbsoluteUrl = origin ? `${origin}/email-fabric-background.png` : undefined;
+  const envelopeFallback = origin ? `${origin}/email-invite-envelope-template.png` : undefined;
+  const envelopeCardImageSrc =
+    (await generateEnvelopeInviteCardDataUrl({
+      coupleNames: names,
+      weddingDateIso: input.weddingDate,
+    })) ?? envelopeFallback;
 
   return {
     householdName: input.householdName?.trim() || undefined,
     coupleNames: names,
     inviteUrl,
     backgroundImageAbsoluteUrl,
+    envelopeCardImageSrc,
     weddingDate,
     weddingDateLine,
     weddingTimeLine,
@@ -78,7 +87,7 @@ export async function sendInvitationEmail(props: SendInvitationEmailProps): Prom
     throw new Error("RESEND_API_KEY is not set");
   }
 
-  const html = await renderInvitationEmailHtml(buildEmailProps(props));
+  const html = await renderInvitationEmailHtml(await buildEmailProps(props));
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({

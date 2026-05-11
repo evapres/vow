@@ -1,4 +1,5 @@
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
+import { generateEnvelopeInviteCardDataUrl } from "./generateEnvelopeInviteCard";
 import { formatDetailsDateTime } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
 
@@ -42,11 +43,11 @@ function formatRsvpBeforeLine(iso: string | null | undefined): string {
 /**
  * Maps saved wedding + household rows to {@link InvitationEmailProps} (same facts as the web invitation).
  */
-export function buildInvitationEmailProps(input: {
+export async function buildInvitationEmailProps(input: {
   wedding: WeddingLike;
   household: HouseholdLike | null;
   siteOrigin: string;
-}): InvitationEmailProps {
+}): Promise<InvitationEmailProps> {
   const { wedding, household, siteOrigin } = input;
   const coupleNames = (wedding.couple_names ?? "").trim() || "Couple";
 
@@ -73,11 +74,19 @@ export function buildInvitationEmailProps(input: {
       : undefined;
 
   const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
+  const envelopeFallback =
+    siteOrigin ? `${siteOrigin}/email-invite-envelope-template.png` : undefined;
+  const envelopeCardImageSrc =
+    (await generateEnvelopeInviteCardDataUrl({
+      coupleNames,
+      weddingDateIso: wedding.wedding_date,
+    })) ?? envelopeFallback;
 
   return {
     householdName: household?.household_name?.trim() || undefined,
     coupleNames,
     backgroundImageAbsoluteUrl,
+    envelopeCardImageSrc,
     heroImageAbsoluteUrl,
     weddingDate: combined || "Saturday, June 14",
     weddingDateLine: dateLine,

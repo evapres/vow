@@ -79,7 +79,7 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
 
   const { data: household } = await householdQuery.limit(1).maybeSingle();
 
-  const emailProps = buildInvitationEmailProps({
+  const emailProps = await buildInvitationEmailProps({
     wedding,
     household,
     siteOrigin,

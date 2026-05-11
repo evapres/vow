@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# one-off image processing venv (not for app runtime)
+/.venv-imgproc/
+
 # dependencies
 /node_modules
 /.pnp

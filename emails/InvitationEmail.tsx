@@ -23,7 +23,8 @@ const shellBase = {
   maxWidth: "520px",
   margin: "0 auto",
   padding: "40px 28px",
-  border: "1px solid #e8e4dc",
+  border: "0",
+  borderStyle: "none",
 } as const;
 
 const shellSolid = { ...shellBase, backgroundColor: "#fcfaf7" } as const;
@@ -41,15 +42,26 @@ const forGuest = {
   lineHeight: "1.5",
 };
 
-const viewCard = {
-  fontFamily: sans,
-  fontSize: "11px",
-  fontWeight: 600 as const,
-  letterSpacing: "0.22em",
+/** Clickable envelope + card art (no extra CSS background — image carries the design). */
+const envelopeCardLink = {
+  display: "inline-block",
+  margin: "14px auto 0",
+  textDecoration: "none",
   color: "#111111",
-  textDecoration: "underline",
-  textTransform: "uppercase" as const,
-};
+  border: "0",
+  borderStyle: "none",
+  outline: "none",
+  boxShadow: "none",
+} as const;
+
+const envelopeCardImg = {
+  display: "block",
+  margin: "0 auto",
+  maxWidth: "100%",
+  height: "auto",
+  border: "0",
+  outline: "none",
+} as const;
 
 const heroWrap = {
   textAlign: "center" as const,
@@ -125,6 +137,11 @@ export type InvitationEmailProps = {
   coupleNames?: string;
   /** Full absolute URL for body background (fabric texture); omit for plain white. */
   backgroundImageAbsoluteUrl?: string;
+  /**
+   * `src` for the clickable envelope + card image: composited PNG (typically `data:image/png;base64,…`)
+   * or an absolute `https?://` URL fallback.
+   */
+  envelopeCardImageSrc?: string;
   /** Full absolute URL to the hero image (required for most inboxes). */
   heroImageAbsoluteUrl?: string;
   /** Combined line like "Saturday, July 11, 2026 at 8:00 PM" — split into date + time when possible. */
@@ -158,6 +175,7 @@ export default function InvitationEmail({
   householdName,
   coupleNames = "Couple",
   backgroundImageAbsoluteUrl,
+  envelopeCardImageSrc,
   heroImageAbsoluteUrl,
   weddingDate = "Saturday, June 14",
   weddingDateLine,
@@ -204,6 +222,7 @@ export default function InvitationEmail({
 
   const heroSrc = heroImageAbsoluteUrl?.trim();
   const bgUrl = backgroundImageAbsoluteUrl?.trim();
+  const envelopeSrc = envelopeCardImageSrc?.trim();
 
   const bodyStyle = {
     ...pageBase,
@@ -231,36 +250,40 @@ export default function InvitationEmail({
         <Container style={shellStyle}>
           <Text style={forGuest}>For: {forAddressee}</Text>
 
-          <Section style={{ textAlign: "center", margin: "0 0 8px" }}>
-            <Link href={inviteUrl} style={viewCard}>
-              VIEW THE CARD
-            </Link>
+          <Section
+            style={{
+              textAlign: "center",
+              margin: "0 0 24px",
+              border: "0",
+              borderStyle: "none",
+            }}
+          >
+            {envelopeSrc ? (
+              <Link href={inviteUrl} style={envelopeCardLink}>
+                <Img
+                  src={envelopeSrc}
+                  width={520}
+                  alt={`Open invitation — ${coupleNames}`}
+                  style={envelopeCardImg}
+                />
+              </Link>
+            ) : (
+              <Link href={inviteUrl} style={{ ...envelopeCardLink, fontFamily: sans, fontSize: "14px" }}>
+                View invitation
+              </Link>
+            )}
           </Section>
 
-          <Section style={heroWrap}>
-            {heroSrc ? (
+          {heroSrc ? (
+            <Section style={heroWrap}>
               <Img
                 src={heroSrc}
                 width={480}
                 alt={`Save the Date — ${coupleNames}`}
                 style={heroImg}
               />
-            ) : (
-              <Text
-                style={{
-                  ...heroImg,
-                  fontFamily: serif,
-                  fontSize: "22px",
-                  padding: "48px 24px",
-                  backgroundColor: "#f3f0ea",
-                  color: "#222",
-                  textAlign: "center" as const,
-                }}
-              >
-                {coupleNames}
-              </Text>
-            )}
-          </Section>
+            </Section>
+          ) : null}
 
           <Text style={headline}>Save the Date</Text>
           <Text style={detail}>{dateLine}</Text>
