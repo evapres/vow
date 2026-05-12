@@ -1,5 +1,5 @@
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
-import { generateEnvelopeInviteCardDataUrl } from "./generateEnvelopeInviteCard";
+import { envelopeInviteCardImageUrl } from "./envelopeInviteCardUrl";
 import { formatDetailsDateTime } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
 
@@ -74,14 +74,12 @@ export async function buildInvitationEmailProps(input: {
       : undefined;
 
   const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
-  const envelopeFallback =
-    siteOrigin ? `${siteOrigin}/email-invite-envelope-template.png` : undefined;
-  const envelopeCardImageSrc =
-    (await generateEnvelopeInviteCardDataUrl({
-      coupleNames,
-      weddingDateIso: wedding.wedding_date,
-      siteOrigin: siteOrigin || undefined,
-    })) ?? envelopeFallback;
+  const envelopeCardImageSrc = siteOrigin
+    ? envelopeInviteCardImageUrl(siteOrigin, {
+        coupleNames,
+        weddingDateIso: wedding.wedding_date,
+      })
+    : undefined;
 
   return {
     householdName: household?.household_name?.trim() || undefined,

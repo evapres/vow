@@ -138,8 +138,8 @@ export type InvitationEmailProps = {
   /** Full absolute URL for body background (fabric texture); omit for plain white. */
   backgroundImageAbsoluteUrl?: string;
   /**
-   * `src` for the clickable envelope + card image: composited PNG (typically `data:image/png;base64,…`)
-   * or an absolute `https?://` URL fallback.
+   * `src` for the clickable envelope + card image: composited PNG at
+   * `/api/email-invite-card?…` (HTTPS, email-client safe) or omitted when no site origin.
    */
   envelopeCardImageSrc?: string;
   /** Full absolute URL to the hero image (required for most inboxes). */

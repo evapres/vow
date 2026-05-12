@@ -151,17 +151,20 @@ async function applyNearWhiteTransparency(pngBuffer: Buffer): Promise<Buffer> {
   return sharp(out, { raw: { width, height, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer();
 }
 
-/**
- * Renders the envelope + card template with “You are invited”, dynamic date on the card,
- * and couple initials on the burgundy flap. Near-white background becomes transparent.
- * Returns a PNG data URL for `<Img src="…">`, or `null` if the template is missing or rendering fails.
- */
-export async function generateEnvelopeInviteCardDataUrl(input: {
+export type GenerateEnvelopeInviteCardInput = {
   coupleNames: string;
   weddingDateIso: string | null | undefined;
-  /** Production: used to fetch `/email-invite-envelope-template.png` when the file is not on serverless disk. */
+  /** Used to fetch `/email-invite-envelope-template.png` when the file is not on serverless disk. */
   siteOrigin?: string;
-}): Promise<string | null> {
+};
+
+/**
+ * Renders the envelope + card PNG (transparent backdrop, dynamic text).
+ * Used by `/api/email-invite-card` so emails can use a normal `https://` img src.
+ */
+export async function generateEnvelopeInviteCardPngBuffer(
+  input: GenerateEnvelopeInviteCardInput,
+): Promise<Buffer | null> {
   const templateBuffer = await loadEnvelopeTemplateBuffer(input.siteOrigin);
   if (!templateBuffer?.length) return null;
 
@@ -195,8 +198,7 @@ export async function generateEnvelopeInviteCardDataUrl(input: {
     const overlay = await sharp(Buffer.from(svg)).png().toBuffer();
     const composed = await sharp(templateBuffer).composite([{ input: overlay, left: 0, top: 0 }]).png({ compressionLevel: 9 }).toBuffer();
     const transparent = await applyNearWhiteTransparency(composed);
-    const out = await sharp(transparent).resize({ width: OUT_WIDTH }).png({ compressionLevel: 9 }).toBuffer();
-    return `data:image/png;base64,${out.toString("base64")}`;
+    return await sharp(transparent).resize({ width: OUT_WIDTH }).png({ compressionLevel: 9 }).toBuffer();
   } catch {
     return null;
   }
