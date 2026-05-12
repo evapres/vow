@@ -52,9 +52,6 @@ const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
 /** Top padding so invite + date sit on the beige card (px). */
 const ENVELOPE_CARD_PADDING_TOP_PX = 180;
 
-/** Space after the date so couple names sit on the burgundy flap (smaller = names higher). */
-const ENVELOPE_FLAP_MARGIN_TOP_PX = Math.round(ENVELOPE_BLOCK_MIN_HEIGHT_PX * 0.118);
-
 /** Clickable block: fabric / shell (fallback when no envelope image). */
 const envelopeCardLink = {
   display: "inline-block",
@@ -122,7 +119,10 @@ const envelopeOnFlapCouple = {
   fontWeight: 400 as const,
   color: "#f5efe8",
   textAlign: "center" as const,
-  margin: `${ENVELOPE_FLAP_MARGIN_TOP_PX}px 0 0`,
+  marginTop: "100px",
+  marginRight: "0",
+  marginBottom: "-30px",
+  marginLeft: "0",
   lineHeight: "1.35",
   letterSpacing: "0.02em",
 } as const;
