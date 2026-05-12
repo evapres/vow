@@ -60,6 +60,7 @@ async function buildEmailProps(input: SendInvitationEmailProps): Promise<Invitat
     (await generateEnvelopeInviteCardDataUrl({
       coupleNames: names,
       weddingDateIso: input.weddingDate,
+      siteOrigin: origin || undefined,
     })) ?? envelopeFallback;
 
   return {

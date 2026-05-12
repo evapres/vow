@@ -42,7 +42,33 @@ function escapeXml(s: string): string {
     .replaceAll("'", "&apos;");
 }
 
-const TEMPLATE_REL = path.join("public", "email-invite-envelope-template.png");
+const TEMPLATE_FILENAME = "email-invite-envelope-template.png";
+const TEMPLATE_DISK_PATH = path.join(process.cwd(), "public", TEMPLATE_FILENAME);
+
+/**
+ * Template bytes for Sharp. On Vercel/serverless, `public/` is often not on the function disk — then we fetch from the deployed site.
+ */
+async function loadEnvelopeTemplateBuffer(siteOrigin?: string): Promise<Buffer | null> {
+  try {
+    if (fs.existsSync(TEMPLATE_DISK_PATH)) {
+      return fs.readFileSync(TEMPLATE_DISK_PATH);
+    }
+  } catch {
+    // ignore
+  }
+
+  const origin = siteOrigin?.trim().replace(/\/$/, "");
+  if (!origin || !origin.startsWith("http")) return null;
+  const url = `${origin}/${TEMPLATE_FILENAME}`;
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const ab = await res.arrayBuffer();
+    return Buffer.from(ab);
+  } catch {
+    return null;
+  }
+}
 
 const NOTO_SANS_WOFF2 = path.join(
   process.cwd(),
@@ -133,11 +159,13 @@ async function applyNearWhiteTransparency(pngBuffer: Buffer): Promise<Buffer> {
 export async function generateEnvelopeInviteCardDataUrl(input: {
   coupleNames: string;
   weddingDateIso: string | null | undefined;
+  /** Production: used to fetch `/email-invite-envelope-template.png` when the file is not on serverless disk. */
+  siteOrigin?: string;
 }): Promise<string | null> {
-  const templatePath = path.join(process.cwd(), TEMPLATE_REL);
-  if (!fs.existsSync(templatePath)) return null;
+  const templateBuffer = await loadEnvelopeTemplateBuffer(input.siteOrigin);
+  if (!templateBuffer?.length) return null;
 
-  const meta = await sharp(templatePath).metadata();
+  const meta = await sharp(templateBuffer).metadata();
   const W = meta.width ?? 736;
   const H = meta.height ?? 981;
   const cx = W / 2;
@@ -165,7 +193,7 @@ export async function generateEnvelopeInviteCardDataUrl(input: {
 
   try {
     const overlay = await sharp(Buffer.from(svg)).png().toBuffer();
-    const composed = await sharp(templatePath).composite([{ input: overlay, left: 0, top: 0 }]).png({ compressionLevel: 9 }).toBuffer();
+    const composed = await sharp(templateBuffer).composite([{ input: overlay, left: 0, top: 0 }]).png({ compressionLevel: 9 }).toBuffer();
     const transparent = await applyNearWhiteTransparency(composed);
     const out = await sharp(transparent).resize({ width: OUT_WIDTH }).png({ compressionLevel: 9 }).toBuffer();
     return `data:image/png;base64,${out.toString("base64")}`;

@@ -80,6 +80,7 @@ export async function buildInvitationEmailProps(input: {
     (await generateEnvelopeInviteCardDataUrl({
       coupleNames,
       weddingDateIso: wedding.wedding_date,
+      siteOrigin: siteOrigin || undefined,
     })) ?? envelopeFallback;
 
   return {
