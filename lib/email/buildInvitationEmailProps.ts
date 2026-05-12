@@ -1,4 +1,5 @@
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
+import { buildEnvelopeCardImageAlt } from "@/lib/email/generateEnvelopeInviteCard";
 import { envelopeInviteCardImageUrl } from "./envelopeInviteCardUrl";
 import { formatDetailsDateTime } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
@@ -81,11 +82,16 @@ export async function buildInvitationEmailProps(input: {
       })
     : undefined;
 
+  const envelopeCardImageAlt = envelopeCardImageSrc
+    ? buildEnvelopeCardImageAlt(coupleNames, wedding.wedding_date)
+    : undefined;
+
   return {
     householdName: household?.household_name?.trim() || undefined,
     coupleNames,
     backgroundImageAbsoluteUrl,
     envelopeCardImageSrc,
+    envelopeCardImageAlt,
     heroImageAbsoluteUrl,
     weddingDate: combined || "Saturday, June 14",
     weddingDateLine: dateLine,

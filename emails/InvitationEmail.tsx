@@ -10,7 +10,7 @@ import {
   Text,
 } from "@react-email/components";
 
-import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
+import { INVITATION_RSVP_LINE_FONT_PX, INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 
 const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
@@ -149,7 +149,7 @@ const linkMuted = {
 
 const rsvpLine = {
   fontFamily: sans,
-  fontSize: "14px",
+  fontSize: `${INVITATION_RSVP_LINE_FONT_PX}px`,
   color: "#111111",
   textAlign: "center" as const,
   margin: "28px 0 0",
@@ -186,6 +186,8 @@ export type InvitationEmailProps = {
    * `/api/email-invite-card?…` (HTTPS, email-client safe) or omitted when no site origin.
    */
   envelopeCardImageSrc?: string;
+  /** Plain summary of text printed on the envelope image (screen readers / images off). */
+  envelopeCardImageAlt?: string;
   /** Full absolute URL to the hero image (required for most inboxes). */
   heroImageAbsoluteUrl?: string;
   /** Combined line like "Saturday, July 11, 2026 at 8:00 PM" — split into date + time when possible. */
@@ -220,6 +222,7 @@ export default function InvitationEmail({
   coupleNames = "Couple",
   backgroundImageAbsoluteUrl,
   envelopeCardImageSrc,
+  envelopeCardImageAlt,
   heroImageAbsoluteUrl,
   weddingDate = "Saturday, June 14",
   weddingDateLine,
@@ -304,7 +307,10 @@ export default function InvitationEmail({
                   <Img
                     src={envelopeSrc}
                     width={520}
-                    alt={`Open invitation — ${coupleNames}`}
+                    alt={
+                      envelopeCardImageAlt?.trim() ||
+                      `Open invitation — ${coupleNames}. You are invited. Save the date.`
+                    }
                     style={envelopeCardImg}
                   />
                 </Link>
