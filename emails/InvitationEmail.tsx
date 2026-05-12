@@ -64,10 +64,11 @@ const envelopeCardImg = {
   outline: "none",
 } as const;
 
-const openCardCtaWrap = {
+const envelopeHeroWrap = {
   textAlign: "center" as const,
-  margin: "20px 0 0",
-};
+  margin: "0 auto 24px",
+  maxWidth: "520px",
+} as const;
 
 const openCardButton = {
   display: "inline-block",
@@ -82,7 +83,16 @@ const openCardButton = {
   padding: "12px 32px",
   borderRadius: "4px",
   border: "1px solid #2a1818",
-};
+} as const;
+
+/** Pulls the button over the top / open flap of the envelope art (works in table-based email HTML). */
+const openCardButtonOnFlap = {
+  ...openCardButton,
+  position: "relative" as const,
+  zIndex: 2,
+  marginTop: "8px",
+  marginBottom: "-56px",
+} as const;
 
 const heroWrap = {
   textAlign: "center" as const,
@@ -271,34 +281,26 @@ export default function InvitationEmail({
         <Container style={shellStyle}>
           <Text style={forGuest}>For: {forAddressee}</Text>
 
-          <Section
-            style={{
-              textAlign: "center",
-              margin: "0 0 24px",
-              border: "0",
-              borderStyle: "none",
-            }}
-          >
+          <Section style={envelopeHeroWrap}>
             {envelopeSrc ? (
-              <Link href={inviteUrl} style={envelopeCardLink}>
-                <Img
-                  src={envelopeSrc}
-                  width={520}
-                  alt={`Open invitation — ${coupleNames}`}
-                  style={envelopeCardImg}
-                />
-              </Link>
+              <Section style={{ margin: 0, padding: 0, textAlign: "center" }}>
+                <Button href={inviteUrl} style={openCardButtonOnFlap}>
+                  Open Card
+                </Button>
+                <Link href={inviteUrl} style={{ ...envelopeCardLink, marginTop: 0 }}>
+                  <Img
+                    src={envelopeSrc}
+                    width={520}
+                    alt={`Open invitation — ${coupleNames}`}
+                    style={envelopeCardImg}
+                  />
+                </Link>
+              </Section>
             ) : (
               <Link href={inviteUrl} style={{ ...envelopeCardLink, fontFamily: sans, fontSize: "14px" }}>
                 View invitation
               </Link>
             )}
-          </Section>
-
-          <Section style={openCardCtaWrap}>
-            <Button href={inviteUrl} style={openCardButton}>
-              Open the card
-            </Button>
           </Section>
 
           {heroSrc ? (

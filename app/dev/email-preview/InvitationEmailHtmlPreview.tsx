@@ -11,7 +11,6 @@ export default function InvitationEmailHtmlPreview({ html }: InvitationEmailHtml
       <iframe
         title="Invitation email preview"
         className="h-[min(560px,75vh)] w-full border-0 bg-[#f6f4f1]"
-        sandbox="allow-same-origin"
         srcDoc={html}
       />
     </section>
