@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/** Supabase `.select()` fragment — keep in sync with {@link buildInvitationEmailProps} wedding shape. */
+export const INVITATION_EMAIL_WEDDING_SELECT =
+  "couple_names, wedding_date, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url" as const;
+
 /** Rows needed for {@link buildInvitationEmailProps} on the invitation preview / embed routes. */
 export async function loadInvitationEmailPreviewContext(
   supabase: SupabaseClient,
@@ -21,9 +25,7 @@ export async function loadInvitationEmailPreviewContext(
 } | null> {
   const { data: wedding, error: weddingError } = await supabase
     .from("weddings")
-    .select(
-      "couple_names, wedding_date, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url",
-    )
+    .select(INVITATION_EMAIL_WEDDING_SELECT)
     .eq("id", weddingId)
     .eq("user_id", userId)
     .single();

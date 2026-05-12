@@ -16,6 +16,42 @@ import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
+/** Mobile only — envelope card + overlay copy (Apple Mail, iOS, Gmail app, many Android). */
+const INVITATION_ENVELOPE_MOBILE_CSS = `
+@media only screen and (max-width: 600px) {
+  .inv-envelope-card {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 300px !important;
+    padding-top: 70px !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    padding-bottom: 20px !important;
+    background-size: 100% auto !important;
+    background-repeat: no-repeat !important;
+    background-position: center top !important;
+    text-align: center !important;
+  }
+  .inv-envelope-oncard,
+  .inv-envelope-date {
+    font-size: 10px !important;
+  }
+  .inv-envelope-couple {
+    font-size: 10px !important;
+    line-height: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-weight: 400 !important;
+    color: #f5efe8 !important;
+    text-align: center !important;
+    margin-top: 40px !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    letter-spacing: 0.02em !important;
+  }
+}
+`.trim();
+
 const pageBase = {
   margin: 0,
   padding: "48px 20px",
@@ -338,6 +374,8 @@ export default function InvitationEmail({
     <Html>
       <Head>
         <meta name="color-scheme" content="light only" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>{INVITATION_ENVELOPE_MOBILE_CSS}</style>
       </Head>
       <Preview>{previewText}</Preview>
       <Body style={bodyStyle}>
@@ -352,14 +390,21 @@ export default function InvitationEmail({
                 </Link>
                 <Link href={inviteUrl} style={envelopeHeroLink}>
                   <Section
+                    className="inv-envelope-card"
                     style={{
                       ...envelopeCardBackground,
                       backgroundImage: `url(${envelopeSrc})`,
                     }}
                   >
-                    <Text style={envelopeOnCardLine}>{ENVELOPE_INVITE_LINE}</Text>
-                    <Text style={envelopeOnCardDate}>{cardDateLine}</Text>
-                    <Text style={envelopeOnFlapCouple}>{(coupleNames ?? "").trim() || "Couple"}</Text>
+                    <Text className="inv-envelope-oncard" style={envelopeOnCardLine}>
+                      {ENVELOPE_INVITE_LINE}
+                    </Text>
+                    <Text className="inv-envelope-date" style={envelopeOnCardDate}>
+                      {cardDateLine}
+                    </Text>
+                    <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
+                      {(coupleNames ?? "").trim() || "Couple"}
+                    </Text>
                   </Section>
                 </Link>
               </Section>

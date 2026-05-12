@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
+import { buildInvitationEmailProps } from "@/lib/email/buildInvitationEmailProps";
+import { INVITATION_EMAIL_WEDDING_SELECT } from "@/lib/email/loadInvitationEmailPreviewContext";
 import { sendInvitationEmail } from "@/lib/email/sendInvitationEmail";
 
 function getServiceRoleClientOrNull() {
@@ -255,7 +257,7 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
 
   const { data: wedding, error: weddingError } = await supabase
     .from("weddings")
-    .select("id, couple_names, wedding_date, location")
+    .select(`id, ${INVITATION_EMAIL_WEDDING_SELECT}`)
     .eq("id", weddingId)
     .eq("user_id", user.id)
     .single();
@@ -298,17 +300,17 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
     );
   }
 
-  const inviteUrl = `${origin}/invite/${token}`;
+  const emailProps = await buildInvitationEmailProps({
+    wedding,
+    household: {
+      household_name: household.household_name,
+      invite_token: token,
+    },
+    siteOrigin: origin,
+  });
 
   try {
-    await sendInvitationEmail({
-      to: email,
-      householdName: household.household_name,
-      coupleNames: (wedding.couple_names ?? "").trim() || "Couple",
-      weddingDate: wedding.wedding_date ?? undefined,
-      location: wedding.location?.trim() || undefined,
-      inviteUrl,
-    });
+    await sendInvitationEmail({ to: email, emailProps });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to send invitation email.";
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(msg));
