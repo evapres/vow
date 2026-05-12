@@ -3,6 +3,8 @@ import path from "node:path";
 
 import sharp from "sharp";
 
+import { INVITATION_SANS_SVG_RASTER } from "@/lib/email/invitationTypography";
+
 /** `YYYY-MM-DD…` → `DD MM YYYY` (spaced). */
 export function formatEnvelopeCardDate(iso: string | null | undefined): string {
   if (!iso?.trim()) return "";
@@ -93,13 +95,6 @@ const LAYOUT = {
 
 const INVITE_LINE = "You are invited";
 
-/**
- * Fonts bundled with Sharp’s SVG renderer (librsvg on Linux). Do not use @font-face / WOFF2 here —
- * embedded fonts often fail and render as “tofu” boxes in the PNG emailed to clients.
- */
-const SVG_SANS_LIGHT =
-  "DejaVu Sans, Liberation Sans, Bitstream Vera Sans, Helvetica, Arial, sans-serif";
-
 /** Turn near-white backdrop pixels transparent; output RGBA PNG. */
 async function applyNearWhiteTransparency(pngBuffer: Buffer): Promise<Buffer> {
   const { data, info } = await sharp(pngBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -161,14 +156,15 @@ export async function generateEnvelopeInviteCardPngBuffer(
   const y2 = Math.round(H * LAYOUT.dateBaselineY);
   const yMono = Math.round(H * LAYOUT.initialsBaselineY);
 
+  const font = INVITATION_SANS_SVG_RASTER;
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <text x="${cx}" y="${y1}" text-anchor="middle" fill="#3d2328" font-family="${SVG_SANS_LIGHT}"
-    font-size="${Math.round(W * 0.03)}" font-weight="300" letter-spacing="0.02em">${escapeXml(INVITE_LINE)}</text>
-  <text x="${cx}" y="${y2}" text-anchor="middle" fill="#4a2a32" font-family="${SVG_SANS_LIGHT}"
-    font-size="${Math.round(W * 0.033)}" font-weight="300" letter-spacing="0.06em">${escapeXml(line2)}</text>
-  <text x="${cx}" y="${yMono}" text-anchor="middle" fill="#f0e6dc" font-family="${SVG_SANS_LIGHT}"
-    font-size="${Math.round(W * 0.04)}" font-weight="300">${escapeXml(initials)}</text>
+  <text x="${cx}" y="${y1}" text-anchor="middle" fill="#3d2328" font-family='${font}'
+    font-size="${Math.round(W * 0.03)}" font-weight="400" letter-spacing="0.02em">${escapeXml(INVITE_LINE)}</text>
+  <text x="${cx}" y="${y2}" text-anchor="middle" fill="#4a2a32" font-family='${font}'
+    font-size="${Math.round(W * 0.033)}" font-weight="400" letter-spacing="0.06em">${escapeXml(line2)}</text>
+  <text x="${cx}" y="${yMono}" text-anchor="middle" fill="#f0e6dc" font-family='${font}'
+    font-size="${Math.round(W * 0.04)}" font-weight="400">${escapeXml(initials)}</text>
 </svg>`;
 
   try {

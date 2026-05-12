@@ -10,8 +10,9 @@ import {
   Text,
 } from "@react-email/components";
 
-const sans =
-  '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif' as const;
+import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
+
+const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
 const pageBase = {
