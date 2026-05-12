@@ -1,4 +1,0 @@
-Roboto-Regular.ttf — Google Roboto (Apache License 2.0).
-https://github.com/googlefonts/roboto
-
-Used only to draw invitation lines into the envelope PNG so they match the email body sans at 15px.
