@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Container,
   Head,
   Html,
@@ -62,6 +63,26 @@ const envelopeCardImg = {
   border: "0",
   outline: "none",
 } as const;
+
+const openCardCtaWrap = {
+  textAlign: "center" as const,
+  margin: "20px 0 0",
+};
+
+const openCardButton = {
+  display: "inline-block",
+  fontFamily: sans,
+  fontSize: "14px",
+  fontWeight: 300 as const,
+  lineHeight: "1.4",
+  color: "#ffffff",
+  backgroundColor: "#2a1818",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  padding: "12px 32px",
+  borderRadius: "4px",
+  border: "1px solid #2a1818",
+};
 
 const heroWrap = {
   textAlign: "center" as const,
@@ -272,6 +293,12 @@ export default function InvitationEmail({
                 View invitation
               </Link>
             )}
+          </Section>
+
+          <Section style={openCardCtaWrap}>
+            <Button href={inviteUrl} style={openCardButton}>
+              Open the card
+            </Button>
           </Section>
 
           {heroSrc ? (

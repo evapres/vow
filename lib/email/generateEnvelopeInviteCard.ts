@@ -70,11 +70,6 @@ async function loadEnvelopeTemplateBuffer(siteOrigin?: string): Promise<Buffer |
   }
 }
 
-const NOTO_SANS_WOFF2 = path.join(
-  process.cwd(),
-  "node_modules/@fontsource/noto-sans/files/noto-sans-latin-300-normal.woff2",
-);
-
 /** Email column width — composited asset is scaled to this after overlay. */
 const OUT_WIDTH = 520;
 
@@ -98,27 +93,12 @@ const LAYOUT = {
 
 const INVITE_LINE = "You are invited";
 
-/** CSS `font-family` for card copy in SVG (sans). */
-const CARD_FONT_FAMILY = "'Noto Sans', system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-
-let notoSans300Woff2Base64: string | null | undefined;
-
-function notoSansFontFaceBlock(): string {
-  if (notoSans300Woff2Base64 === undefined) {
-    notoSans300Woff2Base64 = fs.existsSync(NOTO_SANS_WOFF2)
-      ? fs.readFileSync(NOTO_SANS_WOFF2).toString("base64")
-      : null;
-  }
-  if (!notoSans300Woff2Base64) return "";
-  return `<style type="text/css"><![CDATA[
-@font-face {
-  font-family: "Noto Sans";
-  font-style: normal;
-  font-weight: 300;
-  src: url(data:font/woff2;base64,${notoSans300Woff2Base64}) format("woff2");
-}
-]]></style>`;
-}
+/**
+ * Fonts bundled with Sharp’s SVG renderer (librsvg on Linux). Do not use @font-face / WOFF2 here —
+ * embedded fonts often fail and render as “tofu” boxes in the PNG emailed to clients.
+ */
+const SVG_SANS_LIGHT =
+  "DejaVu Sans, Liberation Sans, Bitstream Vera Sans, Helvetica, Arial, sans-serif";
 
 /** Turn near-white backdrop pixels transparent; output RGBA PNG. */
 async function applyNearWhiteTransparency(pngBuffer: Buffer): Promise<Buffer> {
@@ -181,17 +161,14 @@ export async function generateEnvelopeInviteCardPngBuffer(
   const y2 = Math.round(H * LAYOUT.dateBaselineY);
   const yMono = Math.round(H * LAYOUT.initialsBaselineY);
 
-  const fontFace = notoSansFontFaceBlock();
-
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs>${fontFace}</defs>
-  <text x="${cx}" y="${y1}" text-anchor="middle" fill="#3d2328" font-family="${CARD_FONT_FAMILY}"
+  <text x="${cx}" y="${y1}" text-anchor="middle" fill="#3d2328" font-family="${SVG_SANS_LIGHT}"
     font-size="${Math.round(W * 0.03)}" font-weight="300" letter-spacing="0.02em">${escapeXml(INVITE_LINE)}</text>
-  <text x="${cx}" y="${y2}" text-anchor="middle" fill="#4a2a32" font-family="${CARD_FONT_FAMILY}"
+  <text x="${cx}" y="${y2}" text-anchor="middle" fill="#4a2a32" font-family="${SVG_SANS_LIGHT}"
     font-size="${Math.round(W * 0.033)}" font-weight="300" letter-spacing="0.06em">${escapeXml(line2)}</text>
-  <text x="${cx}" y="${yMono}" text-anchor="middle" fill="#f0e6dc"
-    font-family="Georgia, Times New Roman, Times, serif" font-size="${Math.round(W * 0.04)}">${escapeXml(initials)}</text>
+  <text x="${cx}" y="${yMono}" text-anchor="middle" fill="#f0e6dc" font-family="${SVG_SANS_LIGHT}"
+    font-size="${Math.round(W * 0.04)}" font-weight="300">${escapeXml(initials)}</text>
 </svg>`;
 
   try {
