@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 
 import InvitationEmailHtmlPreview from "./InvitationEmailHtmlPreview";
@@ -11,7 +12,11 @@ type PageProps = {
   searchParams: Promise<{ weddingId?: string; householdId?: string }>;
 };
 
+/** Always re-render email HTML from disk (avoid stale preview after template edits). */
+export const dynamic = "force-dynamic";
+
 export default async function EmailPreviewPage({ searchParams }: PageProps) {
+  noStore();
   const sp = await searchParams;
   const weddingId = sp.weddingId?.trim();
 
