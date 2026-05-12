@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 
 import InvitationEmailHtmlPreview from "./InvitationEmailHtmlPreview";
-import { buildInvitationEmailProps } from "@/lib/email/buildInvitationEmailProps";
-import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
+import { loadInvitationEmailPreviewContext } from "@/lib/email/loadInvitationEmailPreviewContext";
 import { createClient } from "@/lib/supabase/server";
 
 type PageProps = {
@@ -19,11 +17,6 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
   noStore();
   const sp = await searchParams;
   const weddingId = sp.weddingId?.trim();
-
-  const hdrs = await headers();
-  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
-  const proto = hdrs.get("x-forwarded-proto") ?? "http";
-  const siteOrigin = host ? `${proto}://${host}` : "";
 
   if (!weddingId) {
     return (
@@ -58,39 +51,18 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const { data: wedding, error: weddingError } = await supabase
-    .from("weddings")
-    .select(
-      "couple_names, wedding_date, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url",
-    )
-    .eq("id", weddingId)
-    .eq("user_id", user.id)
-    .single();
+  const householdId = sp.householdId?.trim();
 
-  if (weddingError || !wedding) {
+  const ctx = await loadInvitationEmailPreviewContext(supabase, user.id, weddingId, householdId);
+  if (!ctx) {
     notFound();
   }
 
-  const householdId = sp.householdId?.trim();
+  const { household } = ctx;
 
-  let householdQuery = supabase
-    .from("households")
-    .select("household_name, invite_token")
-    .eq("wedding_id", weddingId);
-
-  if (householdId) {
-    householdQuery = householdQuery.eq("id", householdId);
-  }
-
-  const { data: household } = await householdQuery.limit(1).maybeSingle();
-
-  const emailProps = await buildInvitationEmailProps({
-    wedding,
-    household,
-    siteOrigin,
-  });
-
-  const html = await renderInvitationEmailHtml(emailProps);
+  const embedParams = new URLSearchParams({ weddingId });
+  if (householdId) embedParams.set("householdId", householdId);
+  const embedSrc = `/dev/email-preview/embed?${embedParams.toString()}`;
 
   return (
     <main className="min-h-screen bg-[#fafafa] px-4 py-10 text-[#181818]">
@@ -112,7 +84,7 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
             ← Guest list
           </Link>
         </p>
-        <InvitationEmailHtmlPreview html={html} />
+        <InvitationEmailHtmlPreview embedSrc={embedSrc} />
       </div>
     </main>
   );

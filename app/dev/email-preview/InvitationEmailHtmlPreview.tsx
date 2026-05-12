@@ -1,23 +1,19 @@
-import { randomUUID } from "node:crypto";
-
 type InvitationEmailHtmlPreviewProps = {
-  html: string;
+  /** Full-document URL (same HTML as Resend) so layout matches real email clients. */
+  embedSrc: string;
 };
 
-export default function InvitationEmailHtmlPreview({ html }: InvitationEmailHtmlPreviewProps) {
-  /** New mount each server render so the iframe never keeps a stale `srcDoc`. */
-  const iframeKey = randomUUID();
-
+export default function InvitationEmailHtmlPreview({ embedSrc }: InvitationEmailHtmlPreviewProps) {
   return (
     <section className="mt-8 border border-[#181818]/20 bg-white shadow-sm">
       <div className="border-b border-[#181818]/15 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/55">Rendered HTML</p>
       </div>
       <iframe
-        key={iframeKey}
+        key={embedSrc}
         title="Invitation email preview"
-        className="h-[min(560px,75vh)] w-full border-0 bg-[#f6f4f1]"
-        srcDoc={html}
+        className="h-[min(900px,85vh)] w-full border-0 bg-[#f6f4f1]"
+        src={embedSrc}
       />
     </section>
   );

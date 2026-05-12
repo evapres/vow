@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Html,
@@ -47,6 +46,8 @@ const forGuest = {
 const envelopeCardLink = {
   display: "inline-block",
   margin: "14px auto 0",
+  marginBottom: "0",
+  lineHeight: 0,
   textDecoration: "none",
   color: "#111111",
   border: "0",
@@ -58,45 +59,56 @@ const envelopeCardLink = {
 const envelopeCardImg = {
   display: "block",
   margin: "0 auto",
+  marginBottom: "0",
   maxWidth: "100%",
   height: "auto",
   border: "0",
   outline: "none",
+  verticalAlign: "bottom" as const,
 } as const;
 
 const envelopeHeroWrap = {
   textAlign: "center" as const,
-  margin: "0 auto 24px",
+  margin: "0 auto 4px",
   maxWidth: "520px",
 } as const;
 
-const openCardButton = {
+/** Open Card above the envelope on the light shell — dark text so it stays readable in every client. */
+const openCardCta = {
   display: "inline-block",
   fontFamily: sans,
   fontSize: "14px",
-  fontWeight: 300 as const,
+  fontWeight: 500 as const,
   lineHeight: "1.4",
-  color: "#ffffff",
-  backgroundColor: "#2a1818",
+  color: "#1a1410",
+  backgroundColor: "transparent",
   textDecoration: "none",
   textAlign: "center" as const,
-  padding: "12px 32px",
-  borderRadius: "4px",
-  border: "1px solid #2a1818",
+  padding: "6px 4px 8px",
+  border: "0",
+  borderStyle: "none",
+  outline: "none",
+  boxShadow: "none",
+  borderRadius: "0",
+  borderBottom: "1px solid rgba(26, 20, 16, 0.45)",
+  marginTop: "0",
+  marginBottom: "10px",
 } as const;
 
-/** Pulls the button over the top / open flap of the envelope art (works in table-based email HTML). */
-const openCardButtonOnFlap = {
-  ...openCardButton,
-  position: "relative" as const,
-  zIndex: 2,
-  marginTop: "8px",
-  marginBottom: "-56px",
+const envelopeStack = {
+  margin: 0,
+  padding: 0,
+  textAlign: "center" as const,
+} as const;
+
+const envelopeLinkUnderCta = {
+  ...envelopeCardLink,
+  marginTop: 0,
 } as const;
 
 const heroWrap = {
   textAlign: "center" as const,
-  margin: "28px 0 36px",
+  margin: "4px 0 14px",
 };
 
 const heroImg = {
@@ -113,7 +125,7 @@ const headline = {
   fontWeight: 400 as const,
   color: "#111111",
   textAlign: "center" as const,
-  margin: "0 0 28px",
+  margin: "4px 0 22px",
   lineHeight: "1.15",
   letterSpacing: "0.01em",
 };
@@ -283,11 +295,11 @@ export default function InvitationEmail({
 
           <Section style={envelopeHeroWrap}>
             {envelopeSrc ? (
-              <Section style={{ margin: 0, padding: 0, textAlign: "center" }}>
-                <Button href={inviteUrl} style={openCardButtonOnFlap}>
+              <Section style={envelopeStack}>
+                <Link href={inviteUrl} style={openCardCta}>
                   Open Card
-                </Button>
-                <Link href={inviteUrl} style={{ ...envelopeCardLink, marginTop: 0 }}>
+                </Link>
+                <Link href={inviteUrl} style={envelopeLinkUnderCta}>
                   <Img
                     src={envelopeSrc}
                     width={520}
