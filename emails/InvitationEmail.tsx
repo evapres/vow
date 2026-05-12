@@ -10,6 +10,7 @@ import {
   Text,
 } from "@react-email/components";
 
+import { ENVELOPE_INVITE_LINE } from "@/lib/email/envelopeCardCopy";
 import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 
 const sans = INVITATION_SANS_EMAIL;
@@ -43,7 +44,18 @@ const forGuest = {
   lineHeight: "1.5",
 };
 
-/** Clickable envelope + card art (no extra CSS background — image carries the design). */
+const ENVELOPE_DISPLAY_W = 520;
+
+/** Envelope hero block height (HTML overlay over `email-invite-envelope-template.png`). */
+const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
+
+/** Top padding so invite + date sit on the beige card (px). */
+const ENVELOPE_CARD_PADDING_TOP_PX = 180;
+
+/** Space after the date so couple names sit on the burgundy flap (smaller = names higher). */
+const ENVELOPE_FLAP_MARGIN_TOP_PX = Math.round(ENVELOPE_BLOCK_MIN_HEIGHT_PX * 0.118);
+
+/** Clickable block: fabric / shell (fallback when no envelope image). */
 const envelopeCardLink = {
   display: "inline-block",
   margin: "14px auto 0",
@@ -57,21 +69,62 @@ const envelopeCardLink = {
   boxShadow: "none",
 } as const;
 
-const envelopeCardImg = {
-  display: "block",
-  margin: "0 auto",
-  marginBottom: "0",
-  maxWidth: "100%",
-  height: "auto",
-  border: "0",
-  outline: "none",
-  verticalAlign: "bottom" as const,
-} as const;
-
 const envelopeHeroWrap = {
   textAlign: "center" as const,
   margin: "0 auto 4px",
   maxWidth: "520px",
+  backgroundColor: "transparent",
+} as const;
+
+const envelopeHeroLink = {
+  display: "block" as const,
+  maxWidth: `${ENVELOPE_DISPLAY_W}px`,
+  margin: "0 auto",
+  textDecoration: "none",
+  color: "#111111",
+  backgroundColor: "transparent",
+} as const;
+
+const envelopeCardBackground = {
+  boxSizing: "border-box" as const,
+  width: "100%",
+  minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
+  paddingTop: `${ENVELOPE_CARD_PADDING_TOP_PX}px`,
+  paddingLeft: "28px",
+  paddingRight: "28px",
+  paddingBottom: "20px",
+  backgroundColor: "transparent",
+  backgroundSize: "100% auto",
+  backgroundRepeat: "no-repeat" as const,
+  backgroundPosition: "center top",
+  textAlign: "center" as const,
+} as const;
+
+const envelopeOnCardLine = {
+  fontFamily: sans,
+  fontSize: "15px",
+  fontWeight: 400 as const,
+  color: "#111111",
+  textAlign: "center" as const,
+  margin: "0 0 4px",
+  lineHeight: "1.45",
+} as const;
+
+const envelopeOnCardDate = {
+  ...envelopeOnCardLine,
+  margin: "0",
+  letterSpacing: "0.08em",
+} as const;
+
+const envelopeOnFlapCouple = {
+  fontFamily: sans,
+  fontSize: "16px",
+  fontWeight: 400 as const,
+  color: "#f5efe8",
+  textAlign: "center" as const,
+  margin: `${ENVELOPE_FLAP_MARGIN_TOP_PX}px 0 0`,
+  lineHeight: "1.35",
+  letterSpacing: "0.02em",
 } as const;
 
 /** Open Card above the envelope on the light shell — dark text so it stays readable in every client. */
@@ -100,11 +153,7 @@ const envelopeStack = {
   margin: 0,
   padding: 0,
   textAlign: "center" as const,
-} as const;
-
-const envelopeLinkUnderCta = {
-  ...envelopeCardLink,
-  marginTop: 0,
+  backgroundColor: "transparent",
 } as const;
 
 const heroWrap = {
@@ -181,11 +230,10 @@ export type InvitationEmailProps = {
   coupleNames?: string;
   /** Full absolute URL for body background (fabric texture); omit for plain white. */
   backgroundImageAbsoluteUrl?: string;
-  /**
-   * `src` for the clickable envelope + card image: composited PNG at
-   * `/api/email-invite-card?…` (HTTPS, email-client safe) or omitted when no site origin.
-   */
+  /** Static envelope template (`/email-invite-envelope-template.png`); text is separate HTML. */
   envelopeCardImageSrc?: string;
+  /** Spaced date line on the card (e.g. from ISO wedding date); omit when unknown. */
+  envelopeCardDateDisplay?: string;
   /** Full absolute URL to the hero image (required for most inboxes). */
   heroImageAbsoluteUrl?: string;
   /** Combined line like "Saturday, July 11, 2026 at 8:00 PM" — split into date + time when possible. */
@@ -220,6 +268,7 @@ export default function InvitationEmail({
   coupleNames = "Couple",
   backgroundImageAbsoluteUrl,
   envelopeCardImageSrc,
+  envelopeCardDateDisplay,
   heroImageAbsoluteUrl,
   weddingDate = "Saturday, June 14",
   weddingDateLine,
@@ -267,6 +316,7 @@ export default function InvitationEmail({
   const heroSrc = heroImageAbsoluteUrl?.trim();
   const bgUrl = backgroundImageAbsoluteUrl?.trim();
   const envelopeSrc = envelopeCardImageSrc?.trim();
+  const cardDateLine = envelopeCardDateDisplay?.trim() || "—  —  —";
 
   const bodyStyle = {
     ...pageBase,
@@ -300,13 +350,17 @@ export default function InvitationEmail({
                 <Link href={inviteUrl} style={openCardCta}>
                   Open Card
                 </Link>
-                <Link href={inviteUrl} style={envelopeLinkUnderCta}>
-                  <Img
-                    src={envelopeSrc}
-                    width={520}
-                    alt={`Open invitation — ${coupleNames}`}
-                    style={envelopeCardImg}
-                  />
+                <Link href={inviteUrl} style={envelopeHeroLink}>
+                  <Section
+                    style={{
+                      ...envelopeCardBackground,
+                      backgroundImage: `url(${envelopeSrc})`,
+                    }}
+                  >
+                    <Text style={envelopeOnCardLine}>{ENVELOPE_INVITE_LINE}</Text>
+                    <Text style={envelopeOnCardDate}>{cardDateLine}</Text>
+                    <Text style={envelopeOnFlapCouple}>{(coupleNames ?? "").trim() || "Couple"}</Text>
+                  </Section>
                 </Link>
               </Section>
             ) : (

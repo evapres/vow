@@ -1,5 +1,8 @@
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
-import { envelopeInviteCardImageUrl } from "./envelopeInviteCardUrl";
+import {
+  envelopeTemplateImageAbsoluteUrl,
+  formatEnvelopeCardDate,
+} from "./envelopeCardCopy";
 import { formatDetailsDateTime } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
 
@@ -74,18 +77,15 @@ export async function buildInvitationEmailProps(input: {
       : undefined;
 
   const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
-  const envelopeCardImageSrc = siteOrigin
-    ? envelopeInviteCardImageUrl(siteOrigin, {
-        coupleNames,
-        weddingDateIso: wedding.wedding_date,
-      })
-    : undefined;
+  const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(siteOrigin);
+  const envelopeCardDateDisplay = formatEnvelopeCardDate(wedding.wedding_date) || undefined;
 
   return {
     householdName: household?.household_name?.trim() || undefined,
     coupleNames,
     backgroundImageAbsoluteUrl,
     envelopeCardImageSrc,
+    envelopeCardDateDisplay,
     heroImageAbsoluteUrl,
     weddingDate: combined || "Saturday, June 14",
     weddingDateLine: dateLine,

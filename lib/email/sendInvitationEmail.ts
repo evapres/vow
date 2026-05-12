@@ -1,7 +1,10 @@
 import { Resend } from "resend";
 
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
-import { envelopeInviteCardImageUrl } from "@/lib/email/envelopeInviteCardUrl";
+import {
+  envelopeTemplateImageAbsoluteUrl,
+  formatEnvelopeCardDate,
+} from "@/lib/email/envelopeCardCopy";
 import { formatDetailsDateTime } from "@/lib/invitationDisplay";
 import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
 
@@ -55,12 +58,8 @@ function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps 
 
   const origin = siteOriginFromInviteUrl(inviteUrl);
   const backgroundImageAbsoluteUrl = origin ? `${origin}/email-fabric-background.png` : undefined;
-  const envelopeCardImageSrc = origin
-    ? envelopeInviteCardImageUrl(origin, {
-        coupleNames: names,
-        weddingDateIso: input.weddingDate,
-      })
-    : undefined;
+  const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(origin);
+  const envelopeCardDateDisplay = formatEnvelopeCardDate(input.weddingDate) || undefined;
 
   return {
     householdName: input.householdName?.trim() || undefined,
@@ -68,6 +67,7 @@ function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps 
     inviteUrl,
     backgroundImageAbsoluteUrl,
     envelopeCardImageSrc,
+    envelopeCardDateDisplay,
     weddingDate,
     weddingDateLine,
     weddingTimeLine,
