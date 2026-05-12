@@ -3,8 +3,7 @@ import path from "node:path";
 
 import sharp from "sharp";
 
-import { envelopeCardCenteredPathD } from "@/lib/email/envelopeCardTextAsPaths";
-import { INVITATION_RSVP_LINE_FONT_PX } from "@/lib/email/invitationTypography";
+import { INVITATION_SANS_SVG_RASTER } from "@/lib/email/invitationTypography";
 
 /** `YYYY-MM-DD…` → `DD MM YYYY` (spaced). */
 export function formatEnvelopeCardDate(iso: string | null | undefined): string {
@@ -34,6 +33,15 @@ export function coupleInitialsLabel(coupleNames: string): string {
   if (letters.length >= 2) return `${letters[0]} & ${letters[1]}`;
   if (letters.length === 1) return letters[0];
   return "";
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 const TEMPLATE_FILENAME = "email-invite-envelope-template.png";
@@ -87,22 +95,6 @@ const LAYOUT = {
 
 const INVITE_LINE = "You are invited";
 
-/** Plain-language description of what appears on the envelope image (Gmail / screen readers). */
-export function buildEnvelopeCardImageAlt(
-  coupleNames: string,
-  weddingDateIso: string | null | undefined,
-): string {
-  const dateStr = formatEnvelopeCardDate(weddingDateIso);
-  const initials = coupleInitialsLabel(coupleNames);
-  const couple = (coupleNames ?? "").trim() || "the couple";
-  const bits: string[] = ["You are invited"];
-  if (dateStr) bits.push(`Wedding date: ${dateStr}`);
-  if (initials) bits.push(initials);
-  bits.push(`Save the date from ${couple}`);
-  bits.push("Open Card below for the full invitation.");
-  return bits.join(". ") + ".";
-}
-
 /** Turn near-white backdrop pixels transparent; output RGBA PNG. */
 async function applyNearWhiteTransparency(pngBuffer: Buffer): Promise<Buffer> {
   const { data, info } = await sharp(pngBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -143,7 +135,7 @@ export type GenerateEnvelopeInviteCardInput = {
 
 /**
  * Renders the envelope + card PNG (transparent backdrop, dynamic text).
- * Text is outlined with bundled Roboto (same 14px scale as RSVP copy) so Gmail never shows missing glyphs.
+ * Used by `/api/email-invite-card` so emails can use a normal `https://` img src.
  */
 export async function generateEnvelopeInviteCardPngBuffer(
   input: GenerateEnvelopeInviteCardInput,
@@ -164,22 +156,15 @@ export async function generateEnvelopeInviteCardPngBuffer(
   const y2 = Math.round(H * LAYOUT.dateBaselineY);
   const yMono = Math.round(H * LAYOUT.initialsBaselineY);
 
-  /** Match apparent size of RSVP line when the final image is 520px wide. */
-  const tracePx = Math.max(11, Math.round(INVITATION_RSVP_LINE_FONT_PX * (W / OUT_WIDTH)));
-
-  const d1 = envelopeCardCenteredPathD(INVITE_LINE, cx, y1, tracePx);
-  const d2 = envelopeCardCenteredPathD(line2, cx, y2, tracePx);
-  const d3 = envelopeCardCenteredPathD(initials, cx, yMono, tracePx);
-
-  if (!d1 || !d2 || !d3) {
-    return null;
-  }
-
+  const font = INVITATION_SANS_SVG_RASTER;
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <path fill="#111111" d="${d1}"/>
-  <path fill="#111111" d="${d2}"/>
-  <path fill="#f0e6dc" d="${d3}"/>
+  <text x="${cx}" y="${y1}" text-anchor="middle" fill="#3d2328" font-family='${font}'
+    font-size="${Math.round(W * 0.03)}" font-weight="400" letter-spacing="0.02em">${escapeXml(INVITE_LINE)}</text>
+  <text x="${cx}" y="${y2}" text-anchor="middle" fill="#4a2a32" font-family='${font}'
+    font-size="${Math.round(W * 0.033)}" font-weight="400" letter-spacing="0.06em">${escapeXml(line2)}</text>
+  <text x="${cx}" y="${yMono}" text-anchor="middle" fill="#f0e6dc" font-family='${font}'
+    font-size="${Math.round(W * 0.04)}" font-weight="400">${escapeXml(initials)}</text>
 </svg>`;
 
   try {

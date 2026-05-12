@@ -1,1 +1,0 @@
-Roboto-Regular.ttf — Google Roboto (Apache-2.0). Bundled only to rasterize envelope PNG text as paths (Gmail-safe).

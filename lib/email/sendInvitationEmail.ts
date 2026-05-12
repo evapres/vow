@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
-import { buildEnvelopeCardImageAlt } from "@/lib/email/generateEnvelopeInviteCard";
 import { envelopeInviteCardImageUrl } from "@/lib/email/envelopeInviteCardUrl";
 import { formatDetailsDateTime } from "@/lib/invitationDisplay";
 import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
@@ -63,17 +62,12 @@ function buildEmailProps(input: SendInvitationEmailProps): InvitationEmailProps 
       })
     : undefined;
 
-  const envelopeCardImageAlt = envelopeCardImageSrc
-    ? buildEnvelopeCardImageAlt(names, input.weddingDate)
-    : undefined;
-
   return {
     householdName: input.householdName?.trim() || undefined,
     coupleNames: names,
     inviteUrl,
     backgroundImageAbsoluteUrl,
     envelopeCardImageSrc,
-    envelopeCardImageAlt,
     weddingDate,
     weddingDateLine,
     weddingTimeLine,
