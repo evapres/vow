@@ -3,9 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
 import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
+
+function getServiceRoleClientOrNull() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  if (!url?.trim() || !serviceKey.trim()) return null;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+function dbAfterAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
+  return getServiceRoleClientOrNull() ?? supabase;
+}
 
 function optionalDate(value: FormDataEntryValue | null): string | null {
   if (value == null) return null;
@@ -183,4 +199,59 @@ export async function updateWedding(formData: FormData) {
   revalidatePath(`/preview/${weddingId}`);
   revalidatePath(`/dashboard/${weddingId}`);
   redirect(`/admin/edit/${weddingId}?saved=1`);
+}
+
+/** Deletes a wedding owned by the current user, including households and RSVPs. */
+export async function deleteWedding(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  const weddingId = String(formData.get("wedding_id") ?? "").trim();
+  if (!weddingId) {
+    redirect("/admin/invitations?error=" + encodeURIComponent("Missing invitation id."));
+  }
+
+  const { data: owned, error: ownError } = await supabase
+    .from("weddings")
+    .select("id")
+    .eq("id", weddingId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (ownError || !owned) {
+    redirect(
+      "/admin/invitations?error=" + encodeURIComponent("Invitation not found or you do not have access."),
+    );
+  }
+
+  const mutate = dbAfterAuth(supabase);
+
+  const { error: rsvpError } = await mutate.from("rsvps").delete().eq("wedding_id", weddingId);
+  if (rsvpError) {
+    redirect("/admin/invitations?error=" + encodeURIComponent(rsvpError.message));
+  }
+
+  const { error: householdError } = await mutate.from("households").delete().eq("wedding_id", weddingId);
+  if (householdError) {
+    redirect("/admin/invitations?error=" + encodeURIComponent(householdError.message));
+  }
+
+  const { error: weddingError } = await mutate.from("weddings").delete().eq("id", weddingId).eq("user_id", user.id);
+  if (weddingError) {
+    redirect("/admin/invitations?error=" + encodeURIComponent(weddingError.message));
+  }
+
+  revalidatePath("/admin/invitations");
+  revalidatePath("/admin");
+  revalidatePath(`/admin/edit/${weddingId}`);
+  revalidatePath(`/preview/${weddingId}`);
+  revalidatePath(`/dashboard/${weddingId}`);
+  redirect("/admin/invitations?deleted=1");
 }

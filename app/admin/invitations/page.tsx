@@ -6,7 +6,24 @@ import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function AdminInvitationsPage() {
+import DeleteInvitationButton from "./DeleteInvitationButton";
+
+type PageProps = {
+  searchParams: Promise<{ deleted?: string; error?: string }>;
+};
+
+function safeDecodeParam(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export default async function AdminInvitationsPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const deleted = sp.deleted === "1";
+  const deleteError = sp.error ? safeDecodeParam(sp.error) : null;
   const supabase = await createClient();
   const {
     data: { user },
@@ -47,6 +64,14 @@ export default async function AdminInvitationsPage() {
           <div className="mb-6 flex items-center justify-end">
             <AdminBurgerMenu />
           </div>
+          {deleted ? (
+            <div className="mb-4 border border-emerald-200/90 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950">
+              Invitation deleted.
+            </div>
+          ) : null}
+          {deleteError ? (
+            <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{deleteError}</div>
+          ) : null}
 
           <div className="mb-8 flex flex-col gap-2 border-b border-[#181818]/20 pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -105,6 +130,9 @@ export default async function AdminInvitationsPage() {
                     >
                       Dashboard
                     </Link>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <DeleteInvitationButton weddingId={w.id} coupleNames={w.couple_names ?? ""} />
                   </div>
                 </div>
               ))}
