@@ -1,11 +1,13 @@
 import {
   Body,
+  Column,
   Container,
   Head,
   Html,
   Img,
   Link,
   Preview,
+  Row,
   Section,
   Text,
 } from "@react-email/components";
@@ -52,18 +54,22 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
     box-sizing: border-box !important;
     width: 100% !important;
     max-width: ${ENVELOPE_DISPLAY_W}px !important;
-    -webkit-text-size-adjust: 100% !important;
-    text-size-adjust: 100% !important;
-    /* % padding-top/bottom resolve against this box width — same basis as background width scaling. */
-    padding-top: 70% !important;
-    padding-left: 5% !important;
-    padding-right: 5% !important;
-    padding-bottom: 30% !important;
     min-height: 0 !important;
     background-size: 100% auto !important;
     background-repeat: no-repeat !important;
     background-position: center top !important;
     text-align: center !important;
+  }
+  .inv-envelope-card-cell {
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    /* Padding on <td> — Gmail honors this more reliably than padding on the outer <table>. */
+    padding-top: 70% !important;
+    padding-left: 5% !important;
+    padding-right: 5% !important;
+    padding-bottom: 30% !important;
+    text-align: center !important;
+    vertical-align: top !important;
   }
   .inv-envelope-oncard,
   .inv-envelope-date {
@@ -160,22 +166,30 @@ const envelopeHeroLink = {
   backgroundColor: "transparent",
 } as const;
 
-const envelopeCardBackground = {
+/** Outer envelope `<table>` — background + size only (no padding: Gmail is inconsistent on table padding). */
+const envelopeCardOuter = {
   boxSizing: "border-box" as const,
   width: "100%",
   maxWidth: `${ENVELOPE_DISPLAY_W}px`,
   marginLeft: "auto",
   marginRight: "auto",
   minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
-  paddingTop: `${ENVELOPE_CARD_PADDING_TOP_PX}px`,
-  paddingLeft: "28px",
-  paddingRight: "28px",
-  paddingBottom: "20px",
+  padding: "0",
   backgroundColor: "transparent",
   backgroundSize: "100% auto",
   backgroundRepeat: "no-repeat" as const,
   backgroundPosition: "center top",
   textAlign: "center" as const,
+} as const;
+
+/** Inner `<td>` — all inset spacing so desktop Gmail matches preview browsers. */
+const envelopeCardCell = {
+  paddingTop: `${ENVELOPE_CARD_PADDING_TOP_PX}px`,
+  paddingLeft: "28px",
+  paddingRight: "28px",
+  paddingBottom: "20px",
+  textAlign: "center" as const,
+  verticalAlign: "top" as const,
 } as const;
 
 const envelopeOnCardLine = {
@@ -437,19 +451,23 @@ export default function InvitationEmail({
                   <Section
                     className="inv-envelope-card"
                     style={{
-                      ...envelopeCardBackground,
+                      ...envelopeCardOuter,
                       backgroundImage: `url(${envelopeSrc})`,
                     }}
                   >
-                    <Text className="inv-envelope-oncard" style={envelopeOnCardLine}>
-                      {ENVELOPE_INVITE_LINE}
-                    </Text>
-                    <Text className="inv-envelope-date" style={envelopeOnCardDate}>
-                      {cardDateLine}
-                    </Text>
-                    <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
-                      {(coupleNames ?? "").trim() || "Couple"}
-                    </Text>
+                    <Row>
+                      <Column className="inv-envelope-card-cell" style={envelopeCardCell}>
+                        <Text className="inv-envelope-oncard" style={envelopeOnCardLine}>
+                          {ENVELOPE_INVITE_LINE}
+                        </Text>
+                        <Text className="inv-envelope-date" style={envelopeOnCardDate}>
+                          {cardDateLine}
+                        </Text>
+                        <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
+                          {(coupleNames ?? "").trim() || "Couple"}
+                        </Text>
+                      </Column>
+                    </Row>
                   </Section>
                 </Link>
               </Section>
