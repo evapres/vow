@@ -16,17 +16,34 @@ import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
-/** Mobile only — envelope card + overlay copy (Apple Mail, iOS, Gmail app, many Android). */
+/** Mobile only — envelope scales by width; % padding/margin track the same reference as background-size: 100% auto. */
 const INVITATION_ENVELOPE_MOBILE_CSS = `
 @media only screen and (max-width: 600px) {
+  .inv-email-shell {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    max-width: 100% !important;
+  }
+  .inv-envelope-outer {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .inv-envelope-link {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
   .inv-envelope-card {
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 300px !important;
-    padding-top: 70px !important;
-    padding-left: 28px !important;
-    padding-right: 28px !important;
-    padding-bottom: 20px !important;
+    max-width: 100% !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    /* % padding-top/bottom resolve against this box width — same basis as background width scaling. */
+    padding-top: 70% !important;
+    padding-left: 5% !important;
+    padding-right: 5% !important;
+    padding-bottom: 102% !important;
+    min-height: 0 !important;
     background-size: 100% auto !important;
     background-repeat: no-repeat !important;
     background-position: center top !important;
@@ -35,19 +52,30 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
   .inv-envelope-oncard,
   .inv-envelope-date {
     font-size: 10px !important;
+    line-height: 1.35 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    text-shadow: 0 0 1px rgba(252, 250, 247, 0.95), 0 1px 1px rgba(252, 250, 247, 0.6) !important;
+  }
+  .inv-envelope-date {
+    letter-spacing: 0.05em !important;
   }
   .inv-envelope-couple {
     font-size: 10px !important;
-    line-height: 12px !important;
+    line-height: 13px !important;
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
     font-weight: 400 !important;
     color: #f5efe8 !important;
     text-align: center !important;
-    margin-top: 40px !important;
-    margin-right: 0 !important;
+    margin-top: 20% !important;
+    margin-right: auto !important;
     margin-bottom: 0 !important;
-    margin-left: 0 !important;
+    margin-left: auto !important;
+    max-width: 96% !important;
     letter-spacing: 0.02em !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
   }
 }
 `.trim();
@@ -379,16 +407,16 @@ export default function InvitationEmail({
       </Head>
       <Preview>{previewText}</Preview>
       <Body style={bodyStyle}>
-        <Container style={shellStyle}>
+        <Container className="inv-email-shell" style={shellStyle}>
           <Text style={forGuest}>For: {forAddressee}</Text>
 
-          <Section style={envelopeHeroWrap}>
+          <Section className="inv-envelope-outer" style={envelopeHeroWrap}>
             {envelopeSrc ? (
               <Section style={envelopeStack}>
                 <Link href={inviteUrl} style={openCardCta}>
                   Open Card
                 </Link>
-                <Link href={inviteUrl} style={envelopeHeroLink}>
+                <Link className="inv-envelope-link" href={inviteUrl} style={envelopeHeroLink}>
                   <Section
                     className="inv-envelope-card"
                     style={{
