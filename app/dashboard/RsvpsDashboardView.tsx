@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
-import { deleteHousehold, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
+import { deleteHousehold, sendAllHouseholdInvitationEmails, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
 import RsvpRealtimeRefresh from "./RsvpRealtimeRefresh";
 import type { DashboardHouseholdRow, HouseholdRsvpStatus } from "../../lib/rsvps/dashboard";
 import InvitationFrame from "@/app/components/InvitationFrame";
@@ -15,9 +15,9 @@ type RsvpsDashboardViewProps = {
   householdUpdated?: boolean;
   householdDeleted?: boolean;
   invitationEmailSent?: boolean;
+  /** Number of invitations sent in the last bulk send (from `bulk_invites_sent` query param). */
+  bulkInvitesSent?: number;
   householdError?: string | null;
-  /** Present on redirect after adding a guest; used to show copyable invite URL. */
-  newInviteToken?: string | null;
   /** e.g. https://yoursite.com — optional; falls back to relative path only. */
   inviteBaseUrl?: string;
 };
@@ -41,8 +41,8 @@ export default function RsvpsDashboardView({
   householdUpdated,
   householdDeleted,
   invitationEmailSent,
+  bulkInvitesSent,
   householdError,
-  newInviteToken,
   inviteBaseUrl,
 }: RsvpsDashboardViewProps) {
   const counts = households.reduce(
@@ -53,6 +53,10 @@ export default function RsvpsDashboardView({
     },
     { yes: 0, no: 0 },
   );
+
+  const pendingInviteCount = households.filter(
+    (h) => Boolean(h.email?.trim() && h.inviteToken?.trim() && !h.emailSentAt),
+  ).length;
 
   return (
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
@@ -81,7 +85,7 @@ export default function RsvpsDashboardView({
           <div className="flex flex-col items-stretch gap-4 sm:items-end" />
         </div>
 
-        {householdError ? (
+        {householdError && !(bulkInvitesSent != null && bulkInvitesSent > 0) ? (
           <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{householdError}</div>
         ) : null}
         {householdUpdated ? (
@@ -99,20 +103,22 @@ export default function RsvpsDashboardView({
             Invitation email sent.
           </div>
         ) : null}
-        {householdAdded ? (
-          <div className="mb-4 space-y-3 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-            <p className="font-medium">Guest household saved in Supabase.</p>
-            <p className="text-emerald-950/90">
-              Use <span className="font-medium">Send invitation</span> on each row (when an email is saved) to email the invite, or copy the link below.
+        {bulkInvitesSent != null && bulkInvitesSent > 0 ? (
+          <div className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            <p className="font-medium">
+              Sent {bulkInvitesSent} invitation{bulkInvitesSent === 1 ? "" : "s"}.
             </p>
-            {newInviteToken ? (
-              <div className="rounded border border-emerald-300/60 bg-white/80 px-3 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1A1A1A]/55">Invite link</p>
-                <p className="mt-1 break-all font-mono text-xs text-[#1A1A1A]">
-                  {inviteBaseUrl ? `${inviteBaseUrl}/invite/${newInviteToken}` : `/invite/${newInviteToken}`}
-                </p>
-              </div>
+            {householdError ? (
+              <p className="mt-2 text-emerald-950/90">Some messages could not be sent: {householdError}</p>
             ) : null}
+          </div>
+        ) : null}
+        {householdAdded ? (
+          <div className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            <p className="font-medium">Guest added.</p>
+            <p className="mt-1 text-emerald-950/90">
+              Use <span className="font-medium">Send all invitations</span> above when emails are ready.
+            </p>
           </div>
         ) : null}
 
@@ -141,6 +147,21 @@ export default function RsvpsDashboardView({
               >
                 Email preview
               </Link>
+              <form action={sendAllHouseholdInvitationEmails} className="inline-flex">
+                <input type="hidden" name="wedding_id" value={weddingId} />
+                <button
+                  type="submit"
+                  disabled={pendingInviteCount === 0}
+                  title={
+                    pendingInviteCount === 0
+                      ? "No guests with an email are waiting for their first invitation."
+                      : `Send to ${pendingInviteCount} guest household${pendingInviteCount === 1 ? "" : "s"} not yet emailed.`
+                  }
+                  className="inline-flex h-9 shrink-0 items-center justify-center border border-[#1A1A1A]/30 bg-transparent px-4 text-sm font-medium text-[#1A1A1A] transition-colors hover:border-[#1A1A1A]/50 hover:bg-[#1A1A1A]/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Send all invitations
+                </button>
+              </form>
               <AddGuestForm weddingId={weddingId} />
             </div>
           </div>
@@ -233,25 +254,33 @@ export default function RsvpsDashboardView({
                             </div>
                           </details>
 
-                          {row.email && row.inviteToken ? (
+                          {row.emailSentAt ? (
+                            <span
+                              className="inline-flex w-fit rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-900"
+                              title={`Sent ${new Date(row.emailSentAt).toLocaleString()}`}
+                            >
+                              Invitation sent
+                            </span>
+                          ) : null}
+                          {row.email?.trim() && row.inviteToken?.trim() ? (
                             <form action={sendHouseholdInvitationEmail}>
                               <input type="hidden" name="wedding_id" value={weddingId} />
                               <input type="hidden" name="household_id" value={row.householdId} />
                               <button
                                 type="submit"
-                                title={row.emailSentAt ? "Send the invitation email again" : undefined}
+                                title={
+                                  row.emailSentAt
+                                    ? "Sends the invitation email to this guest again."
+                                    : "Sends the invitation email to this guest."
+                                }
                                 className="inline-flex h-9 w-full items-center justify-center border border-[#1A1A1A]/30 bg-transparent px-4 text-sm font-medium text-[#1A1A1A] transition-colors hover:border-[#1A1A1A]/50 hover:bg-[#1A1A1A]/[0.03]"
                               >
-                                {row.emailSentAt ? "Invitation sent" : "Send invitation"}
+                                {row.emailSentAt ? "Send reminder" : "Send invitation"}
                               </button>
                             </form>
-                          ) : (
-                            <span className="text-xs text-[#1A1A1A]/55">Add an email to send an invitation.</span>
-                          )}
-                          {row.emailSentAt ? (
-                            <p className="text-[11px] text-[#1A1A1A]/50">
-                              Last sent: {new Date(row.emailSentAt).toLocaleString()}
-                            </p>
+                          ) : null}
+                          {!row.email?.trim() ? (
+                            <span className="text-[11px] text-[#1A1A1A]/55">Add an email to include in a bulk send.</span>
                           ) : null}
 
                           <form action={deleteHousehold}>

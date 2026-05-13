@@ -5,8 +5,9 @@ import {
 } from "./envelopeCardCopy";
 import { formatDetailsDateTime } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
+import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
-type WeddingLike = {
+export type WeddingLike = {
   couple_names: string | null;
   wedding_date: string | null;
   location: string | null;
@@ -63,8 +64,14 @@ export async function buildInvitationEmailProps(input: {
   const street = (wedding.street_address ?? "").trim();
   const orderedCelebrate = celebrateLocationLineFromParts(church, venueExplicit, street);
   const locForEmail = loc || joinWeddingLocationStorage(venueExplicit, church, street) || "";
-  /** Single line in the email (church, venue, street); no separate bold venue row. */
-  const locationDisplayLine = (orderedCelebrate || loc).trim();
+  /** Single line in the email (church, venue, street); Latin script when the source is Greek. */
+  const locationDisplayLineRaw = (orderedCelebrate || loc).trim();
+  const locationDisplayLine = locationDisplayLineRaw
+    ? locationLineForEmailInLatinScript(locationDisplayLineRaw)
+    : "";
+  const locForEmailOut = (locForEmail || "").trim()
+    ? locationLineForEmailInLatinScript((locForEmail || "").trim())
+    : "";
 
   const token = household?.invite_token?.trim();
   const inviteUrl =
@@ -94,7 +101,7 @@ export async function buildInvitationEmailProps(input: {
     rsvpDeadlineText: formatRsvpBeforeLine(wedding.rsvp_deadline),
     venueName: undefined,
     venueAddress: locationDisplayLine || undefined,
-    location: (locForEmail || "").trim() || undefined,
+    location: locForEmailOut || undefined,
     inviteUrl,
   };
 }

@@ -13,8 +13,8 @@ type PageProps = {
     household_updated?: string;
     household_deleted?: string;
     invitation_email_sent?: string;
+    bulk_invites_sent?: string;
     household_error?: string;
-    invite_token?: string;
   }>;
 };
 
@@ -69,8 +69,7 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
   const householdUpdated = sp.household_updated === "1";
   const householdDeleted = sp.household_deleted === "1";
   const invitationEmailSent = sp.invitation_email_sent === "1";
-  const newInviteToken = sp.invite_token ? safeDecodeParam(sp.invite_token) : null;
-
+  const bulkInvitesSent = sp.bulk_invites_sent ? Number.parseInt(sp.bulk_invites_sent, 10) : 0;
   return (
     <RsvpsDashboardView
       households={households}
@@ -79,8 +78,8 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
       householdUpdated={householdUpdated}
       householdDeleted={householdDeleted}
       invitationEmailSent={invitationEmailSent}
+      bulkInvitesSent={Number.isFinite(bulkInvitesSent) && bulkInvitesSent > 0 ? bulkInvitesSent : undefined}
       householdError={householdError}
-      newInviteToken={newInviteToken}
       inviteBaseUrl={siteOrigin}
     />
   );

@@ -2,12 +2,13 @@
 
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
-import { buildInvitationEmailProps } from "@/lib/email/buildInvitationEmailProps";
+import { buildInvitationEmailProps, type WeddingLike } from "@/lib/email/buildInvitationEmailProps";
 import { INVITATION_EMAIL_WEDDING_SELECT } from "@/lib/email/loadInvitationEmailPreviewContext";
 import { sendInvitationEmail } from "@/lib/email/sendInvitationEmail";
 
@@ -40,8 +41,6 @@ export async function createHousehold(formData: FormData) {
     invitedCountRaw.length > 0 && Number.isFinite(Number(invitedCountRaw))
       ? Math.max(1, Math.floor(Number(invitedCountRaw)))
       : null;
-  const inviteTokenInput = String(formData.get("invite_token") ?? "").trim();
-
   if (!weddingId || !householdName) {
     redirect(
       "/admin?household_error=" + encodeURIComponent("Wedding and household name are required."),
@@ -72,7 +71,7 @@ export async function createHousehold(formData: FormData) {
     );
   }
 
-  const invite_token = inviteTokenInput || randomUUID();
+  const invite_token = randomUUID();
 
   const { error } = await supabase.from("households").insert({
     wedding_id: weddingId,
@@ -87,9 +86,7 @@ export async function createHousehold(formData: FormData) {
   }
 
   revalidatePath(`/dashboard/${weddingId}`);
-  redirect(
-    `/dashboard/${weddingId}?household_added=1&invite_token=${encodeURIComponent(invite_token)}`,
-  );
+  redirect(`/dashboard/${weddingId}?household_added=1`);
 }
 
 function optionalText(value: FormDataEntryValue | null): string | null {
@@ -229,8 +226,78 @@ export async function deleteHousehold(formData: FormData) {
   redirect(`/dashboard/${weddingId}?household_deleted=1`);
 }
 
-function publicSiteOrigin(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/$/, "");
+const SITE_ORIGIN_MISSING_MSG =
+  "Could not build invite links. Set NEXT_PUBLIC_SITE_URL to your public site (e.g. https://vow.vip), or ensure your host forwards x-forwarded-host / host (local dev: open the dashboard at http://localhost:3000/...).";
+
+/**
+ * Public origin for absolute invite + asset URLs in outbound emails.
+ * Prefer `NEXT_PUBLIC_SITE_URL`, then this request's host headers, then `VERCEL_URL`.
+ */
+async function resolveSiteOriginForInvitationEmails(): Promise<string> {
+  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+
+  const hdrs = await headers();
+  const rawHost = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
+  const host = rawHost.split(",")[0]?.trim() ?? "";
+  const rawProto = hdrs.get("x-forwarded-proto") ?? "";
+  const proto = rawProto.split(",")[0]?.trim().toLowerCase() || "";
+  const safeProto = proto === "http" || proto === "https" ? proto : "https";
+  if (host) {
+    return `${safeProto}://${host}`;
+  }
+
+  const vercel = (process.env.VERCEL_URL ?? "").trim().replace(/\/$/, "");
+  if (vercel) {
+    if (/^https?:\/\//i.test(vercel)) return vercel;
+    return `https://${vercel}`;
+  }
+
+  return "";
+}
+
+type HouseholdInviteRow = {
+  id: string;
+  email: string | null;
+  invite_token: string | null;
+  household_name: string | null;
+};
+
+/** Sends one invitation and sets `email_sent_at` (used by single-send and bulk-send). */
+async function deliverHouseholdInvitationEmail(args: {
+  mutate: ReturnType<typeof dbAfterAuth>;
+  wedding: WeddingLike;
+  weddingId: string;
+  household: HouseholdInviteRow;
+  origin: string;
+}): Promise<void> {
+  const email = args.household.email?.trim();
+  const token = args.household.invite_token?.trim();
+  if (!email || !token) {
+    throw new Error("Household must have an email and invite link to send an invitation.");
+  }
+
+  const emailProps = await buildInvitationEmailProps({
+    wedding: args.wedding,
+    household: {
+      household_name: args.household.household_name,
+      invite_token: token,
+    },
+    siteOrigin: args.origin,
+  });
+
+  await sendInvitationEmail({ to: email, emailProps });
+
+  const sentAt = new Date().toISOString();
+  const { error: updateError } = await args.mutate
+    .from("households")
+    .update({ email_sent_at: sentAt })
+    .eq("id", args.household.id)
+    .eq("wedding_id", args.weddingId);
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
 }
 
 /** Sends the invitation email via Resend and records `email_sent_at` on the household. */
@@ -283,51 +350,118 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
     );
   }
 
-  const email = household.email?.trim();
-  const token = household.invite_token?.trim();
-  if (!email || !token) {
-    redirect(
-      `/dashboard/${weddingId}?household_error=` +
-        encodeURIComponent("Household must have an email and invite link to send an invitation."),
-    );
-  }
-
-  const origin = publicSiteOrigin();
+  const origin = await resolveSiteOriginForInvitationEmails();
   if (!origin) {
-    redirect(
-      `/dashboard/${weddingId}?household_error=` +
-        encodeURIComponent("NEXT_PUBLIC_SITE_URL is not set; cannot build the invite link."),
-    );
+    redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(SITE_ORIGIN_MISSING_MSG));
   }
 
-  const emailProps = await buildInvitationEmailProps({
-    wedding,
-    household: {
-      household_name: household.household_name,
-      invite_token: token,
-    },
-    siteOrigin: origin,
-  });
+  const mutate = dbAfterAuth(supabase);
 
   try {
-    await sendInvitationEmail({ to: email, emailProps });
+    await deliverHouseholdInvitationEmail({
+      mutate,
+      wedding: wedding as WeddingLike,
+      weddingId,
+      household: household as HouseholdInviteRow,
+      origin,
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to send invitation email.";
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(msg));
   }
 
-  const sentAt = new Date().toISOString();
-  const mutate = dbAfterAuth(supabase);
-  const { error: updateError } = await mutate
-    .from("households")
-    .update({ email_sent_at: sentAt })
-    .eq("id", householdId)
-    .eq("wedding_id", weddingId);
+  revalidatePath(`/dashboard/${weddingId}`);
+  redirect(`/dashboard/${weddingId}?invitation_email_sent=1`);
+}
 
-  if (updateError) {
-    redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(updateError.message));
+/** Sends invitation emails to every household on this wedding that has an email + token and no `email_sent_at` yet. */
+export async function sendAllHouseholdInvitationEmails(formData: FormData) {
+  const weddingId = String(formData.get("wedding_id") ?? "").trim();
+
+  if (!weddingId) {
+    redirect(
+      `/dashboard/?household_error=` + encodeURIComponent("Wedding id is required to send invitations."),
+    );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  const { data: wedding, error: weddingError } = await supabase
+    .from("weddings")
+    .select(`id, ${INVITATION_EMAIL_WEDDING_SELECT}`)
+    .eq("id", weddingId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (weddingError || !wedding) {
+    redirect(
+      `/dashboard/${weddingId}?household_error=` +
+        encodeURIComponent("You can only send invitations for your own weddings."),
+    );
+  }
+
+  const origin = await resolveSiteOriginForInvitationEmails();
+  if (!origin) {
+    redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(SITE_ORIGIN_MISSING_MSG));
+  }
+
+  const { data: householdRows, error: listError } = await supabase
+    .from("households")
+    .select("id, email, invite_token, household_name, email_sent_at")
+    .eq("wedding_id", weddingId)
+    .is("email_sent_at", null);
+
+  if (listError) {
+    redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(listError.message));
+  }
+
+  const candidates = (householdRows ?? []).filter((h) => {
+    const email = (h as HouseholdInviteRow).email?.trim();
+    const token = (h as HouseholdInviteRow).invite_token?.trim();
+    return Boolean(email && token);
+  }) as HouseholdInviteRow[];
+
+  if (candidates.length === 0) {
+    redirect(
+      `/dashboard/${weddingId}?household_error=` +
+        encodeURIComponent(
+          "No guests are waiting for an invitation. Add an email to each household, or invitations were already sent.",
+        ),
+    );
+  }
+
+  const mutate = dbAfterAuth(supabase);
+  let sent = 0;
+
+  for (const household of candidates) {
+    try {
+      await deliverHouseholdInvitationEmail({
+        mutate,
+        wedding: wedding as WeddingLike,
+        weddingId,
+        household,
+        origin,
+      });
+      sent += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to send invitation email.";
+      revalidatePath(`/dashboard/${weddingId}`);
+      const q =
+        sent > 0
+          ? `household_error=${encodeURIComponent(msg)}&bulk_invites_sent=${sent}`
+          : `household_error=${encodeURIComponent(msg)}`;
+      redirect(`/dashboard/${weddingId}?${q}`);
+    }
   }
 
   revalidatePath(`/dashboard/${weddingId}`);
-  redirect(`/dashboard/${weddingId}?invitation_email_sent=1`);
+  redirect(`/dashboard/${weddingId}?bulk_invites_sent=${sent}`);
 }

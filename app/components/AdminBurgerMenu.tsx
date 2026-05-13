@@ -34,8 +34,6 @@ export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMen
     router.refresh();
   }
 
-  const dashboardHref = weddingId ? `/dashboard/${weddingId}` : "/admin";
-
   return (
     <div ref={rootRef} className={`relative ${className ?? ""}`.trim()}>
       <button
@@ -64,18 +62,11 @@ export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMen
               Invitations
             </Link>
             <Link
-              href={dashboardHref}
-              onClick={() => setOpen(false)}
-              className="px-4 py-3 text-sm font-medium hover:bg-[#181818]/[0.04]"
-            >
-              Dashboard
-            </Link>
-            <Link
               href="/admin?new=1"
               onClick={() => setOpen(false)}
               className="px-4 py-3 text-sm font-medium hover:bg-[#181818]/[0.04]"
             >
-              Create more invitations
+              Create invitation
             </Link>
             <button
               type="button"

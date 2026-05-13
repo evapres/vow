@@ -16,7 +16,9 @@ export type SendInvitationEmailInput = {
 export async function sendInvitationEmail({ to, emailProps }: SendInvitationEmailInput): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey?.trim()) {
-    throw new Error("RESEND_API_KEY is not set");
+    throw new Error(
+      "RESEND_API_KEY is not set. Add it to .env.local for local dev (see https://resend.com/api-keys), or set it in your Vercel/hosting project environment variables.",
+    );
   }
 
   const html = await renderInvitationEmailHtml(emailProps);
