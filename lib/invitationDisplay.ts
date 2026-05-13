@@ -1,4 +1,8 @@
+import { parseWeddingStoredForDisplay, WEDDING_EVENT_TIME_ZONE } from "./weddingDateParse";
+
 export type InvitationLanguage = "en" | "el";
+
+const weddingDisplayZone = { timeZone: WEDDING_EVENT_TIME_ZONE } as const;
 
 /** Format wedding date for the invitation header row (e.g. 11 JULY 2026). */
 export function formatHeaderDateLabel(
@@ -6,14 +10,15 @@ export function formatHeaderDateLabel(
   language?: InvitationLanguage,
 ): string {
   if (!input) return "";
-  const d = new Date(input);
-  if (Number.isNaN(d.getTime())) return toAllCapsNoAccents(String(input));
+  const parsed = parseWeddingStoredForDisplay(input);
+  if (!parsed) return toAllCapsNoAccents(String(input));
   const locale = language === "el" ? "el-GR" : "en-GB";
   const formatted = new Intl.DateTimeFormat(locale, {
+    ...weddingDisplayZone,
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(d);
+  }).format(parsed.instant);
   // Strip combining marks before uppercase so CSS uppercase never leaves stray accents.
   return toAllCapsNoAccents(formatted);
 }
@@ -62,25 +67,29 @@ export function splitWeddingDateTimeForForm(
   return { date: "", time: "20:00" };
 }
 
-/** e.g. Saturday, July 11, 2026 at 8:00 PM (omits time when local midnight) */
+/** e.g. Saturday, July 11, 2026 at 8:00 PM (omits time when stored civil / UTC clock is midnight) */
 export function formatDetailsDateTime(
   input: string | null | undefined,
   language?: InvitationLanguage,
 ): string {
   if (!input) return "";
-  const d = new Date(input);
-  if (Number.isNaN(d.getTime())) return String(input);
+  const parsed = parseWeddingStoredForDisplay(input);
+  if (!parsed) return String(input);
+  const { instant: d, showTime: hasTime } = parsed;
   const isGreek = language === "el";
-  const weekday = new Intl.DateTimeFormat(isGreek ? "el-GR" : "en-US", { weekday: "long" }).format(d);
-  const hasTime =
-    d.getHours() !== 0 || d.getMinutes() !== 0 || d.getSeconds() !== 0;
+  const weekday = new Intl.DateTimeFormat(isGreek ? "el-GR" : "en-US", {
+    ...weddingDisplayZone,
+    weekday: "long",
+  }).format(d);
   const datePart = new Intl.DateTimeFormat(isGreek ? "el-GR" : "en-US", {
+    ...weddingDisplayZone,
     month: "long",
     day: "numeric",
     year: "numeric",
   }).format(d);
   if (!hasTime) return `${weekday}, ${datePart}`;
   let timePart = new Intl.DateTimeFormat("en-US", {
+    ...weddingDisplayZone,
     hour: "numeric",
     minute: "2-digit",
   }).format(d);
@@ -90,4 +99,21 @@ export function formatDetailsDateTime(
     return `${toAllCapsNoAccents(weekday)}, ${toAllCapsNoAccents(datePart)} ΣΤΙΣ ${timePart}`;
   }
   return `${weekday}, ${datePart} at ${timePart}`;
+}
+
+/**
+ * Split {@link formatDetailsDateTime} output into date + time lines (email body).
+ * English uses " at …"; Greek uses " ΣΤΙΣ …".
+ */
+export function splitDetailsDateTimeLines(combined: string): { dateLine: string; timeLine: string } {
+  const t = combined.trim();
+  const english = t.match(/^(.+?)\s+at\s+(.+)$/i);
+  if (english) {
+    return { dateLine: english[1]!.trim(), timeLine: english[2]!.trim() };
+  }
+  const greek = t.match(/^(.+?)\s+ΣΤΙΣ\s+(.+)$/);
+  if (greek) {
+    return { dateLine: greek[1]!.trim(), timeLine: greek[2]!.trim() };
+  }
+  return { dateLine: t, timeLine: "" };
 }

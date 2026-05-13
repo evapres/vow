@@ -12,8 +12,10 @@ import {
   Text,
 } from "@react-email/components";
 
+import { coupleEnvelopeInitialsAmpersand } from "@/lib/email/coupleEnvelopeInitials";
 import { ENVELOPE_INVITE_LINE } from "@/lib/email/envelopeCardCopy";
 import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
+import { splitDetailsDateTimeLines } from "@/lib/invitationDisplay";
 
 const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
@@ -354,12 +356,6 @@ export type InvitationEmailProps = {
   inviteUrl?: string;
 };
 
-function splitDateAndTime(combined: string): { date: string; time: string } {
-  const m = combined.trim().match(/^(.+?)\s+at\s+(.+)$/i);
-  if (m) return { date: m[1].trim(), time: m[2].trim() };
-  return { date: combined.trim(), time: "6:00PM EEST" };
-}
-
 function defaultMapUrl(venueName: string, venueAddress: string): string {
   const q = [venueName, venueAddress].filter(Boolean).join(", ");
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
@@ -386,12 +382,9 @@ export default function InvitationEmail({
   const forAddressee = (householdName?.trim() || coupleNames).trim();
   const previewText = `Save the Date — ${coupleNames}`;
 
-  const dateLine =
-    weddingDateLine ??
-    (weddingDate.includes("at") ? splitDateAndTime(weddingDate).date : weddingDate);
-  const timeLine =
-    weddingTimeLine ??
-    (weddingDate.includes("at") ? splitDateAndTime(weddingDate).time : "6:00PM EEST");
+  const splitFromCombined = splitDetailsDateTimeLines(weddingDate);
+  const dateLine = weddingDateLine ?? splitFromCombined.dateLine;
+  const timeLine = weddingTimeLine ?? splitFromCombined.timeLine;
 
   const locRaw = (location ?? "").trim();
   const explicitVenue = (venueName ?? "").trim();
@@ -471,7 +464,7 @@ export default function InvitationEmail({
                           {cardDateLine}
                         </Text>
                         <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
-                          {(coupleNames ?? "").trim() || "Couple"}
+                          {coupleEnvelopeInitialsAmpersand((coupleNames ?? "").trim() || "Couple")}
                         </Text>
                       </Column>
                     </Row>
@@ -498,7 +491,7 @@ export default function InvitationEmail({
 
           <Text style={headline}>Save the Date</Text>
           <Text style={detail}>{dateLine}</Text>
-          <Text style={detail}>{timeLine}</Text>
+          {timeLine ? <Text style={detail}>{timeLine}</Text> : null}
 
           <Section style={{ textAlign: "center", margin: "10px 0 0" }}>
             <Link href={calendarUrl} style={linkMuted}>

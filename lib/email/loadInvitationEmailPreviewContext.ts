@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** Supabase `.select()` fragment — keep in sync with {@link buildInvitationEmailProps} wedding shape. */
 export const INVITATION_EMAIL_WEDDING_SELECT =
-  "couple_names, wedding_date, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url" as const;
+  "couple_names, wedding_date, language, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url" as const;
 
 /** Rows needed for {@link buildInvitationEmailProps} on the invitation preview / embed routes. */
 export async function loadInvitationEmailPreviewContext(
@@ -14,6 +14,7 @@ export async function loadInvitationEmailPreviewContext(
   wedding: {
     couple_names: string | null;
     wedding_date: string | null;
+    language: string | null;
     location: string | null;
     venue_name: string | null;
     church_name: string | null;

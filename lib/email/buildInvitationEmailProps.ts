@@ -3,13 +3,15 @@ import {
   envelopeTemplateImageAbsoluteUrl,
   formatEnvelopeCardDate,
 } from "./envelopeCardCopy";
-import { formatDetailsDateTime } from "../invitationDisplay";
+import { formatDetailsDateTime, splitDetailsDateTimeLines } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
 import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
 export type WeddingLike = {
   couple_names: string | null;
   wedding_date: string | null;
+  /** Invitation page language; email date/time is always English. */
+  language?: string | null;
   location: string | null;
   venue_name?: string | null;
   church_name?: string | null;
@@ -22,12 +24,6 @@ type HouseholdLike = {
   household_name: string | null;
   invite_token: string | null;
 };
-
-function splitDateTimeLine(combined: string): { dateLine: string; timeLine: string } {
-  const m = combined.trim().match(/^(.+?)\s+at\s+(.+)$/i);
-  if (m) return { dateLine: m[1].trim(), timeLine: m[2].trim() };
-  return { dateLine: combined.trim(), timeLine: "" };
-}
 
 function formatRsvpBeforeLine(iso: string | null | undefined): string {
   if (!iso?.trim()) return "Please RSVP using the link in this email.";
@@ -45,7 +41,8 @@ function formatRsvpBeforeLine(iso: string | null | undefined): string {
 }
 
 /**
- * Maps saved wedding + household rows to {@link InvitationEmailProps} (same facts as the web invitation).
+ * Maps saved wedding + household rows to {@link InvitationEmailProps}.
+ * Date/time lines are always English; the public invite page can still use {@link WeddingLike.language}.
  */
 export async function buildInvitationEmailProps(input: {
   wedding: WeddingLike;
@@ -55,8 +52,10 @@ export async function buildInvitationEmailProps(input: {
   const { wedding, household, siteOrigin } = input;
   const coupleNames = (wedding.couple_names ?? "").trim() || "Couple";
 
-  const combined = wedding.wedding_date ? formatDetailsDateTime(wedding.wedding_date) : "";
-  const { dateLine, timeLine } = combined ? splitDateTimeLine(combined) : { dateLine: "Date to be announced", timeLine: "" };
+  const combined = wedding.wedding_date ? formatDetailsDateTime(wedding.wedding_date, "en") : "";
+  const { dateLine, timeLine } = combined
+    ? splitDetailsDateTimeLines(combined)
+    : { dateLine: "Date to be announced", timeLine: "" };
 
   const loc = (wedding.location ?? "").trim();
   const venueExplicit = (wedding.venue_name ?? "").trim();
