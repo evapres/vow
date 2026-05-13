@@ -25,11 +25,18 @@ const ENVELOPE_DISPLAY_W = 520;
  * Gmail often ignores max-width on the wrapping `<a>`, so the card grew to full content width (~600px+).
  * % padding-top/bottom then explode. Cap `.inv-envelope-card` (and wrappers) at {@link ENVELOPE_DISPLAY_W}.
  */
+/** Envelope layout: desktop Gmail uses % top padding on the inner `<td>`; mobile uses its own block. */
 const INVITATION_ENVELOPE_MOBILE_CSS = `
 .inv-envelope-card {
   max-width: ${ENVELOPE_DISPLAY_W}px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+}
+@media only screen and (min-width: 601px) {
+  .inv-envelope-card-cell {
+    /* Desktop / webmail — matches Gmail; % is vs. cell width (capped at ${ENVELOPE_DISPLAY_W}px). */
+    padding-top: 50% !important;
+  }
 }
 @media only screen and (max-width: 600px) {
   .inv-email-shell {
