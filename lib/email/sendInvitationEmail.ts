@@ -26,7 +26,7 @@ export async function sendInvitationEmail({ to, emailProps }: SendInvitationEmai
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
-    from: "VOW <invitations@thevow.vip>",
+    from: "VOW <invitations@send.thevow.vip>",
     to: to.trim(),
     subject: `You’re invited — ${couple}`,
     html,

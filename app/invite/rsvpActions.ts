@@ -4,6 +4,9 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 import { revalidatePath } from "next/cache";
 
+import { resolvePublicSiteOrigin } from "@/lib/resolvePublicSiteOrigin";
+import { sendRsvpAdminNotificationEmail } from "@/lib/email/sendRsvpAdminNotificationEmail";
+
 type SubmitRsvpInput = {
   householdId: string;
   response: "yes" | "no";
@@ -78,6 +81,45 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
 
     if (rsvpError) {
       return { ok: false, error: rsvpError.message };
+    }
+
+    const attending = response === "yes";
+    const attendingCount = attending ? Math.floor(Number(attendingCountRaw)) : null;
+
+    try {
+      const { data: weddingRow, error: weddingFetchError } = await supabase
+        .from("weddings")
+        .select("user_id, couple_names")
+        .eq("id", household.wedding_id)
+        .single();
+
+      const { data: householdDetail } = await supabase
+        .from("households")
+        .select("household_name, email")
+        .eq("id", household.id)
+        .single();
+
+      const ownerId = weddingRow?.user_id?.trim();
+      if (!weddingFetchError && ownerId) {
+        const { data: ownerAuth } = await supabase.auth.admin.getUserById(ownerId);
+        const adminEmail = ownerAuth?.user?.email?.trim();
+        if (adminEmail) {
+          const origin = (await resolvePublicSiteOrigin()).replace(/\/$/, "");
+          const dashboardUrl = origin ? `${origin}/dashboard/${household.wedding_id}` : "";
+          await sendRsvpAdminNotificationEmail({
+            to: adminEmail,
+            coupleNames: (weddingRow?.couple_names ?? "").trim() || "Couple",
+            householdName: (householdDetail?.household_name ?? "").trim() || "Guest",
+            guestEmail: householdDetail?.email?.trim() || undefined,
+            attending,
+            attendingCount,
+            notes,
+            dashboardUrl,
+          });
+        }
+      }
+    } catch (notifyErr) {
+      console.error("RSVP admin email notification failed:", notifyErr);
     }
 
     revalidatePath(`/dashboard/${household.wedding_id}`);

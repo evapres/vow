@@ -2,7 +2,6 @@
 
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -10,6 +9,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { buildInvitationEmailProps, type WeddingLike } from "@/lib/email/buildInvitationEmailProps";
 import { INVITATION_EMAIL_WEDDING_SELECT } from "@/lib/email/loadInvitationEmailPreviewContext";
+import { resolvePublicSiteOrigin } from "@/lib/resolvePublicSiteOrigin";
 import { sendInvitationEmail } from "@/lib/email/sendInvitationEmail";
 
 function getServiceRoleClientOrNull() {
@@ -229,33 +229,6 @@ export async function deleteHousehold(formData: FormData) {
 const SITE_ORIGIN_MISSING_MSG =
   "Could not build invite links. Set NEXT_PUBLIC_SITE_URL to your public site (e.g. https://vow.vip), or ensure your host forwards x-forwarded-host / host (local dev: open the dashboard at http://localhost:3000/...).";
 
-/**
- * Public origin for absolute invite + asset URLs in outbound emails.
- * Prefer `NEXT_PUBLIC_SITE_URL`, then this request's host headers, then `VERCEL_URL`.
- */
-async function resolveSiteOriginForInvitationEmails(): Promise<string> {
-  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-
-  const hdrs = await headers();
-  const rawHost = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
-  const host = rawHost.split(",")[0]?.trim() ?? "";
-  const rawProto = hdrs.get("x-forwarded-proto") ?? "";
-  const proto = rawProto.split(",")[0]?.trim().toLowerCase() || "";
-  const safeProto = proto === "http" || proto === "https" ? proto : "https";
-  if (host) {
-    return `${safeProto}://${host}`;
-  }
-
-  const vercel = (process.env.VERCEL_URL ?? "").trim().replace(/\/$/, "");
-  if (vercel) {
-    if (/^https?:\/\//i.test(vercel)) return vercel;
-    return `https://${vercel}`;
-  }
-
-  return "";
-}
-
 type HouseholdInviteRow = {
   id: string;
   email: string | null;
@@ -350,7 +323,7 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
     );
   }
 
-  const origin = await resolveSiteOriginForInvitationEmails();
+  const origin = await resolvePublicSiteOrigin();
   if (!origin) {
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(SITE_ORIGIN_MISSING_MSG));
   }
@@ -408,7 +381,7 @@ export async function sendAllHouseholdInvitationEmails(formData: FormData) {
     );
   }
 
-  const origin = await resolveSiteOriginForInvitationEmails();
+  const origin = await resolvePublicSiteOrigin();
   if (!origin) {
     redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(SITE_ORIGIN_MISSING_MSG));
   }
