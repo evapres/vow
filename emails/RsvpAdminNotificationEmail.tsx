@@ -32,7 +32,7 @@ export default function RsvpAdminNotificationEmail({
   return (
     <Html>
       <Head />
-      <Preview>New RSVP — {householdName}</Preview>
+      <Preview>New RSVP response — {householdName}</Preview>
       <Body style={{ margin: 0, padding: "32px 20px", backgroundColor: "#f4f1ec", fontFamily: sans }}>
         <Container
           style={{
@@ -44,7 +44,7 @@ export default function RsvpAdminNotificationEmail({
           }}
         >
           <Text style={{ fontFamily: sans, fontSize: "18px", fontWeight: 600, color: "#1a1410", margin: "0 0 8px" }}>
-            New RSVP received
+            New RSVP response
           </Text>
           <Text style={{ fontFamily: sans, fontSize: "14px", color: "#444", margin: "0 0 20px", lineHeight: 1.5 }}>
             <strong>{householdName}</strong> replied for <strong>{couple}</strong>.

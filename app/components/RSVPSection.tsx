@@ -30,7 +30,6 @@ type RsvpUiCopy = {
   thankYouForResponse: string;
   lookForwardSeeingYou: string;
   willMissYou: string;
-  responseSentToHost: string;
   writeHostMessageOptional: string;
 };
 
@@ -53,7 +52,6 @@ const RSVP_COPY_EL: RsvpUiCopy = {
   thankYouForResponse: "Ευχαριστούμε για την απάντησή σας",
   lookForwardSeeingYou: "Ανυπομονούμε να σας δούμε",
   willMissYou: "Θα μας λείψετε",
-  responseSentToHost: "Η απάντησή σας εστάλη στο ζευγάρι.",
   writeHostMessageOptional: "Γράψτε ένα μήνυμα στο ζευγάρι (προαιρετικά)",
 };
 
@@ -76,7 +74,6 @@ const RSVP_COPY_EN: RsvpUiCopy = {
   thankYouForResponse: "Thank you for your response",
   lookForwardSeeingYou: "We look forward to seeing you",
   willMissYou: "We are going to miss you",
-  responseSentToHost: "Your response has been sent to the host.",
   writeHostMessageOptional: "Write the host a message (optional)",
 };
 
@@ -115,6 +112,38 @@ export default function RSVPSection({
   const [isSaving, setIsSaving] = useState(false);
 
   const copy = language === "el" ? RSVP_COPY_EL : RSVP_COPY_EN;
+
+  /** Single success UI for recorded RSVP, post-submit yes, and post-submit no (avoids flash when server props refresh). */
+  const rsvpSuccessMessage = (
+    <>
+      {language === "el" ? (
+        <div className="flex flex-col items-center gap-6">
+          <h3
+            className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            {copy.heading}
+          </h3>
+          <p
+            className="max-w-[360px] text-center text-[14px] font-normal italic leading-relaxed tracking-[1px] sm:text-[16px]"
+            style={{ fontFamily: "var(--font-source-serif)", fontStretch: "condensed" }}
+          >
+            {copy.rsvpSentBody}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[16px]">
+          <h3
+            className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            {copy.heading}
+          </h3>
+          <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">{copy.rsvpSentBody}</p>
+        </div>
+      )}
+    </>
+  );
 
   const saveRsvp = async (payload: {
     response: "yes" | "no";
@@ -218,35 +247,7 @@ export default function RSVPSection({
       >
         <div className="mx-auto max-w-[520px] text-center">
           {rsvpAlreadyRecorded ? (
-            <>
-              {language === "el" ? (
-                <div className="flex flex-col items-center gap-6">
-                  <h3
-                    className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
-                    {copy.heading}
-                  </h3>
-                  <p
-                    className="max-w-[360px] text-center text-[14px] font-normal italic leading-relaxed tracking-[1px] sm:text-[16px]"
-                    style={{ fontFamily: "var(--font-source-serif)", fontStretch: "condensed" }}
-                  >
-                    {copy.rsvpSentBody}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-[16px]">
-                  <h3
-                    className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
-                    {copy.heading}
-                  </h3>
-
-                  <p className="text-[15px] leading-relaxed text-[#FAF6F2]/82">{copy.rsvpSentBody}</p>
-                </div>
-              )}
-            </>
+            rsvpSuccessMessage
           ) : response === null ? (
             <>
               {language === "el" ? (
@@ -374,68 +375,53 @@ export default function RSVPSection({
               </SolidSilkButton>
             </div>
           ) : response === "yes" && yesStep === "thankyou" ? (
-            <div className="mx-auto w-[360px] max-w-full text-center">
-              <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
-                {toAllCapsNoAccents(copy.thankYouForResponse)}
-              </p>
-              <p
-                className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {copy.lookForwardSeeingYou}
-              </p>
-              <p className="mt-6 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
-                {copy.responseSentToHost}
-              </p>
-            </div>
+            rsvpSuccessMessage
           ) : (
-            <div className="mx-auto w-[360px] max-w-full text-center">
-              <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
-                {toAllCapsNoAccents(copy.thankYouForResponse)}
-              </p>
-              <p
-                className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {copy.willMissYou}
-              </p>
-              <label
-                htmlFor="rsvp-notes"
-                className="mt-4 block text-left text-[11px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/65"
-              >
-                {toAllCapsNoAccents(copy.writeHostMessageOptional)}
-              </label>
-              <textarea
-                id="rsvp-notes"
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder={copy.notePlaceholder}
-                rows={4}
-                disabled={submitted || isSaving}
-                className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-left text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55 disabled:opacity-60"
-              />
-
-              {submitError ? (
-                <p className="mt-3 text-left text-[12px] text-[#FCFCF6]/85">{submitError}</p>
-              ) : null}
-
+            <>
               {submitted ? (
-                <>
-                  <p className="mt-4 border border-[#FCFCF6]/25 px-4 py-3 text-[13px] font-medium text-[#FCFCF6]/90">
-                    {copy.responseSentToHost}
-                  </p>
-                </>
+                rsvpSuccessMessage
               ) : (
-                <SolidSilkButton
-                  type="button"
-                  onClick={handleNoSubmit}
-                  disabled={isSaving}
-                  wrapperClassName="mt-4 h-[46px] w-[220px] max-w-full"
-                >
-                  {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}
-                </SolidSilkButton>
+                <div className="mx-auto w-[360px] max-w-full text-center">
+                  <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/75">
+                    {toAllCapsNoAccents(copy.thankYouForResponse)}
+                  </p>
+                  <p
+                    className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    {copy.willMissYou}
+                  </p>
+                  <label
+                    htmlFor="rsvp-notes"
+                    className="mt-4 block text-left text-[11px] font-medium uppercase tracking-[0.2em] text-[#FCFCF6]/65"
+                  >
+                    {toAllCapsNoAccents(copy.writeHostMessageOptional)}
+                  </label>
+                  <textarea
+                    id="rsvp-notes"
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    placeholder={copy.notePlaceholder}
+                    rows={4}
+                    disabled={isSaving}
+                    className="mt-3 w-full resize-none border border-[#FCFCF6]/30 bg-transparent px-4 py-3 text-left text-[13px] leading-6 text-[#FCFCF6] outline-none placeholder:text-[#FCFCF6]/40 focus:border-[#FCFCF6]/55 disabled:opacity-60"
+                  />
+
+                  {submitError ? (
+                    <p className="mt-3 text-left text-[12px] text-[#FCFCF6]/85">{submitError}</p>
+                  ) : null}
+
+                  <SolidSilkButton
+                    type="button"
+                    onClick={handleNoSubmit}
+                    disabled={isSaving}
+                    wrapperClassName="mt-4 h-[46px] w-[220px] max-w-full"
+                  >
+                    {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}
+                  </SolidSilkButton>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

@@ -41,7 +41,7 @@ export async function sendRsvpAdminNotificationEmail(input: SendRsvpAdminNotific
   const { error } = await resend.emails.send({
     from: "VOW <invitations@thevow.vip>",
     to,
-    subject: `New RSVP — ${household}`,
+    subject: `New RSVP response — ${household}`,
     html,
   });
 

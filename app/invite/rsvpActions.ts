@@ -101,8 +101,11 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
 
       const ownerId = weddingRow?.user_id?.trim();
       if (!weddingFetchError && ownerId) {
-        const { data: ownerAuth } = await supabase.auth.admin.getUserById(ownerId);
-        const adminEmail = ownerAuth?.user?.email?.trim();
+        const { data: ownerData, error: ownerLookupError } = await supabase.auth.admin.getUserById(ownerId);
+        if (ownerLookupError) {
+          console.error("RSVP admin email: could not load wedding owner:", ownerLookupError.message);
+        }
+        const adminEmail = ownerData?.user?.email?.trim();
         if (adminEmail) {
           const origin = (await resolvePublicSiteOrigin()).replace(/\/$/, "");
           const dashboardUrl = origin ? `${origin}/dashboard/${household.wedding_id}` : "";
