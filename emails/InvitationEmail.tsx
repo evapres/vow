@@ -16,8 +16,19 @@ import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
-/** Mobile only — envelope scales by width; % padding/margin track the same reference as background-size: 100% auto. */
+/** Design width for envelope hero — keeps % padding in sync with `background-size: 100% auto`. */
+const ENVELOPE_DISPLAY_W = 520;
+
+/**
+ * Gmail often ignores max-width on the wrapping `<a>`, so the card grew to full content width (~600px+).
+ * % padding-top/bottom then explode. Cap `.inv-envelope-card` (and wrappers) at {@link ENVELOPE_DISPLAY_W}.
+ */
 const INVITATION_ENVELOPE_MOBILE_CSS = `
+.inv-envelope-card {
+  max-width: ${ENVELOPE_DISPLAY_W}px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 @media only screen and (max-width: 600px) {
   .inv-email-shell {
     padding-left: 16px !important;
@@ -25,24 +36,29 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
     max-width: 100% !important;
   }
   .inv-envelope-outer {
-    max-width: 100% !important;
+    max-width: ${ENVELOPE_DISPLAY_W}px !important;
     width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .inv-envelope-link {
-    max-width: 100% !important;
+    box-sizing: border-box !important;
+    max-width: ${ENVELOPE_DISPLAY_W}px !important;
     width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .inv-envelope-card {
     box-sizing: border-box !important;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: ${ENVELOPE_DISPLAY_W}px !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
     /* % padding-top/bottom resolve against this box width — same basis as background width scaling. */
     padding-top: 70% !important;
     padding-left: 5% !important;
     padding-right: 5% !important;
-    padding-bottom: 102% !important;
+    padding-bottom: 30% !important;
     min-height: 0 !important;
     background-size: 100% auto !important;
     background-repeat: no-repeat !important;
@@ -108,8 +124,6 @@ const forGuest = {
   lineHeight: "1.5",
 };
 
-const ENVELOPE_DISPLAY_W = 520;
-
 /** Envelope hero block height (HTML overlay over `email-invite-envelope-template.png`). */
 const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
 
@@ -149,6 +163,9 @@ const envelopeHeroLink = {
 const envelopeCardBackground = {
   boxSizing: "border-box" as const,
   width: "100%",
+  maxWidth: `${ENVELOPE_DISPLAY_W}px`,
+  marginLeft: "auto",
+  marginRight: "auto",
   minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
   paddingTop: `${ENVELOPE_CARD_PADDING_TOP_PX}px`,
   paddingLeft: "28px",
