@@ -39,7 +39,7 @@ export async function sendRsvpAdminNotificationEmail(input: SendRsvpAdminNotific
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
-    from: "VOW <invitations@send.thevow.vip>",
+    from: "VOW <invitations@thevow.vip>",
     to,
     subject: `New RSVP — ${household}`,
     html,
