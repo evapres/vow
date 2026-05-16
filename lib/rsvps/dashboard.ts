@@ -9,6 +9,8 @@ export type DashboardHouseholdRow = {
   email: string | null;
   inviteToken: string | null;
   emailSentAt: string | null;
+  /** How many guests are invited in this household; null if unset. */
+  invitedCount: number | null;
   status: HouseholdRsvpStatus;
   /** Raw note from `rsvps.notes` when an RSVP exists; otherwise null. */
   rsvpNote: string | null;
@@ -22,6 +24,7 @@ type HouseholdRow = {
   invite_token: string | null;
   email: string | null;
   email_sent_at: string | null;
+  invited_count: number | null;
 };
 
 type RsvpRow = {
@@ -47,7 +50,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
   const [householdsResult, rsvpsResult] = await Promise.all([
     supabase
       .from("households")
-      .select("id, household_name, invite_token, email, email_sent_at")
+      .select("id, household_name, invite_token, email, email_sent_at, invited_count")
       .eq("wedding_id", weddingId)
       .order("household_name", { ascending: true }),
     supabase
@@ -86,6 +89,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       email: row.email ?? null,
       inviteToken: row.invite_token ?? null,
       emailSentAt: row.email_sent_at ?? null,
+      invitedCount: row.invited_count ?? null,
       status: statusFromRsvp(rsvp),
       rsvpNote: rsvp?.notes ?? null,
       attendingCount: null,
