@@ -1,7 +1,5 @@
 import Image from "next/image";
 
-import { toAllCapsNoAccents } from "@/lib/invitationDisplay";
-
 type HeroSplitProps = {
   kicker: string;
   title: string;
@@ -44,8 +42,8 @@ export default function HeroSplit({
 
         <div className="flex min-w-0 flex-1 flex-col justify-center px-[var(--invite-gutter,12px)] py-14 text-[#FCFCF6] lg:py-16 lg:pl-0 lg:pr-[var(--invite-gutter,12px)]">
           <p
-            className="max-w-xl text-[40px] leading-[1.12] text-[#FCFCF6]/90 sm:text-[54px]"
-            style={{ fontFamily: "var(--font-heading)" }}
+            className="max-w-xl text-[54px] leading-[1.12] text-[#FCFCF6]/90"
+            style={{ fontFamily: "var(--font-special)" }}
           >
             {`${kicker} ${title} ${subtitle}`}
           </p>
@@ -57,7 +55,7 @@ export default function HeroSplit({
             <span aria-hidden="true" className="text-base leading-none text-[#FCFCF6]/70">
               ↓
             </span>
-            {toAllCapsNoAccents("Kindly Respond Below")}
+            Kindly Respond Below
           </a>
         </div>
       </div>

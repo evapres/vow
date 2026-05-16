@@ -6,6 +6,7 @@ import SolidSilkButton from "./SolidSilkButton";
 import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
 import {
   inviteMetaCaptionClass,
+  inviteNotoSerifLight18Class,
   toAllCapsNoAccents,
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
@@ -35,7 +36,7 @@ type RsvpUiCopy = {
 
 const RSVP_COPY_EL: RsvpUiCopy = {
   heading: "RSVP",
-  pleaseRespondBy: (d) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}`,
+  pleaseRespondBy: (d) => `Παρακαλούμε επιβεβαιώστε την παρουσία σας έως τις ${d}.`,
   confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
   unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
   rsvpSentBody: "Έχουμε λάβει την απάντησή σας. Σας ευχαριστούμε.",
@@ -277,10 +278,9 @@ export default function RSVPSection({
               <div className="mt-6 flex flex-col items-center gap-4 sm:mt-[48px]">
                 {language === "el" ? (
                   <p
-                    className="mb-8 w-full whitespace-normal px-4 text-center text-[14px] font-normal italic leading-[20px] tracking-[1px] sm:px-0 sm:text-[16px] sm:leading-[24px] [font-family:var(--font-source-serif)]"
-                    style={{ fontStretch: "condensed" }}
+                    className={`mb-8 w-full whitespace-normal px-4 text-center sm:px-0 ${inviteNotoSerifLight18Class}`}
                   >
-                    {copy.pleaseRespondBy(rsvpDeadline)}
+                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadline))}
                   </p>
                 ) : null}
                 <SolidSilkButton
@@ -306,22 +306,19 @@ export default function RSVPSection({
               <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">
                 {toAllCapsNoAccents(copy.almostThere)}
               </p>
-              <h3
-                className="mt-6 font-serif text-[34px] font-normal leading-[0.98] tracking-[0.01em] text-[#FCFCF6] sm:text-[40px]"
-                style={{
-                  fontFamily: "var(--font-heading)",
-                }}
-              >
-                {copy.howManyGuests}
-              </h3>
+              <p className={`mt-6 text-[#FCFCF6] ${inviteNotoSerifLight18Class}`}>
+                {language === "el"
+                  ? toAllCapsNoAccents(copy.howManyGuests)
+                  : copy.howManyGuests}
+              </p>
               {invitedCount != null ? (
-                <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">
+                <p className="mt-4 text-[13px] leading-[20px] text-[#FCFCF6]/65">
                   {language === "el"
                     ? `Έχετε προσκληθεί για ${initialInvitedCount} άτομα.`
                     : `You are invited for ${initialInvitedCount} guests.`}
                 </p>
               ) : null}
-              <p className="mt-4 text-[13px] leading-6 text-[#FCFCF6]/65">{copy.includeEveryoneInParty}</p>
+              <p className="mt-4 text-[13px] leading-[20px] text-[#FCFCF6]/65">{copy.includeEveryoneInParty}</p>
 
               <label
                 htmlFor="rsvp-guest-count"
