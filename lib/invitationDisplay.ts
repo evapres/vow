@@ -31,8 +31,16 @@ export function toAllCapsNoAccents(value: string | null | undefined) {
     .toUpperCase();
 }
 
+/** Small caps line: wrap copy with {@link toAllCapsNoAccents} (not CSS `uppercase`). */
 export const inviteMetaCaptionClass =
-  "text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70";
+  "text-[10px] font-semibold tracking-[0.22em] text-white/70";
+
+/**
+ * Noto Serif (text face), light, 18px / 32px line height, 1px tracking.
+ * Reception note, Greek invite line, RSVP deadline, “how many guests” (el), etc.
+ */
+export const inviteNotoSerifLight18Class =
+  "text-[18px] font-light leading-[32px] tracking-[1px] [font-family:var(--font-noto-serif)]";
 
 /**
  * Build a local datetime string from a date-only field (`YYYY-MM-DD`) and optional `HH:MM`.

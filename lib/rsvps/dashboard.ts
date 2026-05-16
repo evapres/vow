@@ -1,5 +1,4 @@
 import { createClient } from "../supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 /** RSVP state for a household row on the wedding dashboard. */
 export type HouseholdRsvpStatus = "attending" | "not_attending" | "pending";
@@ -10,7 +9,6 @@ export type DashboardHouseholdRow = {
   email: string | null;
   inviteToken: string | null;
   emailSentAt: string | null;
-  invitedCount: number | null;
   status: HouseholdRsvpStatus;
   /** Raw note from `rsvps.notes` when an RSVP exists; otherwise null. */
   rsvpNote: string | null;
@@ -24,14 +22,12 @@ type HouseholdRow = {
   invite_token: string | null;
   email: string | null;
   email_sent_at: string | null;
-  invited_count: number | null;
 };
 
 type RsvpRow = {
   household_id: string;
   attending: boolean;
   notes: string | null;
-  attending_count: number | null;
 };
 
 function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
@@ -41,16 +37,6 @@ function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
   return "pending";
 }
 
-function getServiceRoleClientOrNull() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
-  if (!url?.trim() || !serviceKey.trim()) return null;
-  return createAdminClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
 /**
  * All households for a wedding with RSVP status (one row per household).
  * Fetches households and RSVPs in two queries, then maps by `household_id`.
@@ -58,68 +44,51 @@ function getServiceRoleClientOrNull() {
 export async function getDashboardHouseholdRows(weddingId: string): Promise<DashboardHouseholdRow[]> {
   const supabase = await createClient();
 
-  const householdsResult = await supabase
-    .from("households")
-    .select("id, household_name, invite_token, email, email_sent_at, invited_count")
-    .eq("wedding_id", weddingId)
-    .order("household_name", { ascending: true });
+  const [householdsResult, rsvpsResult] = await Promise.all([
+    supabase
+      .from("households")
+      .select("id, household_name, invite_token, email, email_sent_at")
+      .eq("wedding_id", weddingId)
+      .order("household_name", { ascending: true }),
+    supabase
+      .from("rsvps")
+      .select("household_id, attending, notes")
+      .eq("wedding_id", weddingId)
+      .order("id", { ascending: false }),
+  ]);
 
   if (householdsResult.error) {
     console.error("Household fetch error:", householdsResult.error.message);
     return [];
   }
 
+  if (rsvpsResult.error) {
+    console.error("RSVP fetch error:", rsvpsResult.error.message);
+    return [];
+  }
+
   const householdRows = (householdsResult.data ?? []) as HouseholdRow[];
-  const householdIds = householdRows.map((h) => String(h.id));
+  const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
 
+  /** Newest RSVP per household (query ordered by `id` descending; keep first seen). */
   const rsvpByHouseholdId = new Map<string, RsvpRow>();
-  if (householdIds.length > 0) {
-    // Prefer service-role reads when available to avoid admin-session RLS returning empty sets.
-    const rsvpClient = getServiceRoleClientOrNull() ?? supabase;
-    const rsvpsResult = await rsvpClient
-      .from("rsvps")
-      .select("household_id, attending, notes, attending_count")
-      .eq("wedding_id", weddingId)
-      .in("household_id", householdIds);
-
-    if (rsvpsResult.error) {
-      console.error("RSVP fetch error:", rsvpsResult.error.message);
-      // Still return households so the dashboard remains usable.
-      return householdRows.map((row) => ({
-        householdId: row.id,
-        householdName: row.household_name ?? "Unnamed household",
-        email: row.email ?? null,
-        inviteToken: row.invite_token ?? null,
-        emailSentAt: row.email_sent_at ?? null,
-        invitedCount: row.invited_count ?? null,
-        status: "pending",
-        rsvpNote: null,
-        attendingCount: null,
-        submittedAt: null,
-      }));
-    }
-
-    const rsvpRows = (rsvpsResult.data ?? []) as RsvpRow[];
-
-    // If multiple rows exist per household, last row wins.
-    for (const r of rsvpRows) {
-      const key = String(r.household_id);
-      if (key) rsvpByHouseholdId.set(key, r);
+  for (const r of rsvpRows) {
+    if (r.household_id && !rsvpByHouseholdId.has(r.household_id)) {
+      rsvpByHouseholdId.set(r.household_id, r);
     }
   }
 
   return householdRows.map((row) => {
-    const rsvp = rsvpByHouseholdId.get(String(row.id));
+    const rsvp = rsvpByHouseholdId.get(row.id);
     return {
       householdId: row.id,
       householdName: row.household_name ?? "Unnamed household",
       email: row.email ?? null,
       inviteToken: row.invite_token ?? null,
       emailSentAt: row.email_sent_at ?? null,
-      invitedCount: row.invited_count ?? null,
       status: statusFromRsvp(rsvp),
       rsvpNote: rsvp?.notes ?? null,
-      attendingCount: rsvp?.attending_count ?? null,
+      attendingCount: null,
       submittedAt: null,
     };
   });
