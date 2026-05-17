@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
+import { invitationMusicUrlFromForm } from "@/lib/admin/invitationMusicFromForm";
 import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
@@ -86,6 +87,17 @@ export async function createWedding(formData: FormData) {
     heroImageUrl = `data:${heroFile.type};base64,${buf.toString("base64")}`;
   }
 
+  let invitation_music_url: string | null = null;
+  try {
+    const music = await invitationMusicUrlFromForm(formData);
+    if (music !== undefined) invitation_music_url = music;
+  } catch (e) {
+    redirect(
+      "/admin?error=" +
+        encodeURIComponent(e instanceof Error ? e.message : "Invalid invitation music file."),
+    );
+  }
+
   const { data, error } = await supabase
     .from("weddings")
     .insert({
@@ -98,6 +110,7 @@ export async function createWedding(formData: FormData) {
       street_address,
       location,
       hero_image_url: heroImageUrl,
+      invitation_music_url,
       rsvp_deadline: rsvpDeadline,
       note,
     })
@@ -187,6 +200,16 @@ export async function updateWedding(formData: FormData) {
     patch.hero_image_url = `data:${heroFile.type};base64,${buf.toString("base64")}`;
   } else if (clearHero) {
     patch.hero_image_url = null;
+  }
+
+  try {
+    const music = await invitationMusicUrlFromForm(formData);
+    if (music !== undefined) patch.invitation_music_url = music;
+  } catch (e) {
+    redirect(
+      `/admin/edit/${weddingId}?error=` +
+        encodeURIComponent(e instanceof Error ? e.message : "Invalid invitation music file."),
+    );
   }
 
   const { error } = await supabase.from("weddings").update(patch).eq("id", weddingId).eq("user_id", user.id);

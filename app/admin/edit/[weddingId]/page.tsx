@@ -63,6 +63,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
     heroImageUrl: wedding.hero_image_url ?? null,
     rsvpDeadline: rsvp,
     note: wedding.note ?? "",
+    invitationMusicUrl: wedding.invitation_music_url ?? null,
   };
 
   const saved = sp.saved === "1";

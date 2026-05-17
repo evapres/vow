@@ -1,6 +1,7 @@
 import Footer from "@/app/components/Footer";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/InvitationHero";
+import InvitationMusic from "@/app/components/InvitationMusic";
 import RSVPSection from "@/app/components/RSVPSection";
 import { formatDetailsDateTime, formatHeaderDateLabel } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
@@ -49,6 +50,7 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames={wedding.couple_names} year="2026" />}>
+      <InvitationMusic language={language} src={wedding.invitation_music_url} />
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
           <InvitationHero

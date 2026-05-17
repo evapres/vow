@@ -5,6 +5,7 @@ import type { ChangeEvent, CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import InvitationHeroBody, { inviteHeroDefaultSrc } from "@/app/components/InvitationHeroBody";
+import InvitationMusic from "@/app/components/InvitationMusic";
 import OutlineSilkButton from "@/app/components/OutlineSilkButton";
 import SolidSilkButton from "@/app/components/SolidSilkButton";
 import { invitationPageCanvasStripStyle, invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
@@ -31,6 +32,7 @@ export type AdminWeddingFormInitial = {
   heroImageUrl: string | null;
   rsvpDeadline: string;
   note: string;
+  invitationMusicUrl?: string | null;
 };
 
 type AdminNewWeddingFormProps = {
@@ -82,10 +84,15 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     initial?.rsvpDeadline ? initial.rsvpDeadline.slice(0, 10) : "",
   );
   const [note, setNote] = useState(initial?.note ?? "");
+  const [musicPreviewSrc, setMusicPreviewSrc] = useState<string | null>(
+    () => initial?.invitationMusicUrl?.trim() || null,
+  );
   const [clearHeroForSubmit, setClearHeroForSubmit] = useState(false);
+  const [clearMusicForSubmit, setClearMusicForSubmit] = useState(false);
 
   const heroBlobUrlRef = useRef<string | null>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
+  const musicFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -148,6 +155,23 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     if (isEdit) setClearHeroForSubmit(true);
   };
 
+  const clearInvitationMusic = () => {
+    setMusicPreviewSrc(null);
+    if (musicFileInputRef.current) musicFileInputRef.current.value = "";
+    if (isEdit) setClearMusicForSubmit(true);
+  };
+
+  const onMusicFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      clearInvitationMusic();
+      return;
+    }
+    if (isEdit) setClearMusicForSubmit(false);
+    const url = URL.createObjectURL(file);
+    setMusicPreviewSrc(url);
+  };
+
   const onHeroFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -173,6 +197,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
       >
         {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}
         {isEdit ? <input type="hidden" name="clear_hero" value={clearHeroForSubmit ? "1" : "0"} /> : null}
+        {isEdit ? <input type="hidden" name="clear_music" value={clearMusicForSubmit ? "1" : "0"} /> : null}
         <div>
           <label
             htmlFor="language"
@@ -367,6 +392,39 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
           <p className="mt-1 text-[11px] text-[#181818]/55">Shown in small caps under the date and venue. Leave blank to hide.</p>
         </div>
 
+        <div>
+          <label
+            htmlFor="invitation_music"
+            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
+          >
+            Invitation music <span className="font-normal normal-case tracking-normal text-[#181818]/55">(optional)</span>
+          </label>
+          <input
+            ref={musicFileInputRef}
+            id="invitation_music"
+            name="invitation_music"
+            type="file"
+            accept="audio/mpeg,audio/mp3,audio/mp4,audio/wav,.mp3"
+            onChange={onMusicFileChange}
+            className="mt-2 block w-full text-sm text-[#181818] file:mr-3 file:border file:border-[#181818]/30 file:bg-transparent file:px-3 file:py-2 file:text-sm file:font-medium file:text-[#181818]"
+          />
+          <p className="mt-1 text-[11px] text-[#181818]/55">
+            MP3 up to 8MB. Guests tap the music icon on the invite to play.
+          </p>
+          {musicPreviewSrc ? (
+            <>
+              <audio controls preload="metadata" src={musicPreviewSrc} className="mt-3 w-full max-w-sm" />
+              <button
+                type="button"
+                onClick={clearInvitationMusic}
+                className="mt-2 text-xs font-medium text-[#181818]/80 underline underline-offset-4 hover:text-[#181818]"
+              >
+                Remove music
+              </button>
+            </>
+          ) : null}
+        </div>
+
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <SolidSilkButton
             type="submit"
@@ -397,7 +455,8 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
         >
           {/* Scale-down preview: identical design, smaller viewport */}
           <div className="w-full origin-top scale-[0.72] px-4 pb-8 pt-4 [width:calc(100%/0.72)]">
-            <div className="w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
+            <div className="relative w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
+              {musicPreviewSrc ? <InvitationMusic language={language} src={musicPreviewSrc} /> : null}
               <InvitationHeroBody
                 coupleNames={coupleNames}
                 language={language}

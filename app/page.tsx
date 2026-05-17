@@ -1,6 +1,7 @@
 import Footer from "./components/Footer";
 import InvitationFrame from "./components/InvitationFrame";
 import InvitationHero from "./components/InvitationHero";
+import InvitationMusic from "./components/InvitationMusic";
 import RSVPSection from "./components/RSVPSection";
 import { formatDetailsDateTime, formatHeaderDateLabel } from "../lib/invitationDisplay";
 
@@ -10,6 +11,7 @@ export default function Page() {
 
   return (
     <InvitationFrame removeMobileTopPadding footer={<Footer coupleNames="Ava & Luca" year="2026" />}>
+      <InvitationMusic language={language} />
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
           <InvitationHero
