@@ -32,11 +32,11 @@ const heroNamesClass =
 
 /** Top monogram initials (not the full-name spec). */
 const inviteTopMonogramInitialClass =
-  "font-serif text-[32px] font-light leading-none [font-family:var(--font-heading)] sm:text-[40px] md:text-[64px]";
+  "font-serif text-[36px] font-light leading-none [font-family:var(--font-heading)] sm:text-[40px] md:text-[64px]";
 
 /** Top monogram & between initials. */
 const inviteTopMonogramAmpersandClass =
-  "font-serif text-[18px] font-light leading-none [font-family:var(--font-heading)] sm:text-[24px] md:text-[32px]";
+  "font-serif text-[22px] font-light leading-none [font-family:var(--font-heading)] sm:text-[24px] md:text-[32px]";
 
 /** English invite line after names. */
 const heroInviteLightClass =
@@ -44,11 +44,11 @@ const heroInviteLightClass =
 
 /** Top meta bar (date + venue): Noto Serif Display, light, 2px tracking. */
 const inviteHeroTopBarClass =
-  "font-serif text-[10px] font-light tracking-[1px] [font-family:var(--font-heading)] sm:text-[14px] sm:tracking-[2px] md:text-[18px]";
+  "font-serif text-[12px] font-light tracking-[1px] [font-family:var(--font-heading)] sm:text-[14px] sm:tracking-[2px] md:text-[18px]";
 
 /** Celebrate date/time + location — Noto Serif, light, 0.5px tracking. */
 const inviteCelebrateLineClass =
-  "text-[15px] font-light leading-[22px] tracking-[0.5px] [font-family:var(--font-noto-serif)] sm:text-[20px] sm:leading-[28px] md:text-[24px] md:leading-[32px]";
+  "text-[17px] font-light leading-[24px] tracking-[0.5px] [font-family:var(--font-noto-serif)] sm:text-[20px] sm:leading-[28px] md:text-[24px] md:leading-[32px]";
 
 export type InvitationHeroBodyProps = {
   coupleNames: string;
