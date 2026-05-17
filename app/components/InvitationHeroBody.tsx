@@ -32,11 +32,11 @@ const heroNamesClass =
 
 /** Top monogram initials (not the full-name spec). */
 const inviteTopMonogramInitialClass =
-  "font-serif text-[36px] font-light leading-none [font-family:var(--font-heading)] sm:text-[40px] md:text-[64px]";
+  "font-serif text-[36px] font-normal leading-none [font-family:var(--font-heading)] sm:text-[40px] md:text-[64px]";
 
 /** Top monogram & between initials. */
 const inviteTopMonogramAmpersandClass =
-  "font-serif text-[22px] font-light leading-none [font-family:var(--font-heading)] sm:text-[24px] md:text-[32px]";
+  "font-serif text-[22px] font-normal leading-none [font-family:var(--font-heading)] sm:text-[24px] md:text-[32px]";
 
 /** English invite line after names. */
 const heroInviteLightClass =
@@ -48,7 +48,7 @@ const inviteHeroTopBarClass =
 
 /** Celebrate date/time + location — Noto Serif, light, 0.5px tracking. */
 const inviteCelebrateLineClass =
-  "text-[17px] font-light leading-[24px] tracking-[0.5px] [font-family:var(--font-noto-serif)] sm:text-[20px] sm:leading-[28px] md:text-[24px] md:leading-[32px]";
+  "text-[20px] font-light leading-[28px] tracking-[0.5px] [font-family:var(--font-noto-serif)] md:text-[24px] md:leading-[32px]";
 
 export type InvitationHeroBodyProps = {
   coupleNames: string;

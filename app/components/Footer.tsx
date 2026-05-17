@@ -15,13 +15,13 @@ export default function Footer({ coupleNames: _coupleNames, year: _year }: Foote
           <img
             src="/vow-footer-logo.svg"
             alt="Vow"
-            className="h-[72px] w-auto drop-shadow-sm contrast-110 saturate-110"
+            className="h-[48px] w-auto drop-shadow-sm contrast-110 saturate-110 sm:h-[60px] md:h-[72px]"
             loading="lazy"
             decoding="async"
           />
         </div>
         <p
-          className="mt-4 font-serif text-[18px] font-normal uppercase tracking-[2px] text-[#AE9B91]"
+          className="mt-3 font-serif text-[12px] font-normal uppercase tracking-[1.5px] text-[#AE9B91] sm:mt-4 sm:text-[15px] sm:tracking-[1.75px] md:text-[18px] md:tracking-[2px]"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           PRIVATE MODERN LOVE
