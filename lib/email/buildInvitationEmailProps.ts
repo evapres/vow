@@ -3,7 +3,11 @@ import {
   envelopeTemplateImageAbsoluteUrl,
   formatEnvelopeCardDate,
 } from "./envelopeCardCopy";
-import { formatDetailsDateTime, splitDetailsDateTimeLines } from "../invitationDisplay";
+import {
+  formatDetailsDateTime,
+  formatRsvpBeforeEmailLine,
+  splitDetailsDateTimeLines,
+} from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
 import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
@@ -24,21 +28,6 @@ type HouseholdLike = {
   household_name: string | null;
   invite_token: string | null;
 };
-
-function formatRsvpBeforeLine(iso: string | null | undefined): string {
-  if (!iso?.trim()) return "Please RSVP using the link in this email.";
-  const d = new Date(`${iso.trim().slice(0, 10)}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return "Please RSVP using the link in this email.";
-  const formatted = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(d);
-  return `Please RSVP before ${formatted}`;
-}
 
 /**
  * Maps saved wedding + household rows to {@link InvitationEmailProps}.
@@ -97,7 +86,7 @@ export async function buildInvitationEmailProps(input: {
     weddingDateLine: dateLine,
     weddingTimeLine: timeLine || undefined,
     calendarUrl: "https://calendar.google.com/calendar",
-    rsvpDeadlineText: formatRsvpBeforeLine(wedding.rsvp_deadline),
+    rsvpDeadlineText: formatRsvpBeforeEmailLine(wedding.rsvp_deadline),
     venueName: undefined,
     venueAddress: locationDisplayLine || undefined,
     location: locForEmailOut || undefined,

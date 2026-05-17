@@ -372,7 +372,7 @@ export default function InvitationEmail({
   weddingDateLine,
   weddingTimeLine,
   calendarUrl = "https://calendar.google.com/calendar",
-  rsvpDeadlineText = "Please RSVP before May 15th, 10:30PM",
+  rsvpDeadlineText = "Please RSVP before June 15 2026",
   venueName,
   venueAddress,
   mapUrl,

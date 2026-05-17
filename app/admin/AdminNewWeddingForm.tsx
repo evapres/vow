@@ -13,6 +13,7 @@ import {
   formatDetailsDateTime,
   formatHeaderDateLabel,
   inviteMetaCaptionClass,
+  formatRsvpDeadlineLabel,
   toAllCapsNoAccents,
 } from "@/lib/invitationDisplay";
 import { celebrateLocationLineFromParts } from "@/lib/weddingLocation";
@@ -37,13 +38,6 @@ type AdminNewWeddingFormProps = {
   editWeddingId?: string;
   initial?: AdminWeddingFormInitial;
 };
-
-function formatRsvpDeadlineLine(isoDate: string): string {
-  if (!isoDate) return "—";
-  const d = new Date(`${isoDate}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return isoDate;
-  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(d);
-}
 
 /** First letters of names around `&`, or sample monogram until both sides are present. */
 function previewTopMonogramFromCoupleNames(names: string): { left: string; right: string } {
@@ -121,7 +115,10 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
   const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
 
-  const rsvpLine = useMemo(() => formatRsvpDeadlineLine(rsvpDeadline), [rsvpDeadline]);
+  const rsvpLine = useMemo(
+    () => formatRsvpDeadlineLabel(rsvpDeadline, language) || "—",
+    [rsvpDeadline, language],
+  );
   const previewTopMonogram = useMemo(() => previewTopMonogramFromCoupleNames(coupleNames), [coupleNames]);
 
   const previewT =

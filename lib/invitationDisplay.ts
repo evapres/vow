@@ -31,6 +31,51 @@ export function toAllCapsNoAccents(value: string | null | undefined) {
     .toUpperCase();
 }
 
+/**
+ * RSVP deadline for invite UI and emails (date only, no weekday or time).
+ * English: "June 15 2026"; Greek: "15 Ιουνίου 2026".
+ */
+const ISO_DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})/;
+
+export function formatRsvpDeadlineLabel(
+  iso: string | null | undefined,
+  language: InvitationLanguage = "en",
+): string {
+  if (!iso?.trim()) return "";
+  const raw = iso.trim();
+  const isoMatch = raw.match(ISO_DATE_PREFIX);
+  if (!isoMatch) return raw;
+
+  const dateOnly = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const parsed =
+    parseWeddingStoredForDisplay(`${dateOnly}T12:00:00`) ??
+    (() => {
+      const fallback = new Date(`${dateOnly}T12:00:00Z`);
+      return Number.isNaN(fallback.getTime()) ? null : { instant: fallback, showTime: false };
+    })();
+  if (!parsed) return raw;
+
+  const locale = language === "el" ? "el-GR" : "en-US";
+  const parts = new Intl.DateTimeFormat(locale, {
+    ...weddingDisplayZone,
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).formatToParts(parsed.instant);
+  const month = parts.find((p) => p.type === "month")?.value ?? "";
+  const day = parts.find((p) => p.type === "day")?.value ?? "";
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  if (language === "el") return `${day} ${month} ${year}`.trim();
+  return `${month} ${day} ${year}`.trim();
+}
+
+/** English email line: "Please RSVP before June 15 2026". */
+export function formatRsvpBeforeEmailLine(iso: string | null | undefined): string {
+  const label = formatRsvpDeadlineLabel(iso, "en");
+  if (!label) return "Please RSVP using the link in this email.";
+  return `Please RSVP before ${label}`;
+}
+
 /** Small caps line: wrap copy with {@link toAllCapsNoAccents} (not CSS `uppercase`). */
 export const inviteMetaCaptionClass =
   "text-[10px] font-semibold tracking-[0.22em] text-white/70";

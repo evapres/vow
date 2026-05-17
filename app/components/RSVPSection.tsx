@@ -5,6 +5,7 @@ import OutlineSilkButton from "./OutlineSilkButton";
 import SolidSilkButton from "./SolidSilkButton";
 import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
 import {
+  formatRsvpDeadlineLabel,
   inviteMetaCaptionClass,
   inviteNotoSerifLight18Class,
   toAllCapsNoAccents,
@@ -113,6 +114,8 @@ export default function RSVPSection({
   const [isSaving, setIsSaving] = useState(false);
 
   const copy = language === "el" ? RSVP_COPY_EL : RSVP_COPY_EN;
+  const rsvpDeadlineDisplay =
+    formatRsvpDeadlineLabel(rsvpDeadline, language) || rsvpDeadline.trim() || "—";
 
   /** Single success UI for recorded RSVP, post-submit yes, and post-submit no (avoids flash when server props refresh). */
   const rsvpSuccessMessage = (
@@ -270,7 +273,7 @@ export default function RSVPSection({
                   </h3>
 
                   <p className={inviteMetaCaptionClass}>
-                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadline))}
+                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadlineDisplay))}
                   </p>
                 </div>
               )}
@@ -280,7 +283,7 @@ export default function RSVPSection({
                   <p
                     className={`mb-8 w-full whitespace-normal px-4 text-center sm:px-0 ${inviteNotoSerifLight18Class}`}
                   >
-                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadline))}
+                    {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadlineDisplay))}
                   </p>
                 ) : null}
                 <SolidSilkButton
