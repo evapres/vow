@@ -123,7 +123,7 @@ export default function RSVPSection({
       {language === "el" ? (
         <div className="flex flex-col items-center gap-6">
           <h3
-            className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+            className="text-[22px] font-normal leading-[28px] tracking-[0.5px] sm:text-[28px] sm:leading-[36px] md:text-[48px] md:leading-[56px]"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {copy.heading}
@@ -138,7 +138,7 @@ export default function RSVPSection({
       ) : (
         <div className="flex flex-col gap-[16px]">
           <h3
-            className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+            className="mb-2 text-[22px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[28px] md:text-[40px]"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {copy.heading}
@@ -257,7 +257,7 @@ export default function RSVPSection({
               {language === "el" ? (
                 <div className="flex flex-col items-center gap-8">
                   <h3
-                    className="text-[28px] font-normal leading-[36px] tracking-[0.5px] sm:text-[48px] sm:leading-[56px]"
+                    className="text-[22px] font-normal leading-[28px] tracking-[0.5px] sm:text-[28px] sm:leading-[36px] md:text-[48px] md:leading-[56px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -266,7 +266,7 @@ export default function RSVPSection({
               ) : (
                 <div className="flex flex-col gap-[16px]">
                   <h3
-                    className="mb-2 text-[28px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[40px]"
+                    className="mb-2 text-[22px] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2] sm:text-[28px] md:text-[40px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.heading}
@@ -281,7 +281,7 @@ export default function RSVPSection({
               <div className="mt-6 flex flex-col items-center gap-4 sm:mt-[48px]">
                 {language === "el" ? (
                   <p
-                    className={`mb-8 w-full whitespace-normal px-4 text-center sm:px-0 ${inviteNotoSerifLight18Class}`}
+                    className={`mb-8 w-full max-w-[min(100%,20rem)] whitespace-normal px-2 text-center sm:max-w-none sm:px-0 ${inviteNotoSerifLight18Class}`}
                   >
                     {toAllCapsNoAccents(copy.pleaseRespondBy(rsvpDeadlineDisplay))}
                   </p>
@@ -386,7 +386,7 @@ export default function RSVPSection({
                     {toAllCapsNoAccents(copy.thankYouForResponse)}
                   </p>
                   <p
-                    className="mt-4 text-[34px] font-normal leading-[0.98] text-[#FCFCF6] sm:text-[48px]"
+                    className="mt-4 text-[26px] font-normal leading-[1.05] text-[#FCFCF6] sm:text-[34px] md:text-[48px]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {copy.willMissYou}

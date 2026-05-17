@@ -26,29 +26,29 @@ const polaroidTiltStyle: CSSProperties = {
   transformOrigin: "center center",
 };
 
-/** Hero couple names + & — Noto Serif Display, light, 48 / 54, 8px tracking. */
+/** Hero couple names + & — smaller on mobile to avoid awkward breaks. */
 const heroNamesClass =
-  "font-serif text-[48px] font-light leading-[54px] tracking-[8px] [font-family:var(--font-heading)]";
+  "font-serif text-[30px] font-light leading-[36px] tracking-[3px] [font-family:var(--font-heading)] sm:text-[40px] sm:leading-[46px] sm:tracking-[5px] md:text-[48px] md:leading-[54px] md:tracking-[8px]";
 
 /** Top monogram initials (not the full-name spec). */
 const inviteTopMonogramInitialClass =
-  "font-serif text-[40px] font-light leading-none [font-family:var(--font-heading)] sm:text-[64px]";
+  "font-serif text-[32px] font-light leading-none [font-family:var(--font-heading)] sm:text-[40px] md:text-[64px]";
 
 /** Top monogram & between initials. */
 const inviteTopMonogramAmpersandClass =
-  "font-serif text-[24px] font-light leading-none [font-family:var(--font-heading)] sm:text-[32px]";
+  "font-serif text-[18px] font-light leading-none [font-family:var(--font-heading)] sm:text-[24px] md:text-[32px]";
 
 /** English invite line after names. */
 const heroInviteLightClass =
-  "text-[22px] font-light leading-[32px] tracking-normal sm:text-[32px] sm:leading-[48px]";
+  "text-[18px] font-light leading-[26px] tracking-normal sm:text-[22px] sm:leading-[32px] md:text-[32px] md:leading-[48px]";
 
 /** Top meta bar (date + venue): Noto Serif Display, light, 2px tracking. */
 const inviteHeroTopBarClass =
-  "font-serif text-[14px] font-light tracking-[2px] sm:text-[18px] [font-family:var(--font-heading)]";
+  "font-serif text-[10px] font-light tracking-[1px] [font-family:var(--font-heading)] sm:text-[14px] sm:tracking-[2px] md:text-[18px]";
 
-/** Celebrate date/time + location — Noto Serif, light, 24 / 32, 0.5px tracking. */
+/** Celebrate date/time + location — Noto Serif, light, 0.5px tracking. */
 const inviteCelebrateLineClass =
-  "text-[24px] font-light leading-[32px] tracking-[0.5px] [font-family:var(--font-noto-serif)]";
+  "text-[15px] font-light leading-[22px] tracking-[0.5px] [font-family:var(--font-noto-serif)] sm:text-[20px] sm:leading-[28px] md:text-[24px] md:leading-[32px]";
 
 export type InvitationHeroBodyProps = {
   coupleNames: string;
@@ -161,9 +161,11 @@ export default function InvitationHeroBody({
         {/* Rule + meta: inset by invitation gutter only; line spans full width between gutters */}
         <div className="px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-2">
           <div className="h-px w-full bg-[#FAF6F2]/12" />
-          <div className={`mt-5 flex w-full items-center justify-between gap-6 ${inviteHeroTopBarClass}`}>
-            <span className="min-w-0 text-left">{toAllCapsNoAccents(eventDateLabel)}</span>
-            <span className="min-w-0 text-right">{toAllCapsNoAccents(venueLabel)}</span>
+          <div
+            className={`mt-5 flex w-full flex-row items-center justify-between gap-3 sm:gap-6 ${inviteHeroTopBarClass}`}
+          >
+            <span className="min-w-0 shrink text-left">{toAllCapsNoAccents(eventDateLabel)}</span>
+            <span className="min-w-0 shrink text-right">{toAllCapsNoAccents(venueLabel)}</span>
           </div>
         </div>
 
@@ -212,7 +214,7 @@ export default function InvitationHeroBody({
           <div className="flex w-full max-w-xl min-w-0 flex-col items-center text-center">
             <p style={{ fontFamily: "var(--font-heading)" }}>
               {language === "el" ? (
-                <span className="inline-flex flex-col items-center gap-6">
+                <span className="inline-flex flex-col items-center gap-4 sm:gap-6">
                   <span className="flex flex-col items-center">
                     <span className={heroNamesClass}>
                       {toAllCapsNoAccents(`Ο ${greekLeft}`)}

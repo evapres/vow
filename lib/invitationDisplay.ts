@@ -78,14 +78,14 @@ export function formatRsvpBeforeEmailLine(iso: string | null | undefined): strin
 
 /** Small caps line: wrap copy with {@link toAllCapsNoAccents} (not CSS `uppercase`). */
 export const inviteMetaCaptionClass =
-  "text-[10px] font-semibold tracking-[0.22em] text-white/70";
+  "text-[9px] font-semibold tracking-[0.16em] text-white/70 sm:text-[10px] sm:tracking-[0.22em]";
 
 /**
- * Noto Serif (text face), light, 18px / 32px line height, 1px tracking.
+ * Noto Serif (text face), light — 15px on mobile, 18px from `sm` up.
  * Reception note, Greek invite line, RSVP deadline, “how many guests” (el), etc.
  */
 export const inviteNotoSerifLight18Class =
-  "text-[18px] font-light leading-[32px] tracking-[1px] [font-family:var(--font-noto-serif)]";
+  "text-[15px] font-light leading-[24px] tracking-[0.5px] [font-family:var(--font-noto-serif)] sm:text-[18px] sm:leading-[32px] sm:tracking-[1px]";
 
 /**
  * Build a local datetime string from a date-only field (`YYYY-MM-DD`) and optional `HH:MM`.
