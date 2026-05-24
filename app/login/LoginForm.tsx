@@ -1,11 +1,16 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import SolidSilkButton from "@/app/components/SolidSilkButton";
-import { supabase } from "@/lib/supabase";
+import { buildAuthCallbackUrl, resolveSignInSiteOrigin } from "@/lib/auth/authCallbackUrl";
+import { mapSignInEmailError } from "@/lib/auth/signInEmail";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginForm() {
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -15,24 +20,26 @@ export default function LoginForm() {
     setStatus("loading");
     setMessage(null);
 
-    // Prefer an explicit site URL (Vercel/prod) so magic links never point at localhost.
-    const siteOrigin =
-      (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || window.location.origin).trim();
-    const redirectTo = `${siteOrigin}/auth/callback?next=/admin/invitations`;
-
+    const redirectTo = buildAuthCallbackUrl(resolveSignInSiteOrigin(), nextPath);
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: redirectTo },
+      options: {
+        emailRedirectTo: redirectTo,
+        shouldCreateUser: true,
+      },
     });
 
     if (error) {
       setStatus("error");
-      setMessage(error.message);
+      setMessage(mapSignInEmailError(error.message, redirectTo, error.code));
       return;
     }
 
     setStatus("sent");
-    setMessage("Check your email for the login link.");
+    setMessage(
+      `Check your email for the login link. After signing in you will return to the page you requested.`,
+    );
   }
 
   return (

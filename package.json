@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "email:dev": "email dev --dir emails",
-    "envelope:transparent": "node scripts/key-envelope-studio-white.cjs"
+    "envelope:transparent": "node scripts/key-envelope-studio-white.cjs",
+    "dev:login-link": "node scripts/generate-login-link.cjs"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

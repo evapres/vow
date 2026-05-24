@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
+import InviteShareActions from "./InviteShareActions";
 import { deleteHousehold, sendAllHouseholdInvitationEmails, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
 import RsvpRealtimeRefresh from "./RsvpRealtimeRefresh";
 import type { DashboardHouseholdRow, HouseholdRsvpStatus } from "../../lib/rsvps/dashboard";
@@ -20,6 +21,7 @@ type RsvpsDashboardViewProps = {
   householdError?: string | null;
   /** e.g. https://yoursite.com — optional; falls back to relative path only. */
   inviteBaseUrl?: string;
+  coupleNames?: string | null;
 };
 
 function attendingLabel(status: HouseholdRsvpStatus): string {
@@ -44,6 +46,7 @@ export default function RsvpsDashboardView({
   bulkInvitesSent,
   householdError,
   inviteBaseUrl,
+  coupleNames,
 }: RsvpsDashboardViewProps) {
   const counts = households.reduce(
     (acc, row) => {
@@ -117,7 +120,9 @@ export default function RsvpsDashboardView({
           <div className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
             <p className="font-medium">Guest added.</p>
             <p className="mt-1 text-emerald-950/90">
-              Use <span className="font-medium">Send all invitations</span> above when emails are ready.
+              Share each link via <span className="font-medium">Messenger</span> or{" "}
+              <span className="font-medium">Instagram</span> in the guest list, or use{" "}
+              <span className="font-medium">Send all invitations</span> for email.
             </p>
           </div>
         ) : null}
@@ -191,9 +196,19 @@ export default function RsvpsDashboardView({
                             <p className="text-xs font-normal text-[#1A1A1A]/55">Invited: {row.invitedCount}</p>
                           ) : null}
                           {row.inviteToken ? (
-                            <p className="break-all font-mono text-[11px] font-normal text-[#1A1A1A]/55">
-                              {inviteBaseUrl ? `${inviteBaseUrl}/invite/${row.inviteToken}` : `/invite/${row.inviteToken}`}
-                            </p>
+                            <>
+                              <p className="break-all font-mono text-[11px] font-normal text-[#1A1A1A]/55">
+                                {inviteBaseUrl
+                                  ? `${inviteBaseUrl}/invite/${row.inviteToken}`
+                                  : `/invite/${row.inviteToken}`}
+                              </p>
+                              <InviteShareActions
+                                inviteToken={row.inviteToken}
+                                inviteBaseUrl={inviteBaseUrl}
+                                coupleNames={coupleNames}
+                                householdName={row.householdName}
+                              />
+                            </>
                           ) : null}
                         </div>
                       </td>

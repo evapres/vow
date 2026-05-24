@@ -125,7 +125,7 @@ export async function submitRsvp(input: SubmitRsvpInput): Promise<SubmitRsvpResu
       console.error("RSVP admin email notification failed:", notifyErr);
     }
 
-    revalidatePath(`/dashboard/${household.wedding_id}`);
+    revalidatePath(`/dashboard/${household.wedding_id}`, "page");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed to save RSVP." };

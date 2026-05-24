@@ -29,7 +29,7 @@ export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMen
 
   async function handleLogout() {
     setOpen(false);
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     router.push("/login");
     router.refresh();
   }

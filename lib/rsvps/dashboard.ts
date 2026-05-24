@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+import { getServiceRoleClientOrNull } from "../supabase/service-role";
 
 /** RSVP state for a household row on the wedding dashboard. */
 export type HouseholdRsvpStatus = "attending" | "not_attending" | "pending";
@@ -29,8 +30,9 @@ type HouseholdRow = {
 
 type RsvpRow = {
   household_id: string;
-  attending: boolean;
+  attending: boolean | null;
   notes: string | null;
+  attending_count: number | null;
 };
 
 function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
@@ -42,10 +44,10 @@ function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
 
 /**
  * All households for a wedding with RSVP status (one row per household).
- * Fetches households and RSVPs in two queries, then maps by `household_id`.
+ * Uses service role when available so RLS on `rsvps` cannot hide rows after guest submits.
  */
 export async function getDashboardHouseholdRows(weddingId: string): Promise<DashboardHouseholdRow[]> {
-  const supabase = await createClient();
+  const supabase = getServiceRoleClientOrNull() ?? (await createClient());
 
   const [householdsResult, rsvpsResult] = await Promise.all([
     supabase
@@ -55,7 +57,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       .order("household_name", { ascending: true }),
     supabase
       .from("rsvps")
-      .select("household_id, attending, notes")
+      .select("household_id, attending, notes, attending_count")
       .eq("wedding_id", weddingId)
       .order("id", { ascending: false }),
   ]);
@@ -92,7 +94,7 @@ export async function getDashboardHouseholdRows(weddingId: string): Promise<Dash
       invitedCount: row.invited_count ?? null,
       status: statusFromRsvp(rsvp),
       rsvpNote: rsvp?.notes ?? null,
-      attendingCount: null,
+      attendingCount: rsvp?.attending_count ?? null,
       submittedAt: null,
     };
   });

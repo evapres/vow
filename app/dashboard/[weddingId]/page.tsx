@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getDashboardHouseholdRows } from "../../../lib/rsvps/dashboard";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ weddingId: string }>;
   searchParams: Promise<{
@@ -41,7 +43,8 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect("/login");
+    const returnTo = `/dashboard/${weddingId}`;
+    redirect(`/login?next=${encodeURIComponent(returnTo)}`);
   }
 
   const { data: wedding, error: weddingError } = await supabase
@@ -81,6 +84,7 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
       bulkInvitesSent={Number.isFinite(bulkInvitesSent) && bulkInvitesSent > 0 ? bulkInvitesSent : undefined}
       householdError={householdError}
       inviteBaseUrl={siteOrigin}
+      coupleNames={wedding.couple_names}
     />
   );
 }
