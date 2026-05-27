@@ -8,10 +8,9 @@ import {
   canUseWebShare,
   copyInviteSharePayload,
   facebookMessengerSendDialogUrl,
-  instagramDirectInboxHref,
   isMobileUserAgent,
-  messengerAppShareHref,
   webShareInvite,
+  whatsappShareUrl,
 } from "@/lib/share/invitationShare";
 
 type InviteShareActionsProps = {
@@ -64,34 +63,46 @@ export default function InviteShareActions({
   }, [onCopy, sharePayload]);
 
   const onMessenger = useCallback(async () => {
-    await copyInviteSharePayload(sharePayload);
-
     const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim();
-    if (appId && inviteUrl.startsWith("http")) {
-      const redirectUri = inviteUrl;
-      window.open(facebookMessengerSendDialogUrl(inviteUrl, appId, redirectUri), "_blank", "noopener,noreferrer");
-      flash("Copied — finish sending in Messenger.");
-      return;
-    }
 
     if (isMobileUserAgent()) {
-      window.location.href = messengerAppShareHref(inviteUrl);
+      await copyInviteSharePayload(sharePayload);
+      const deepLink = `fb-messenger://share?link=${encodeURIComponent(inviteUrl)}`;
+      const openedAt = Date.now();
+      window.location.href = deepLink;
       window.setTimeout(() => {
-        flash("Copied — paste in Messenger if the app did not open.");
-      }, 600);
+        if (Date.now() - openedAt < 2000) {
+          if (appId) {
+            window.open(facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl), "_blank", "noopener,noreferrer");
+          } else {
+            flash("Copied — open Messenger and paste the invitation.");
+          }
+        }
+      }, 800);
       return;
     }
 
+    if (appId) {
+      window.open(facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl), "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    await copyInviteSharePayload(sharePayload);
     window.open("https://www.messenger.com/", "_blank", "noopener,noreferrer");
     flash("Copied — paste the invitation into a Messenger chat.");
   }, [flash, inviteUrl, sharePayload]);
+
+  const onWhatsApp = useCallback(() => {
+    const waUrl = whatsappShareUrl(sharePayload.text);
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  }, [sharePayload]);
 
   const onInstagram = useCallback(async () => {
     await copyInviteSharePayload(sharePayload);
 
     if (isMobileUserAgent()) {
       const openedAt = Date.now();
-      window.location.href = instagramDirectInboxHref();
+      window.location.href = "instagram://direct-inbox";
       window.setTimeout(() => {
         if (Date.now() - openedAt < 2500) {
           flash("Copied — open Instagram DMs and paste the link.");
@@ -118,6 +129,9 @@ export default function InviteShareActions({
         ) : null}
         <button type="button" className={actionButtonClass} onClick={() => void onMessenger()}>
           Messenger
+        </button>
+        <button type="button" className={actionButtonClass} onClick={() => void onWhatsApp()}>
+          WhatsApp
         </button>
         <button type="button" className={actionButtonClass} onClick={() => void onInstagram()}>
           Instagram

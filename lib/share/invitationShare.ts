@@ -8,6 +8,7 @@ export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteTok
   const token = inviteToken.trim();
   const base = inviteBaseUrl?.replace(/\/$/, "") ?? "";
   if (base) return `${base}/invite/${token}`;
+  if (typeof window !== "undefined") return `${window.location.origin}/invite/${token}`;
   return `/invite/${token}`;
 }
 
@@ -49,14 +50,17 @@ export async function webShareInvite(payload: InviteSharePayload): Promise<void>
   });
 }
 
-/** Mobile Messenger app deep link (share link in a chat). */
-export function messengerAppShareHref(inviteUrl: string): string {
-  return `fb-messenger://share?link=${encodeURIComponent(inviteUrl)}`;
+export function isMobileUserAgent(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-/** Opens Instagram direct inbox when the app is installed (user pastes from clipboard). */
-export function instagramDirectInboxHref(): string {
-  return "instagram://direct-inbox";
+/** Opens Messenger with the invite link pre-filled — works on mobile (deep link) and desktop (m.me). */
+export function messengerShareUrl(inviteUrl: string): string {
+  if (isMobileUserAgent()) {
+    return `fb-messenger://share?link=${encodeURIComponent(inviteUrl)}`;
+  }
+  return `https://www.facebook.com/dialog/send?link=${encodeURIComponent(inviteUrl)}&redirect_uri=${encodeURIComponent(inviteUrl)}`;
 }
 
 /** Facebook Send dialog when `NEXT_PUBLIC_FACEBOOK_APP_ID` is configured. */
@@ -73,7 +77,12 @@ export function facebookMessengerSendDialogUrl(
   return `https://www.facebook.com/dialog/send?${params.toString()}`;
 }
 
-export function isMobileUserAgent(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+/** Opens Instagram direct inbox when the app is installed (user pastes from clipboard). */
+export function instagramDirectInboxHref(): string {
+  return "instagram://direct-inbox";
+}
+
+/** WhatsApp share — works on mobile and desktop (wa.me). */
+export function whatsappShareUrl(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

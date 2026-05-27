@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import SolidSilkButton from "@/app/components/SolidSilkButton";
-import { buildAuthCallbackUrl, resolveSignInSiteOrigin } from "@/lib/auth/authCallbackUrl";
+import { buildAuthCallbackUrl } from "@/lib/auth/authCallbackUrl";
 import { mapSignInEmailError } from "@/lib/auth/signInEmail";
 import { createClient } from "@/lib/supabase/client";
 
@@ -20,7 +20,7 @@ export default function LoginForm() {
     setStatus("loading");
     setMessage(null);
 
-    const redirectTo = buildAuthCallbackUrl(resolveSignInSiteOrigin(), nextPath);
+    const redirectTo = buildAuthCallbackUrl(nextPath);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
