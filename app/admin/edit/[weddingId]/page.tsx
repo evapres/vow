@@ -7,10 +7,6 @@ import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitation
 import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
 import InvitationWorkflowTabs from "@/app/components/admin/InvitationWorkflowTabs";
 import { createClient } from "@/lib/supabase/server";
-import { splitWeddingDateTimeForForm } from "@/lib/invitationDisplay";
-import { parseInvitationThemeId } from "@/lib/invitationThemes";
-import { heroImageUrlForAdminEdit } from "@/lib/weddingHeroAdmin";
-import { hydrateLocationFormFields } from "@/lib/weddingLocation";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
 type PageProps = {
@@ -40,9 +36,13 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
     redirect("/login");
   }
 
+  // Light select only — hero/music load client-side via /api/admin/wedding/[id]/form
+  // so large stored media never blows up the RSC response after save.
   const { data: wedding, error } = await supabase
     .from("weddings")
-    .select("*")
+    .select(
+      "id, couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, location, invitation_theme",
+    )
     .eq("id", weddingId)
     .eq("user_id", user.id)
     .single();
@@ -50,25 +50,6 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
   if (error || !wedding) {
     notFound();
   }
-
-  const { date, time } = splitWeddingDateTimeForForm(wedding.wedding_date);
-  const rsvp = wedding.rsvp_deadline ? String(wedding.rsvp_deadline).slice(0, 10) : "";
-
-  const locFields = hydrateLocationFormFields(wedding);
-  const initial = {
-    coupleNames: wedding.couple_names ?? "",
-    language: (wedding.language === "el" ? "el" : "en") as "en" | "el",
-    weddingDate: date,
-    weddingTime: time,
-    venueName: locFields.venueName,
-    churchName: locFields.churchName,
-    streetAddress: locFields.streetAddress,
-    heroImageUrl: heroImageUrlForAdminEdit(weddingId, wedding.hero_image_url),
-    rsvpDeadline: rsvp,
-    note: wedding.note ?? "",
-    invitationMusicUrl: wedding.invitation_music_url ?? null,
-    invitationTheme: parseInvitationThemeId(wedding.invitation_theme),
-  };
 
   const saved = sp.saved === "1";
   const formError = sp.error ? safeDecode(sp.error) : null;
@@ -121,7 +102,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
             </div>
           ) : null}
 
-          <AdminNewWeddingForm editWeddingId={weddingId} initial={initial} />
+          <AdminNewWeddingForm editWeddingId={weddingId} />
         </main>
       </div>
     </InvitationFrame>

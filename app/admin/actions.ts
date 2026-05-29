@@ -10,7 +10,8 @@ import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { validateInvitationStepForm } from "@/lib/weddingProgress";
-import { isMissingInvitationThemeColumn } from "@/lib/weddingHeroAdmin";
+import { isMissingInvitationThemeColumn } from "@/lib/adminWeddingMedia";
+import { persistHeroImageFile } from "@/lib/heroImageUpload";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
 
 function getServiceRoleClientOrNull() {
@@ -117,18 +118,10 @@ export async function createWedding(formData: FormData) {
   );
   const note = optionalText(formData.get("note"));
 
-  let heroImageUrl: string | null = null;
+  let heroFileToUpload: File | null = null;
   const heroFile = formData.get("hero_image");
   if (heroFile instanceof File && heroFile.size > 0) {
-    const maxBytes = 4 * 1024 * 1024;
-    if (heroFile.size > maxBytes) {
-      redirect("/admin/new?error=" + encodeURIComponent("Hero image is too large (max 4MB)."));
-    }
-    if (!heroFile.type.startsWith("image/")) {
-      redirect("/admin/new?error=" + encodeURIComponent("Hero image must be an image file."));
-    }
-    const buf = Buffer.from(await heroFile.arrayBuffer());
-    heroImageUrl = `data:${heroFile.type};base64,${buf.toString("base64")}`;
+    heroFileToUpload = heroFile;
   }
 
   let invitation_music_url: string | null = null;
@@ -152,7 +145,7 @@ export async function createWedding(formData: FormData) {
     church_name,
     street_address,
     location,
-    hero_image_url: heroImageUrl,
+    hero_image_url: null,
     invitation_music_url,
     rsvp_deadline: rsvpDeadline,
     note,
@@ -163,6 +156,27 @@ export async function createWedding(formData: FormData) {
       "/admin/new?error=" +
         encodeURIComponent(error?.message ?? "Could not create wedding. Check Supabase permissions and try again."),
     );
+  }
+
+  if (heroFileToUpload) {
+    try {
+      const db = dbAfterAuth(supabase);
+      const heroImageUrl = await persistHeroImageFile(db, data.id, heroFileToUpload);
+      const heroError = await persistWeddingUpdate(supabase, data.id, user.id, {
+        hero_image_url: heroImageUrl,
+      });
+      if (heroError) {
+        redirect(
+          "/admin/new?error=" +
+            encodeURIComponent(heroError.message ?? "Invitation saved but hero image could not be stored."),
+        );
+      }
+    } catch (e) {
+      redirect(
+        "/admin/new?error=" +
+          encodeURIComponent(e instanceof Error ? e.message : "Invitation saved but hero image upload failed."),
+      );
+    }
   }
 
   revalidatePath("/admin");
@@ -244,15 +258,15 @@ export async function updateWedding(formData: FormData) {
 
   const heroFile = formData.get("hero_image");
   if (heroFile instanceof File && heroFile.size > 0) {
-    const maxBytes = 4 * 1024 * 1024;
-    if (heroFile.size > maxBytes) {
-      redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent("Hero image is too large (max 4MB)."));
+    try {
+      const db = dbAfterAuth(supabase);
+      patch.hero_image_url = await persistHeroImageFile(db, weddingId, heroFile);
+    } catch (e) {
+      redirect(
+        `/admin/edit/${weddingId}?error=` +
+          encodeURIComponent(e instanceof Error ? e.message : "Hero image upload failed."),
+      );
     }
-    if (!heroFile.type.startsWith("image/")) {
-      redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent("Hero image must be an image file."));
-    }
-    const buf = Buffer.from(await heroFile.arrayBuffer());
-    patch.hero_image_url = `data:${heroFile.type};base64,${buf.toString("base64")}`;
   } else if (clearHero) {
     patch.hero_image_url = null;
   }

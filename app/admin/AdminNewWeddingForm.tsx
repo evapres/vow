@@ -69,9 +69,42 @@ function isDefaultHeroSrc(src: string): boolean {
   return src === inviteHeroDefaultSrc || src.endsWith("/invite-hero-couple.png");
 }
 
+function applyFormInitial(
+  data: AdminWeddingFormInitial,
+  setters: {
+    setCoupleNames: (v: string) => void;
+    setLanguage: (v: "en" | "el") => void;
+    setInvitationTheme: (v: InvitationThemeId) => void;
+    setWeddingDate: (v: string) => void;
+    setWeddingTime: (v: string) => void;
+    setVenueName: (v: string) => void;
+    setChurchName: (v: string) => void;
+    setStreetAddress: (v: string) => void;
+    setHeroPreviewSrc: (v: string) => void;
+    setRsvpDeadline: (v: string) => void;
+    setNote: (v: string) => void;
+    setMusicPreviewSrc: (v: string | null) => void;
+  },
+) {
+  setters.setCoupleNames(data.coupleNames);
+  setters.setLanguage(data.language);
+  setters.setInvitationTheme(parseInvitationThemeId(data.invitationTheme));
+  setters.setWeddingDate(data.weddingDate);
+  setters.setWeddingTime(data.weddingTime);
+  setters.setVenueName(data.venueName);
+  setters.setChurchName(data.churchName);
+  setters.setStreetAddress(data.streetAddress);
+  setters.setHeroPreviewSrc(initialHeroSrc(data));
+  setters.setRsvpDeadline(data.rsvpDeadline ? data.rsvpDeadline.slice(0, 10) : "");
+  setters.setNote(data.note);
+  setters.setMusicPreviewSrc(data.invitationMusicUrl?.trim() || null);
+}
+
 export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNewWeddingFormProps) {
   const isEdit = Boolean(editWeddingId);
   const [isSaving, startTransition] = useTransition();
+  const [formLoading, setFormLoading] = useState(() => Boolean(editWeddingId) && !initial);
+  const [formLoadError, setFormLoadError] = useState<string | null>(null);
   const [coupleNames, setCoupleNames] = useState(initial?.coupleNames ?? "");
   const [language, setLanguage] = useState<"en" | "el">(initial?.language ?? "en");
   const [invitationTheme, setInvitationTheme] = useState<InvitationThemeId>(() =>
@@ -118,6 +151,50 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!editWeddingId || initial) return;
+
+    let cancelled = false;
+    setFormLoading(true);
+    setFormLoadError(null);
+
+    void fetch(`/api/admin/wedding/${editWeddingId}/form`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || "Could not load invitation.");
+        }
+        return res.json() as Promise<AdminWeddingFormInitial>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        applyFormInitial(data, {
+          setCoupleNames,
+          setLanguage,
+          setInvitationTheme,
+          setWeddingDate,
+          setWeddingTime,
+          setVenueName,
+          setChurchName,
+          setStreetAddress,
+          setHeroPreviewSrc,
+          setRsvpDeadline,
+          setNote,
+          setMusicPreviewSrc,
+        });
+        setFormLoading(false);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setFormLoadError(e instanceof Error ? e.message : "Could not load invitation.");
+        setFormLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editWeddingId, initial]);
 
   const clearHeroImage = () => {
     if (heroBlobUrlRef.current) {
@@ -202,6 +279,22 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
         else await createWedding(fd);
       })();
     });
+  }
+
+  if (formLoading) {
+    return (
+      <div className="m3-form-card px-4 py-8 text-sm text-[#181818]/70" aria-busy="true">
+        Loading invitation…
+      </div>
+    );
+  }
+
+  if (formLoadError) {
+    return (
+      <div className="m3-form-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        {formLoadError}
+      </div>
+    );
   }
 
   return (

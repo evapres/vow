@@ -6,7 +6,7 @@ type RouteContext = { params: Promise<{ weddingId: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const { weddingId } = await context.params;
-  const media = await loadOwnedWeddingMedia(weddingId, "hero");
+  const media = await loadOwnedWeddingMedia(weddingId, "music");
 
   if (!media) {
     return new NextResponse("Not found", { status: 404 });
