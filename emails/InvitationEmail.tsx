@@ -247,7 +247,7 @@ const openCardCta = {
   borderStyle: "none",
   outline: "none",
   boxShadow: "none",
-  borderRadius: "0",
+  borderRadius: "2px",
   borderBottom: "1px solid rgba(26, 20, 16, 0.45)",
   marginTop: "0",
   marginBottom: "10px",

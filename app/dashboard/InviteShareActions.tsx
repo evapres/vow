@@ -20,8 +20,7 @@ type InviteShareActionsProps = {
   householdName?: string | null;
 };
 
-const actionButtonClass =
-  "inline-flex h-8 items-center justify-center border border-[#1A1A1A]/30 bg-transparent px-2.5 text-[11px] font-medium text-[#1A1A1A] transition-colors hover:border-[#1A1A1A]/50 hover:bg-[#1A1A1A]/[0.03] disabled:cursor-not-allowed disabled:opacity-40";
+const shareBtnClass = "m3-btn m3-btn--outlined m3-btn--compact";
 
 export default function InviteShareActions({
   inviteToken,
@@ -116,28 +115,28 @@ export default function InviteShareActions({
   }, [flash, sharePayload]);
 
   return (
-    <div className="mt-2 space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1A1A1A]/50">Share invitation</p>
+    <div className="mt-2 space-y-2">
+      <p className="m3-field-label">Share invitation</p>
       <div className="flex flex-wrap gap-1.5">
-        <button type="button" className={actionButtonClass} onClick={() => void onCopy()}>
+        <button type="button" className={shareBtnClass} onClick={() => void onCopy()}>
           Copy link
         </button>
         {showWebShare ? (
-          <button type="button" className={actionButtonClass} onClick={() => void onWebShare()}>
+          <button type="button" className={shareBtnClass} onClick={() => void onWebShare()}>
             Share…
           </button>
         ) : null}
-        <button type="button" className={actionButtonClass} onClick={() => void onMessenger()}>
+        <button type="button" className={shareBtnClass} onClick={() => void onMessenger()}>
           Messenger
         </button>
-        <button type="button" className={actionButtonClass} onClick={() => void onWhatsApp()}>
+        <button type="button" className={shareBtnClass} onClick={() => void onWhatsApp()}>
           WhatsApp
         </button>
-        <button type="button" className={actionButtonClass} onClick={() => void onInstagram()}>
+        <button type="button" className={shareBtnClass} onClick={() => void onInstagram()}>
           Instagram
         </button>
       </div>
-      {status ? <p className="text-[11px] text-[#1A1A1A]/65">{status}</p> : null}
+      {status ? <p className="m3-field-support">{status}</p> : null}
     </div>
   );
 }

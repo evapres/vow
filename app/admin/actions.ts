@@ -8,6 +8,8 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { invitationMusicUrlFromForm } from "@/lib/admin/invitationMusicFromForm";
 import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
+import { parseInvitationThemeId } from "@/lib/invitationThemes";
+import { validateInvitationStepForm } from "@/lib/weddingProgress";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
 
 function getServiceRoleClientOrNull() {
@@ -45,7 +47,7 @@ export async function createWedding(formData: FormData) {
 
   if (authError || !user) {
     redirect(
-      "/admin?error=" +
+      "/admin/new?error=" +
         encodeURIComponent(
           authError?.message ?? "You must be signed in to create a wedding.",
         ),
@@ -54,23 +56,32 @@ export async function createWedding(formData: FormData) {
 
   const coupleNames = String(formData.get("couple_names") ?? "").trim();
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
-
-  if (!coupleNames) {
-    redirect("/admin?error=" + encodeURIComponent("Couple names are required."));
-  }
-
+  const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
   const weddingDate = combineWeddingDateAndTime(weddingDateOnly, weddingTime);
   const venue_name = optionalText(formData.get("venue_name"));
   const church_name = optionalText(formData.get("church_name"));
   const street_address = optionalText(formData.get("street_address"));
+  const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
+
+  const stepError = validateInvitationStepForm({
+    coupleNames,
+    weddingDate: weddingDateOnly,
+    venueName: venue_name,
+    churchName: church_name,
+    streetAddress: street_address,
+    rsvpDeadline,
+  });
+  if (stepError) {
+    redirect("/admin/new?error=" + encodeURIComponent(stepError));
+  }
+
   const location = joinWeddingLocationStorage(
     venue_name ?? "",
     church_name ?? "",
     street_address ?? "",
   );
-  const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
   const note = optionalText(formData.get("note"));
 
   let heroImageUrl: string | null = null;
@@ -78,10 +89,10 @@ export async function createWedding(formData: FormData) {
   if (heroFile instanceof File && heroFile.size > 0) {
     const maxBytes = 4 * 1024 * 1024;
     if (heroFile.size > maxBytes) {
-      redirect("/admin?error=" + encodeURIComponent("Hero image is too large (max 4MB)."));
+      redirect("/admin/new?error=" + encodeURIComponent("Hero image is too large (max 4MB)."));
     }
     if (!heroFile.type.startsWith("image/")) {
-      redirect("/admin?error=" + encodeURIComponent("Hero image must be an image file."));
+      redirect("/admin/new?error=" + encodeURIComponent("Hero image must be an image file."));
     }
     const buf = Buffer.from(await heroFile.arrayBuffer());
     heroImageUrl = `data:${heroFile.type};base64,${buf.toString("base64")}`;
@@ -93,7 +104,7 @@ export async function createWedding(formData: FormData) {
     if (music !== undefined) invitation_music_url = music;
   } catch (e) {
     redirect(
-      "/admin?error=" +
+      "/admin/new?error=" +
         encodeURIComponent(e instanceof Error ? e.message : "Invalid invitation music file."),
     );
   }
@@ -104,6 +115,7 @@ export async function createWedding(formData: FormData) {
       user_id: user.id,
       couple_names: coupleNames,
       language,
+      invitation_theme,
       wedding_date: weddingDate,
       venue_name,
       church_name,
@@ -119,12 +131,15 @@ export async function createWedding(formData: FormData) {
 
   if (error || !data) {
     redirect(
-      "/admin?error=" +
+      "/admin/new?error=" +
         encodeURIComponent(error?.message ?? "Could not create wedding. Check Supabase permissions and try again."),
     );
   }
 
-  redirect(`/admin?created=${data.id}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/new");
+  revalidatePath("/admin/invitations");
+  redirect(`/admin/new?created=${data.id}`);
 }
 
 export async function updateWedding(formData: FormData) {
@@ -156,28 +171,39 @@ export async function updateWedding(formData: FormData) {
 
   const coupleNames = String(formData.get("couple_names") ?? "").trim();
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
-  if (!coupleNames) {
-    redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent("Couple names are required."));
-  }
-
+  const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
   const weddingDate = combineWeddingDateAndTime(weddingDateOnly, weddingTime);
   const venue_name = optionalText(formData.get("venue_name"));
   const church_name = optionalText(formData.get("church_name"));
   const street_address = optionalText(formData.get("street_address"));
+  const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
+
+  const stepError = validateInvitationStepForm({
+    coupleNames,
+    weddingDate: weddingDateOnly,
+    venueName: venue_name,
+    churchName: church_name,
+    streetAddress: street_address,
+    rsvpDeadline,
+  });
+  if (stepError) {
+    redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent(stepError));
+  }
+
   const location = joinWeddingLocationStorage(
     venue_name ?? "",
     church_name ?? "",
     street_address ?? "",
   );
-  const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
   const note = optionalText(formData.get("note"));
   const clearHero = formData.get("clear_hero") === "1";
 
   const patch: Record<string, unknown> = {
     couple_names: coupleNames,
     language,
+    invitation_theme,
     wedding_date: weddingDate,
     venue_name,
     church_name,

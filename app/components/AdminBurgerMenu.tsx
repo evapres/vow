@@ -7,11 +7,18 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type AdminBurgerMenuProps = {
-  weddingId?: string | null;
   className?: string;
 };
 
-export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMenuProps) {
+function M3MenuIcon() {
+  return (
+    <svg className="m3-icon-btn__glyph" viewBox="0 -960 960 960" aria-hidden>
+      <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z" />
+    </svg>
+  );
+}
+
+export default function AdminBurgerMenu({ className }: AdminBurgerMenuProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -35,43 +42,42 @@ export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMen
   }
 
   return (
-    <div ref={rootRef} className={`relative ${className ?? ""}`.trim()}>
+    <div ref={rootRef} className={`m3-admin-form relative ${className ?? ""}`.trim()}>
       <button
         type="button"
-        aria-label="Menu"
+        aria-label="Open navigation menu"
         aria-expanded={open}
+        aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-10 w-10 items-center justify-center border border-[#181818]/20 bg-white/70 text-[#181818] backdrop-blur-[2px] hover:bg-white/85"
+        className="m3-icon-btn"
       >
-        <span className="sr-only">Open menu</span>
-        <div className="flex flex-col gap-1">
-          <span className="h-px w-5 bg-[#181818]/80" />
-          <span className="h-px w-5 bg-[#181818]/80" />
-          <span className="h-px w-5 bg-[#181818]/80" />
-        </div>
+        <M3MenuIcon />
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden border border-[#181818]/20 bg-white/90 text-[#181818] shadow-[0_16px_48px_rgba(0,0,0,0.12)] backdrop-blur-[4px]">
-          <nav className="flex flex-col">
+        <div className="m3-menu-popup" role="menu">
+          <nav className="flex flex-col py-1">
             <Link
               href="/admin/invitations"
+              role="menuitem"
               onClick={() => setOpen(false)}
-              className="px-4 py-3 text-sm font-medium hover:bg-[#181818]/[0.04]"
+              className="m3-menu-popup__item"
             >
               Invitations
             </Link>
             <Link
-              href="/admin?new=1"
+              href="/admin/new"
+              role="menuitem"
               onClick={() => setOpen(false)}
-              className="px-4 py-3 text-sm font-medium hover:bg-[#181818]/[0.04]"
+              className="m3-menu-popup__item"
             >
               Create invitation
             </Link>
             <button
               type="button"
+              role="menuitem"
               onClick={handleLogout}
-              className="px-4 py-3 text-left text-sm font-medium text-[#7A1F1F] hover:bg-[#181818]/[0.04]"
+              className="m3-menu-popup__item m3-menu-popup__item--danger"
             >
               Log out
             </button>
@@ -81,4 +87,3 @@ export default function AdminBurgerMenu({ weddingId, className }: AdminBurgerMen
     </div>
   );
 }
-

@@ -28,7 +28,16 @@ export default function LoginEmailHelp() {
               Add:{" "}
               <code className="block break-all rounded bg-[#1A1A1A]/10 px-1 py-0.5 text-xs">
                 https://thevow.vip/auth/callback**
+              </code>{" "}
+              and for local dev{" "}
+              <code className="block break-all rounded bg-[#1A1A1A]/10 px-1 py-0.5 text-xs">
+                http://localhost:3000/**
               </code>
+            </li>
+            <li>
+              <span className="font-medium">Local login still opens production?</span> Use{" "}
+              <span className="font-medium">Get local login link (no email)</span> on the login page
+              (needs <code className="text-xs">SUPABASE_SERVICE_ROLE_KEY</code> in .env.local).
             </li>
             <li>Save, then request a new magic link.</li>
           </ol>

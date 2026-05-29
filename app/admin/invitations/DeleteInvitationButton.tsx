@@ -31,7 +31,7 @@ export default function DeleteInvitationButton({ weddingId, coupleNames }: Delet
           void deleteWedding(fd);
         });
       }}
-      className="inline-flex h-9 items-center justify-center border border-red-200/90 bg-white/50 px-3 text-xs font-medium text-red-900/90 hover:bg-red-50/90 disabled:opacity-50"
+      className="m3-btn m3-btn--danger m3-btn--compact"
     >
       {pending ? "Deleting…" : "Delete"}
     </button>

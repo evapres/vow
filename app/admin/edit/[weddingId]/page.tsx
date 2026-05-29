@@ -4,11 +4,13 @@ import { notFound, redirect } from "next/navigation";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import AdminNewWeddingForm from "@/app/admin/AdminNewWeddingForm";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
-import AdminBurgerMenu from "@/app/components/AdminBurgerMenu";
+import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
+import InvitationWorkflowTabs from "@/app/components/admin/InvitationWorkflowTabs";
 import { createClient } from "@/lib/supabase/server";
 import { splitWeddingDateTimeForForm } from "@/lib/invitationDisplay";
+import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { hydrateLocationFormFields } from "@/lib/weddingLocation";
-import { isInvitationStepComplete } from "@/lib/weddingProgress";
+import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
 type PageProps = {
   params: Promise<{ weddingId: string }>;
@@ -64,49 +66,41 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
     rsvpDeadline: rsvp,
     note: wedding.note ?? "",
     invitationMusicUrl: wedding.invitation_music_url ?? null,
+    invitationTheme: parseInvitationThemeId(wedding.invitation_theme),
   };
 
   const saved = sp.saved === "1";
   const formError = sp.error ? safeDecode(sp.error) : null;
   const step1Complete = isInvitationStepComplete(wedding);
+  const step1Missing = step1Complete ? [] : invitationStepMissingFields(wedding);
 
   return (
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
-      <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
-        <main className="flex-1 py-10">
-          <div className="mb-6 flex items-center justify-end">
-            <AdminBurgerMenu weddingId={weddingId} />
-          </div>
-          <div className="mb-8 border-b border-[#181818]/20 pb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/60">Admin</p>
-            <h1 className="mt-2 text-3xl font-medium tracking-[0.02em]">Edit invitation</h1>
-            <p className="mt-2 text-sm text-[#181818]/65">
-              Update details and preview — same as when you created this wedding.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-7 items-center rounded-full border border-[#181818]/25 bg-[#181818]/[0.02] px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#181818]">
-                  Step 1: Invitation
-                </span>
-                {step1Complete ? (
-                  <Link
-                    href={`/dashboard/${weddingId}`}
-                    className="inline-flex h-7 items-center rounded-full border border-[#181818]/25 bg-white px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#181818]/80 hover:text-[#181818]"
-                  >
-                    Step 2: Dashboard →
-                  </Link>
-                ) : (
-                  <span
-                    className="inline-flex h-7 cursor-not-allowed items-center rounded-full border border-[#181818]/15 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#181818]/35"
-                    title="Finish invitation details to unlock the dashboard."
-                  >
-                    Step 2: Dashboard (locked)
-                  </span>
-                )}
-              </div>
+      <div className="m3-admin-form flex min-h-full flex-col bg-transparent font-sans text-[var(--m3-on-background)]">
+        <main className="admin-shell-main">
+          <AdminShellHeader />
+          <div className="mb-8">
+            <h1 className="text-3xl font-medium tracking-[0.02em]">Edit invitation</h1>
+            <div className="mt-5">
+              <InvitationWorkflowTabs
+                weddingId={weddingId}
+                activeStep={1}
+                dashboardEnabled={step1Complete}
+              />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-3 text-sm">
+              <Link
+                href="/admin/invitations"
+                className="font-medium text-[#181818]/75 underline underline-offset-4 hover:text-[#181818]"
+              >
+                All invitations
+              </Link>
               <span className="text-[#181818]/55">·</span>
-              <Link href="/" className="font-medium text-[#181818]/75 underline underline-offset-4 hover:text-[#181818]">
-                Back to invitation
+              <Link
+                href="/admin/new"
+                className="font-medium text-[#181818]/75 underline underline-offset-4 hover:text-[#181818]"
+              >
+                Create new
               </Link>
             </div>
           </div>
@@ -118,6 +112,12 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
           ) : null}
           {formError ? (
             <div className="mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{formError}</div>
+          ) : null}
+          {step1Missing.length > 0 ? (
+            <div className="mb-6 border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
+              <p className="font-medium">RSVP dashboard is locked until you complete:</p>
+              <p className="mt-1 capitalize">{step1Missing.join(", ")}</p>
+            </div>
           ) : null}
 
           <AdminNewWeddingForm editWeddingId={weddingId} initial={initial} />

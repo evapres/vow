@@ -20,7 +20,7 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
 
   if (!weddingId) {
     return (
-      <main className="min-h-screen bg-[#fafafa] px-4 py-10 text-[#181818]">
+      <main className="app-shell-canvas min-h-screen px-4 py-10 text-[#181818]">
         <div className="mx-auto max-w-lg border border-[#181818]/15 bg-white p-6 text-sm">
           <p className="font-medium">Wedding required</p>
           <p className="mt-2 text-[#181818]/75">
@@ -65,7 +65,7 @@ export default async function EmailPreviewPage({ searchParams }: PageProps) {
   const embedSrc = `/dev/email-preview/embed?${embedParams.toString()}`;
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 py-10 text-[#181818]">
+    <main className="min-h-screen bg-[var(--app-shell-bg)] px-4 py-10 text-[#181818]">
       <div className="mx-auto max-w-3xl">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/55">Dev</p>
         <h1 className="mt-2 text-2xl font-medium">Email preview</h1>

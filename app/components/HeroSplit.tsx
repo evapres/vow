@@ -10,7 +10,7 @@ type HeroSplitProps = {
 
 /** Soft radius on TL, TR, BL; sharp BR — matches hero reference. */
 const imageMaskClass =
-  "rounded-tl-[clamp(72px,12vw,200px)] rounded-tr-[clamp(72px,12vw,200px)] rounded-br-none rounded-bl-[clamp(72px,12vw,200px)]";
+  "rounded-[2px]";
 
 export default function HeroSplit({
   kicker,

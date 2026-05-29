@@ -1,8 +1,14 @@
 @import "tailwindcss";
+@import "./styles/m3-tokens.css";
+@import "./styles/m3-admin-form.css";
 
 :root {
-  --background: #FCFCF6;
+  /** App shell (admin, login, dashboard) — not used on guest invitation canvases. */
+  --app-shell-bg: #e6dacf;
+  --background: var(--app-shell-bg);
   --foreground: #181818;
+  /** Uniform corner radius for UI frames, inputs, and buttons. */
+  --radius-app: 2px;
   /**
    * Inner content horizontal inset (each side). Used only on `.main-content`, not on full-bleed wrappers.
    */
@@ -11,9 +17,20 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-app-shell: #e6dacf;
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
   --font-serif: var(--font-heading);
+  --radius-none: var(--radius-app);
+  --radius-xs: var(--radius-app);
+  --radius-sm: var(--radius-app);
+  --radius-md: var(--radius-app);
+  --radius-lg: var(--radius-app);
+  --radius-xl: var(--radius-app);
+  --radius-2xl: var(--radius-app);
+  --radius-3xl: var(--radius-app);
+  --radius-4xl: var(--radius-app);
+  --radius-full: var(--radius-app);
 }
 
 html {
@@ -29,6 +46,14 @@ body {
   /* Syne via next/font (--font-body); keep short fallbacks for FOUT */
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   background-color: transparent;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-radius: var(--radius-app);
+  }
 }
 
 @layer utilities {
@@ -49,6 +74,16 @@ body {
     padding-right: var(--page-padding);
   }
 
+  .rounded-app {
+    border-radius: var(--radius-app);
+  }
+
+  /** Full-page shell (admin, login, dashboard). Clears invitation fabric when used on InvitationFrame. */
+  .app-shell-canvas {
+    background-color: #e6dacf;
+    background-image: none;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     @keyframes invite-float {
       0%,
@@ -64,5 +99,18 @@ body {
       animation: invite-float 4.5s ease-in-out infinite;
       will-change: transform;
     }
+  }
+}
+
+/* App shell pages (admin, dashboard): tighter top padding than guest invitations */
+.app-shell-canvas.full-width-section {
+  padding-top: 12px;
+  padding-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .app-shell-canvas.full-width-section {
+    padding-top: 16px;
+    padding-bottom: 32px;
   }
 }

@@ -1,0 +1,54 @@
+/**
+ * Material Design 3 tokens (Light / Baseline / Syne).
+ * Sourced from Figma export: M3/Light.json, Shape/Baseline.json, Typescale/Baseline.json.
+ */
+.m3-admin-form {
+  /* Color — Schemes */
+  --m3-primary: #6f3244;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: #fcf8f2;
+  --m3-on-primary-container: #8a3758;
+  --m3-surface: #fffbf7;
+  --m3-on-surface: #201b1d;
+  --m3-surface-container-high: #f5eee5;
+  --m3-surface-container-highest: #ede6dd;
+  --m3-surface-variant: #ece6e0;
+  --m3-on-surface-variant: #4f4549;
+  --m3-outline: #7e7478;
+  --m3-outline-variant: #d0c7c4;
+  --m3-background: var(--app-shell-bg);
+  --m3-on-background: #201b1d;
+
+  /* Shape */
+  --m3-shape-corner-none: 0;
+  --m3-shape-corner-xs: 4px;
+  --m3-shape-corner-sm: 8px;
+  --m3-shape-corner-md: 12px;
+  --m3-shape-corner-lg: 16px;
+  --m3-shape-corner-xl: 28px;
+  --m3-shape-corner-full: 9999px;
+
+  /* Type — Syne (matches app --font-body) */
+  --m3-font-brand: var(--font-body), "Syne", ui-sans-serif, system-ui, sans-serif;
+  --m3-font-plain: var(--font-body), "Syne", ui-sans-serif, system-ui, sans-serif;
+
+  --m3-title-large-size: 22px;
+  --m3-title-large-line: 28px;
+  --m3-title-large-tracking: 0;
+
+  --m3-label-large-size: 14px;
+  --m3-label-large-line: 20px;
+  --m3-label-large-tracking: 0.1px;
+
+  --m3-label-medium-size: 12px;
+  --m3-label-medium-line: 16px;
+  --m3-label-medium-tracking: 0.5px;
+
+  --m3-body-large-size: 16px;
+  --m3-body-large-line: 24px;
+  --m3-body-large-tracking: 0.5px;
+
+  --m3-body-small-size: 12px;
+  --m3-body-small-line: 16px;
+  --m3-body-small-tracking: 0.4px;
+}

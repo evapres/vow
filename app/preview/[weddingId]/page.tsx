@@ -1,14 +1,14 @@
 import Footer from "@/app/components/Footer";
-import AdminBurgerMenu from "@/app/components/AdminBurgerMenu";
+import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/InvitationHero";
-import { invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
 import {
   formatDetailsDateTime,
   formatHeaderDateLabel,
   toAllCapsNoAccents,
 } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
+import { getInvitationTheme, parseInvitationThemeId } from "@/lib/invitationThemes";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
 
 type PageProps = {
@@ -61,20 +61,24 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
   }
 
   const language = (wedding.language === "el" ? "el" : "en") as "en" | "el";
+  const invitationTheme = parseInvitationThemeId(wedding.invitation_theme);
+  const themeStyles = getInvitationTheme(invitationTheme);
 
   return (
     <InvitationFrame
+      theme={invitationTheme}
       removeMobileTopPadding
       footer={<Footer coupleNames={wedding.couple_names} year={footerYear(wedding.wedding_date)} />}
     >
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
-          <div className="flex justify-end px-[var(--invite-gutter,12px)] pt-4">
-            <AdminBurgerMenu weddingId={weddingId} />
+          <div className="m3-admin-form px-[var(--invite-gutter,12px)]">
+            <AdminShellHeader />
           </div>
           <InvitationHero
             coupleNames={wedding.couple_names}
             language={language}
+            theme={invitationTheme}
             eventDateLabel={formatHeaderDateLabel(wedding.wedding_date, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
@@ -91,7 +95,7 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
           >
             <div
               className="w-full px-[var(--invite-gutter,12px)] py-16 text-center text-[#FCFCF6] lg:py-20"
-              style={invitationRsvpBandStyle}
+              style={themeStyles.rsvpBand}
             >
               <div className="mx-auto max-w-md">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#FCFCF6]/70">

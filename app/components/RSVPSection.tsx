@@ -3,7 +3,7 @@
 import { useState } from "react";
 import OutlineSilkButton from "./OutlineSilkButton";
 import SolidSilkButton from "./SolidSilkButton";
-import { invitationRsvpBandStyle } from "./invitationDarkBandStyle";
+import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 import {
   formatRsvpDeadlineLabel,
   inviteMetaCaptionClass,
@@ -89,6 +89,7 @@ type RSVPSectionProps = {
   rsvpAlreadyRecorded?: boolean;
   /** How many people are invited in this household/party. */
   invitedCount?: number | null;
+  theme?: InvitationThemeId;
 };
 
 export default function RSVPSection({
@@ -99,7 +100,11 @@ export default function RSVPSection({
   language = "en",
   rsvpAlreadyRecorded = false,
   invitedCount = null,
+  theme,
 }: RSVPSectionProps) {
+  const themeStyles = getInvitationTheme(theme);
+  const rsvpButtonFill = themeStyles.rsvpSolidButtonBg;
+  const rsvpButtonBorder = themeStyles.rsvpSolidButtonBorder;
   const [response, setResponse] = useState<"yes" | "no" | null>(null);
   const [yesStep, setYesStep] = useState<"details" | "thankyou">("details");
   const initialInvitedCount = Math.max(
@@ -247,7 +252,7 @@ export default function RSVPSection({
       <div className="h-0 w-full shrink-0 bg-transparent sm:h-10" aria-hidden />
       <div
         className="w-full px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] py-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] text-[#FAF6F2]/85 sm:p-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]"
-        style={invitationRsvpBandStyle}
+        style={themeStyles.rsvpBand}
       >
         <div className="mx-auto max-w-[520px] text-center">
           {rsvpAlreadyRecorded ? (
@@ -289,6 +294,8 @@ export default function RSVPSection({
                 <SolidSilkButton
                   type="button"
                   onClick={() => handleChooseResponse("yes")}
+                  fill={rsvpButtonFill}
+                  borderColor={rsvpButtonBorder}
                   wrapperClassName="h-[52px] w-full max-w-[360px]"
                 >
                   {toAllCapsNoAccents(copy.confirm)}
@@ -369,6 +376,8 @@ export default function RSVPSection({
                 type="button"
                 onClick={handleYesDetailsSubmit}
                 disabled={isSaving}
+                fill={rsvpButtonFill}
+                borderColor={rsvpButtonBorder}
                 wrapperClassName="mt-6 h-[46px] w-[220px] max-w-full"
               >
                 {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}
@@ -415,6 +424,8 @@ export default function RSVPSection({
                     type="button"
                     onClick={handleNoSubmit}
                     disabled={isSaving}
+                    fill={rsvpButtonFill}
+                    borderColor={rsvpButtonBorder}
                     wrapperClassName="mt-4 h-[46px] w-[220px] max-w-full"
                   >
                     {isSaving ? toAllCapsNoAccents(copy.saving) : toAllCapsNoAccents(copy.submitResponse)}

@@ -38,3 +38,41 @@ export function invitationStepMissingFields(w: WeddingCompletionFields): string[
   return missing;
 }
 
+/** Shown on the admin create/edit form so requirements match the dashboard gate. */
+export const INVITATION_STEP_REQUIRED_LABELS = [
+  "Couple names",
+  "Wedding date",
+  "Venue name",
+  "Church name",
+  "Street address",
+  "RSVP deadline",
+] as const;
+
+export function invitationStepRequiredNotice(): string {
+  return `Required to open the RSVP dashboard: ${INVITATION_STEP_REQUIRED_LABELS.join(", ")}. Hero image, note, and music are optional.`;
+}
+
+export type InvitationStepFormInput = {
+  coupleNames?: string | null;
+  weddingDate?: string | null;
+  venueName?: string | null;
+  churchName?: string | null;
+  streetAddress?: string | null;
+  rsvpDeadline?: string | null;
+};
+
+/** Returns a user-facing error message, or null when the dashboard step is satisfied. */
+export function validateInvitationStepForm(input: InvitationStepFormInput): string | null {
+  const missing = invitationStepMissingFields({
+    couple_names: input.coupleNames,
+    wedding_date: input.weddingDate,
+    venue_name: input.venueName,
+    church_name: input.churchName,
+    street_address: input.streetAddress,
+    rsvp_deadline: input.rsvpDeadline,
+  });
+  if (missing.length === 0) return null;
+  const list = missing.map((f) => f.charAt(0).toUpperCase() + f.slice(1)).join(", ");
+  return `${list} ${missing.length === 1 ? "is" : "are"} required to open the RSVP dashboard.`;
+}
+

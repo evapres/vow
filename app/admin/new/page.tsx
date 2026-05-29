@@ -1,0 +1,93 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import InvitationFrame from "@/app/components/InvitationFrame";
+import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
+import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
+import { createClient } from "@/lib/supabase/server";
+
+import AdminNewWeddingForm from "../AdminNewWeddingForm";
+
+type PageProps = {
+  searchParams: Promise<{ created?: string; error?: string }>;
+};
+
+function safeDecodeParam(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/** Create a new wedding — never auto-redirects to an existing invitation. */
+export default async function AdminNewWeddingPage({ searchParams }: PageProps) {
+  const { created, error } = await searchParams;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?next=/admin/new");
+  }
+
+  return (
+    <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
+      <div className="m3-admin-form flex min-h-full flex-col bg-transparent font-sans text-[var(--m3-on-background)]">
+        <main className="admin-shell-main">
+          <AdminShellHeader />
+          <div className="mb-8 border-b border-[#181818]/20 pb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/60">
+              Admin
+            </p>
+            <h1 className="mt-2 text-3xl font-medium tracking-[0.02em]">New invitation</h1>
+            <p className="mt-2 text-sm text-[#181818]/65">
+              Creates a separate wedding in Supabase. Your other invitations stay unchanged.
+            </p>
+            <p className="mt-3">
+              <Link
+                href="/admin/invitations"
+                className="text-sm font-medium text-[#181818]/75 underline underline-offset-4 hover:text-[#181818]"
+              >
+                ← Back to all invitations
+              </Link>
+            </p>
+          </div>
+
+          {created ? (
+            <div className="mb-6 border border-emerald-200/90 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950">
+              <p className="font-medium">Invitation created.</p>
+              <p className="mt-1">
+                <span className="font-medium">ID:</span> <code className="text-xs">{created}</code>
+              </p>
+              <p className="mt-3 flex flex-wrap gap-4">
+                <Link
+                  href={`/admin/edit/${created}`}
+                  className="font-medium underline underline-offset-4"
+                >
+                  Edit this invitation
+                </Link>
+                <Link
+                  href={`/dashboard/${created}`}
+                  className="font-medium underline underline-offset-4"
+                >
+                  Open dashboard
+                </Link>
+              </p>
+            </div>
+          ) : null}
+
+          {error ? (
+            <div className="mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+              {safeDecodeParam(error)}
+            </div>
+          ) : null}
+
+          <AdminNewWeddingForm />
+        </main>
+      </div>
+    </InvitationFrame>
+  );
+}

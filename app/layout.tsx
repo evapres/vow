@@ -38,12 +38,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bodyFont.variable} ${serifFont.variable} ${notoSerif.variable} ${specialFont.variable} h-full min-h-full antialiased`}
-      style={{
-        backgroundColor: "#FCFCF6",
-      }}
+      className={`${bodyFont.variable} ${serifFont.variable} ${notoSerif.variable} ${specialFont.variable} h-full min-h-full bg-app-shell antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-transparent font-sans">
+      <body className="flex min-h-full flex-col bg-app-shell font-sans">
         <div className="px-page flex min-h-full flex-1 flex-col">{children}</div>
       </body>
     </html>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import AdminBurgerMenu from "@/app/components/AdminBurgerMenu";
+import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import DeleteInvitationButton from "./DeleteInvitationButton";
 
 type PageProps = {
-  searchParams: Promise<{ deleted?: string; error?: string }>;
+  searchParams: Promise<{ deleted?: string; error?: string; from?: string }>;
 };
 
 function safeDecodeParam(value: string) {
@@ -24,6 +24,7 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
   const sp = await searchParams;
   const deleted = sp.deleted === "1";
   const deleteError = sp.error ? safeDecodeParam(sp.error) : null;
+  const fromAdmin = sp.from === "admin";
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,12 +44,10 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
     console.error("Supabase invitations query failed:", error);
     return (
       <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
-        <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
-          <main className="flex-1 py-10">
-            <div className="mb-6 flex items-center justify-end">
-              <AdminBurgerMenu />
-            </div>
-            <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <div className="m3-admin-form flex min-h-full flex-col bg-transparent font-sans text-[var(--m3-on-background)]">
+          <main className="admin-shell-main">
+            <AdminShellHeader />
+            <div className="m3-banner m3-banner--error" role="alert">
               Failed to load invitations: {error.message}
             </div>
           </main>
@@ -59,94 +58,83 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
 
   return (
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
-      <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
-        <main className="flex-1 py-10">
-          <div className="mb-6 flex items-center justify-end">
-            <AdminBurgerMenu />
-          </div>
+      <div className="m3-admin-form flex min-h-full flex-col bg-transparent font-sans text-[var(--m3-on-background)]">
+        <main className="admin-shell-main">
+          <AdminShellHeader />
+
           {deleted ? (
-            <div className="mb-4 border border-emerald-200/90 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950">
+            <div className="m3-banner m3-banner--success" role="status">
               Invitation deleted.
             </div>
           ) : null}
           {deleteError ? (
-            <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{deleteError}</div>
+            <div className="m3-banner m3-banner--error" role="alert">
+              {deleteError}
+            </div>
+          ) : null}
+          {fromAdmin ? (
+            <div className="m3-banner m3-banner--info" role="status">
+              You already have an invitation. Use <span className="font-medium">Create new</span> to add another
+              wedding, or <span className="font-medium">Edit</span> on a card to change the existing one.
+            </div>
           ) : null}
 
-          <div className="mb-8 flex flex-col gap-2 border-b border-[#181818]/20 pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <header className="m3-page-header">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/60">Admin</p>
-              <h1 className="mt-2 text-3xl font-medium tracking-[0.02em]">Invitations</h1>
-              <p className="mt-2 text-sm text-[#181818]/65">Choose an invitation to preview, edit, or open the dashboard.</p>
+              <h1 className="m3-page-title">Invitations</h1>
+              <p className="m3-page-intro">
+                Choose an invitation to preview, edit, or open guests &amp; RSVPs.
+              </p>
             </div>
-            <Link
-              href="/admin?new=1"
-              className="inline-flex h-10 items-center justify-center border border-[#181818]/20 bg-white/70 px-4 text-sm font-medium text-[#181818] backdrop-blur-[2px] hover:bg-white/85"
-            >
+            <Link href="/admin/new" className="m3-btn m3-btn--filled">
               Create new
             </Link>
-          </div>
+          </header>
 
           {weddings && weddings.length ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="m3-invitation-grid">
               {weddings.map((w) => (
-                <div key={w.id} className="border border-[#181818]/20 bg-white/70 p-5 backdrop-blur-[2px]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#181818]/60">
-                        {w.language === "el" ? "EL" : "EN"}
-                      </p>
-                      <p className="mt-2 text-lg font-medium tracking-[0.01em]">{w.couple_names || "Untitled"}</p>
-                      {w.wedding_date ? (
-                        <p className="mt-1 text-sm text-[#181818]/65">
-                          {new Date(w.wedding_date).toLocaleDateString(w.language === "el" ? "el-GR" : "en-GB", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-sm text-[#181818]/55">No date set</p>
-                      )}
-                    </div>
-                  </div>
+                <article key={w.id} className="m3-invitation-card">
+                  <p className="m3-invitation-card__lang">{w.language === "el" ? "Greek" : "English"}</p>
+                  <h2 className="m3-invitation-card__title">{w.couple_names || "Untitled"}</h2>
+                  {w.wedding_date ? (
+                    <p className="m3-invitation-card__meta">
+                      {new Date(w.wedding_date).toLocaleDateString(w.language === "el" ? "el-GR" : "en-GB", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  ) : (
+                    <p className="m3-invitation-card__meta">No date set</p>
+                  )}
 
-                  <div className="mt-5 grid grid-cols-3 gap-2">
-                    <Link
-                      href={`/admin/edit/${w.id}`}
-                      className="inline-flex h-10 items-center justify-center border border-[#181818]/20 bg-white/60 text-sm font-medium hover:bg-white/80"
-                    >
+                  <div className="m3-invitation-card__actions">
+                    <Link href={`/admin/edit/${w.id}`} className="m3-btn m3-btn--tonal m3-btn--compact">
                       Edit
                     </Link>
-                    <Link
-                      href={`/preview/${w.id}`}
-                      className="inline-flex h-10 items-center justify-center border border-[#181818]/20 bg-white/60 text-sm font-medium hover:bg-white/80"
-                    >
+                    <Link href={`/preview/${w.id}`} className="m3-btn m3-btn--outlined m3-btn--compact">
                       Preview
                     </Link>
-                    <Link
-                      href={`/dashboard/${w.id}`}
-                      className="inline-flex h-10 items-center justify-center border border-[#181818]/20 bg-white/60 text-sm font-medium hover:bg-white/80"
-                    >
-                      Dashboard
+                    <Link href={`/dashboard/${w.id}`} className="m3-btn m3-btn--outlined m3-btn--compact">
+                      Guests
                     </Link>
                   </div>
-                  <div className="mt-3 flex justify-end">
+                  <div className="m3-invitation-card__footer">
                     <DeleteInvitationButton weddingId={w.id} coupleNames={w.couple_names ?? ""} />
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           ) : (
-            <div className="border border-[#181818]/20 bg-white/70 px-5 py-6 text-sm text-[#181818]/70 backdrop-blur-[2px]">
-              <h2 className="text-lg font-medium text-[#181818]">No invitations yet</h2>
-              <p className="mt-2">Create your first wedding invitation to get started.</p>
-              <Link
-                href="/admin"
-                className="mt-4 inline-flex h-10 items-center justify-center border border-[#181818]/20 bg-white/70 px-4 text-sm font-medium text-[#181818] backdrop-blur-[2px] hover:bg-white/85"
-              >
-                Add new invitation
-              </Link>
+            <div className="m3-form-card">
+              <h2 className="m3-title-large">No invitations yet</h2>
+              <p className="m3-page-intro">Create your first wedding invitation to get started.</p>
+              <p className="mt-4">
+                <Link href="/admin/new" className="m3-btn m3-btn--filled">
+                  Add new invitation
+                </Link>
+              </p>
             </div>
           )}
         </main>
@@ -154,4 +142,3 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
     </InvitationFrame>
   );
 }
-

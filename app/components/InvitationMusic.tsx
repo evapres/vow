@@ -115,7 +115,7 @@ export default function InvitationMusic({ language = "en", src: srcProp }: Invit
         aria-pressed={playing}
         aria-label={playing ? pauseLabel : playLabel}
         title={loadError ? errorHint : playing ? pauseLabel : playLabel}
-        className={`invite-float flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#FAF6F2]/30 bg-[#6F5248]/92 text-[#FAF6F2] shadow-[0_8px_24px_rgba(0,0,0,0.32)] backdrop-blur-sm transition-[filter,background-color,border-color,opacity] hover:border-[#FAF6F2]/50 hover:brightness-[1.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FAF6F2]/60 sm:h-12 sm:w-12 ${loadError ? "opacity-55 ring-1 ring-red-300/50" : ""} ${playing ? "ring-1 ring-[#FAF6F2]/35" : ""}`}
+        className={`invite-float flex h-11 w-11 cursor-pointer items-center justify-center border border-[#FAF6F2]/30 bg-[#6F5248]/92 text-[#FAF6F2] shadow-[0_8px_24px_rgba(0,0,0,0.32)] backdrop-blur-sm transition-[filter,background-color,border-color,opacity] hover:border-[#FAF6F2]/50 hover:brightness-[1.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FAF6F2]/60 sm:h-12 sm:w-12 ${loadError ? "opacity-55 ring-1 ring-red-300/50" : ""} ${playing ? "ring-1 ring-[#FAF6F2]/35" : ""}`}
       >
         {playing ? (
           <PauseIcon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />

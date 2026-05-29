@@ -1,24 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import type { ChangeEvent, CSSProperties } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
-import InvitationHeroBody, { inviteHeroDefaultSrc } from "@/app/components/InvitationHeroBody";
-import InvitationMusic from "@/app/components/InvitationMusic";
-import OutlineSilkButton from "@/app/components/OutlineSilkButton";
-import SolidSilkButton from "@/app/components/SolidSilkButton";
-import { invitationPageCanvasStripStyle, invitationRsvpBandStyle } from "@/app/components/invitationDarkBandStyle";
-import {
-  combineWeddingDateAndTime,
-  formatDetailsDateTime,
-  formatHeaderDateLabel,
-  inviteMetaCaptionClass,
-  formatRsvpDeadlineLabel,
-  toAllCapsNoAccents,
-} from "@/lib/invitationDisplay";
-import { celebrateLocationLineFromParts } from "@/lib/weddingLocation";
+import { inviteHeroDefaultSrc } from "@/app/components/InvitationHeroBody";
+import M3FileField from "@/app/components/m3/M3FileField";
+import M3FilledSelect from "@/app/components/m3/M3FilledSelect";
+import M3FilledTextField from "@/app/components/m3/M3FilledTextField";
+import M3ThemePicker from "@/app/components/m3/M3ThemePicker";
+import { parseInvitationThemeId, type InvitationThemeId } from "@/lib/invitationThemes";
 
+import AdminInvitationLivePreview from "./AdminInvitationLivePreview";
 import { createWedding, updateWedding } from "./actions";
 
 export type AdminWeddingFormInitial = {
@@ -33,6 +26,7 @@ export type AdminWeddingFormInitial = {
   rsvpDeadline: string;
   note: string;
   invitationMusicUrl?: string | null;
+  invitationTheme?: InvitationThemeId;
 };
 
 type AdminNewWeddingFormProps = {
@@ -41,28 +35,28 @@ type AdminNewWeddingFormProps = {
   initial?: AdminWeddingFormInitial;
 };
 
-/** First letters of names around `&`, or sample monogram until both sides are present. */
-function previewTopMonogramFromCoupleNames(names: string): { left: string; right: string } {
-  const parts = names.split("&").map((p) => p.trim());
-  const left = parts[0]?.[0];
-  const right = parts[1]?.[0];
-  if (left && right) {
-    return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
-  }
-  return { left: "A", right: "B" };
-}
-
-const invitationFrameStyle = {
-  "--invite-gutter": "clamp(12px, calc(96 * 100vw / 1920), 96px)",
-  "--invite-hero-details-gap": "clamp(12px, calc(80 * 100vw / 1920), 80px)",
-  "--invite-block-edge": "clamp(12px, calc(104 * 100vw / 1440), 104px)",
-} as CSSProperties;
-
-/** Shown in the live invitation preview until the admin enters their own values. */
-const PREVIEW_SAMPLE_DETAILS_DATETIME = "Saturday, July 11 2026 at 8:00 PM";
-const PREVIEW_SAMPLE_DATE_FOR_HEADER = "2026-07-11";
 const PREVIEW_SAMPLE_VENUE = "ISLAND";
 const PREVIEW_SAMPLE_DETAILS_LOCATION = "George Town, Brighton, BN1 3HG";
+
+function adminFormPlaceholders(language: "en" | "el") {
+  if (language === "el") {
+    return {
+      coupleNames: "π.χ. Ο Βασίλης & η Λυδία",
+      /** Venue sample stays English on Greek invitations. */
+      venueName: `e.g. ${PREVIEW_SAMPLE_VENUE}`,
+      churchName: "π.χ. Άγιος Δημήτριος",
+      streetAddress: "π.χ. Λεωφ. Συγγρού 100, 117 45, Αθήνα",
+      note: "π.χ. Θα ακολουθήσει δεξίωση στο χώρο",
+    };
+  }
+  return {
+    coupleNames: "e.g. Nestor & Evangelia",
+    venueName: `e.g. ${PREVIEW_SAMPLE_VENUE}`,
+    churchName: "e.g. St. Demetrius Church",
+    streetAddress: `e.g. ${PREVIEW_SAMPLE_DETAILS_LOCATION}`,
+    note: "e.g. Reception to follow",
+  };
+}
 
 function initialHeroSrc(initial: AdminWeddingFormInitial | undefined): string {
   const u = initial?.heroImageUrl?.trim();
@@ -74,6 +68,9 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const isEdit = Boolean(editWeddingId);
   const [coupleNames, setCoupleNames] = useState(initial?.coupleNames ?? "");
   const [language, setLanguage] = useState<"en" | "el">(initial?.language ?? "en");
+  const [invitationTheme, setInvitationTheme] = useState<InvitationThemeId>(() =>
+    parseInvitationThemeId(initial?.invitationTheme),
+  );
   const [weddingDate, setWeddingDate] = useState(initial?.weddingDate ?? "");
   const [weddingTime, setWeddingTime] = useState(initial?.weddingTime ?? "20:00");
   const [venueName, setVenueName] = useState(initial?.venueName ?? "");
@@ -90,6 +87,19 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const [clearHeroForSubmit, setClearHeroForSubmit] = useState(false);
   const [clearMusicForSubmit, setClearMusicForSubmit] = useState(false);
 
+  const previewCoupleNames = useDeferredValue(coupleNames);
+  const previewLanguage = useDeferredValue(language);
+  const previewInvitationTheme = useDeferredValue(invitationTheme);
+  const previewWeddingDate = useDeferredValue(weddingDate);
+  const previewWeddingTime = useDeferredValue(weddingTime);
+  const previewVenueName = useDeferredValue(venueName);
+  const previewChurchName = useDeferredValue(churchName);
+  const previewStreetAddress = useDeferredValue(streetAddress);
+  const previewRsvpDeadline = useDeferredValue(rsvpDeadline);
+  const previewNote = useDeferredValue(note);
+
+  const placeholders = useMemo(() => adminFormPlaceholders(language), [language]);
+
   const heroBlobUrlRef = useRef<string | null>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
   const musicFileInputRef = useRef<HTMLInputElement>(null);
@@ -102,48 +112,6 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
       }
     };
   }, []);
-
-  const photoSrc = heroPreviewSrc;
-
-  const weddingDateTimeIso = useMemo(
-    () => combineWeddingDateAndTime(weddingDate || null, weddingTime || null),
-    [weddingDate, weddingTime],
-  );
-
-  const previewDetailsDateTime = weddingDateTimeIso
-    ? formatDetailsDateTime(weddingDateTimeIso, language)
-    : PREVIEW_SAMPLE_DETAILS_DATETIME;
-  const previewCelebrateLine = celebrateLocationLineFromParts(churchName, venueName, streetAddress);
-  const previewDetailsLocation =
-    previewCelebrateLine ||
-    celebrateLocationLineFromParts("", PREVIEW_SAMPLE_VENUE, PREVIEW_SAMPLE_DETAILS_LOCATION);
-  const previewEventDateLabel = weddingDate.trim()
-    ? formatHeaderDateLabel(weddingDate, language)
-    : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
-  const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
-
-  const rsvpLine = useMemo(
-    () => formatRsvpDeadlineLabel(rsvpDeadline, language) || "—",
-    [rsvpDeadline, language],
-  );
-  const previewTopMonogram = useMemo(() => previewTopMonogramFromCoupleNames(coupleNames), [coupleNames]);
-
-  const previewT =
-    language === "el"
-      ? {
-          willYouAttend: "RSVP",
-          pleaseRespondBy: `Παρακαλούμε απαντήστε έως ${rsvpLine}`,
-          previewOnly: "Μόνο προεπισκόπηση — το RSVP δεν αποθηκεύεται από εδώ",
-          confirm: "ΘΑ ΠΑΡΕΥΡΕΘΩ",
-          unable: "ΔΕ ΘΑ ΠΑΡΕΥΡΕΘΩ",
-        }
-      : {
-          willYouAttend: "RSVP",
-          pleaseRespondBy: `Please respond by ${rsvpLine}`,
-          previewOnly: "Preview only — RSVP is not saved from here",
-          confirm: "CONFIRM ATTENDANCE",
-          unable: "UNABLE TO ATTEND",
-        };
 
   const clearHeroImage = () => {
     if (heroBlobUrlRef.current) {
@@ -189,330 +157,196 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start lg:gap-12">
-      <form
-        action={isEdit ? updateWedding : createWedding}
-        encType="multipart/form-data"
-        className="min-w-0 space-y-5 border border-[#181818]/20 bg-transparent p-6"
-      >
-        {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}
-        {isEdit ? <input type="hidden" name="clear_hero" value={clearHeroForSubmit ? "1" : "0"} /> : null}
-        {isEdit ? <input type="hidden" name="clear_music" value={clearMusicForSubmit ? "1" : "0"} /> : null}
-        <div>
-          <label
-            htmlFor="language"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Language
-          </label>
-          <select
+    <div className="m3-admin-form m3-admin-split grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,2fr)] lg:gap-12">
+      <form action={isEdit ? updateWedding : createWedding} className="min-w-0">
+        <div className="m3-form-card space-y-6">
+          {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}
+          {isEdit ? <input type="hidden" name="clear_hero" value={clearHeroForSubmit ? "1" : "0"} /> : null}
+          {isEdit ? <input type="hidden" name="clear_music" value={clearMusicForSubmit ? "1" : "0"} /> : null}
+          <input type="hidden" name="invitation_theme" value={invitationTheme} />
+
+          <h2 className="m3-title-large">Invitation details</h2>
+
+          <M3ThemePicker value={invitationTheme} onChange={setInvitationTheme} />
+
+          <M3FilledSelect
             id="language"
             name="language"
+            label="Language"
             value={language}
             onChange={(e) => setLanguage(e.target.value === "el" ? "el" : "en")}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
           >
             <option value="en">English</option>
             <option value="el">Greek</option>
-          </select>
-        </div>
+          </M3FilledSelect>
 
-        <div>
-          <label
-            htmlFor="couple_names"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Couple names <span className="text-red-700">*</span>
-          </label>
-          <input
+          <M3FilledTextField
             id="couple_names"
             name="couple_names"
+            label="Couple names"
             type="text"
             required
+            clearable
             value={coupleNames}
             onChange={(e) => setCoupleNames(e.target.value)}
-            placeholder="e.g. Nestor & Evangelia"
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+            onClear={() => setCoupleNames("")}
+            placeholder={placeholders.coupleNames}
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="wedding_date"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Wedding date
-          </label>
-          <input
+          <M3FilledTextField
             id="wedding_date"
             name="wedding_date"
+            label="Wedding date"
             type="date"
+            required
             value={weddingDate}
             onChange={(e) => setWeddingDate(e.target.value)}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="wedding_time"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Event time
-          </label>
-          <input
+          <M3FilledTextField
             id="wedding_time"
             name="wedding_time"
+            label="Event time"
             type="time"
             value={weddingTime}
             onChange={(e) => setWeddingTime(e.target.value)}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="venue_name"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Venue name
-          </label>
-          <input
+          <M3FilledTextField
             id="venue_name"
             name="venue_name"
+            label="Venue name"
             type="text"
+            required
+            clearable
             value={venueName}
             onChange={(e) => setVenueName(e.target.value)}
-            placeholder={`e.g. ${PREVIEW_SAMPLE_VENUE}`}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+            onClear={() => setVenueName("")}
+            placeholder={placeholders.venueName}
+            supportingText="Shown top-right on the invitation (with the date)."
           />
-          <p className="mt-1 text-[11px] text-[#181818]/55">Shown top-right on the invitation (with the date).</p>
-        </div>
 
-        <div>
-          <label
-            htmlFor="church_name"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Church name <span className="font-normal normal-case tracking-normal text-[#181818]/55">(optional)</span>
-          </label>
-          <input
+          <M3FilledTextField
             id="church_name"
             name="church_name"
+            label="Church name"
             type="text"
+            required
+            clearable
             value={churchName}
             onChange={(e) => setChurchName(e.target.value)}
-            placeholder="e.g. St. Demetrius Church"
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+            onClear={() => setChurchName("")}
+            placeholder={placeholders.churchName}
+            supportingText="Required for the dashboard. If the ceremony is at the venue, enter the venue name again here."
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="street_address"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Street address
-          </label>
-          <input
+          <M3FilledTextField
             id="street_address"
             name="street_address"
+            label="Street address"
             type="text"
+            required
+            clearable
             value={streetAddress}
             onChange={(e) => setStreetAddress(e.target.value)}
-            placeholder={`e.g. ${PREVIEW_SAMPLE_DETAILS_LOCATION}`}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+            onClear={() => setStreetAddress("")}
+            placeholder={placeholders.streetAddress}
+            supportingText="Shown under the date with the church name on the invitation."
           />
-          <p className="mt-1 text-[11px] text-[#181818]/55">
-            Shown under the date with church (if any). Leave church blank if the ceremony is at the venue.
-          </p>
-        </div>
 
-        <div>
-          <label
-            htmlFor="hero_image"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Hero image
-          </label>
-          <input
+          <M3FileField
             ref={heroFileInputRef}
             id="hero_image"
             name="hero_image"
             type="file"
             accept="image/*"
+            label="Hero image"
             onChange={onHeroFileChange}
-            className="mt-2 block w-full text-sm text-[#181818] file:mr-3 file:border file:border-[#181818]/30 file:bg-transparent file:px-3 file:py-2 file:text-sm file:font-medium file:text-[#181818]"
-          />
-          <p className="mt-1 text-[11px] text-[#181818]/55">JPEG or PNG, up to 4MB. Optional.</p>
-          {heroPreviewSrc !== inviteHeroDefaultSrc ? (
-            <button
-              type="button"
-              onClick={clearHeroImage}
-              className="mt-2 text-xs font-medium text-[#181818]/80 underline underline-offset-4 hover:text-[#181818]"
-            >
-              Remove image
-            </button>
-          ) : null}
-        </div>
-
-        <div>
-          <label
-            htmlFor="rsvp_deadline"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
+            supportingText="JPEG or PNG, up to 4MB. Optional."
           >
-            RSVP deadline
-          </label>
-          <input
+            {heroPreviewSrc !== inviteHeroDefaultSrc ? (
+              <button type="button" className="m3-btn m3-btn--text" onClick={clearHeroImage}>
+                Remove image
+              </button>
+            ) : null}
+          </M3FileField>
+
+          <M3FilledTextField
             id="rsvp_deadline"
             name="rsvp_deadline"
+            label="RSVP deadline"
             type="date"
+            required
             value={rsvpDeadline}
             onChange={(e) => setRsvpDeadline(e.target.value)}
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="note"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Note <span className="font-normal normal-case tracking-normal text-[#181818]/55">(optional)</span>
-          </label>
-          <input
+          <M3FilledTextField
             id="note"
             name="note"
+            label="Note (optional)"
             type="text"
+            clearable
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. Reception to follow"
-            className="mt-2 w-full border border-[#181818]/25 bg-transparent px-3 py-2 text-sm outline-none focus:border-[#181818]/45"
+            onClear={() => setNote("")}
+            placeholder={placeholders.note}
+            supportingText="Shown in small caps under the date and venue. Leave blank to hide."
           />
-          <p className="mt-1 text-[11px] text-[#181818]/55">Shown in small caps under the date and venue. Leave blank to hide.</p>
-        </div>
 
-        <div>
-          <label
-            htmlFor="invitation_music"
-            className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#181818]/70"
-          >
-            Invitation music <span className="font-normal normal-case tracking-normal text-[#181818]/55">(optional)</span>
-          </label>
-          <input
+          <M3FileField
             ref={musicFileInputRef}
             id="invitation_music"
             name="invitation_music"
             type="file"
             accept="audio/mpeg,audio/mp3,audio/mp4,audio/wav,.mp3"
+            label="Invitation music (optional)"
             onChange={onMusicFileChange}
-            className="mt-2 block w-full text-sm text-[#181818] file:mr-3 file:border file:border-[#181818]/30 file:bg-transparent file:px-3 file:py-2 file:text-sm file:font-medium file:text-[#181818]"
-          />
-          <p className="mt-1 text-[11px] text-[#181818]/55">
-            MP3 up to 8MB. Guests tap the music icon on the invite to play.
-          </p>
-          {musicPreviewSrc ? (
-            <>
-              <audio controls preload="metadata" src={musicPreviewSrc} className="mt-3 w-full max-w-sm" />
-              <button
-                type="button"
-                onClick={clearInvitationMusic}
-                className="mt-2 text-xs font-medium text-[#181818]/80 underline underline-offset-4 hover:text-[#181818]"
-              >
-                Remove music
-              </button>
-            </>
-          ) : null}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 pt-2">
-          <SolidSilkButton
-            type="submit"
-            wrapperClassName="h-11 w-fit"
-            buttonClassName="px-6 whitespace-nowrap"
+            supportingText="MP3 up to 8MB. Guests tap the music icon on the invite to play."
           >
-            {isEdit ? "Save changes" : "Save wedding"}
-          </SolidSilkButton>
-          {isEdit && editWeddingId ? (
-            <Link
-              href={`/dashboard/${editWeddingId}`}
-              className="text-sm font-medium text-[#181818]/70 hover:text-[#181818]"
-            >
-              Back to guest list
-            </Link>
-          ) : null}
-          <Link href="/" className="text-sm font-medium text-[#181818]/70 hover:text-[#181818]">
-            {isEdit ? "Home" : "Back to site"}
-          </Link>
-        </div>
-      </form>
+            {musicPreviewSrc ? (
+              <>
+                <audio controls preload="metadata" src={musicPreviewSrc} className="mt-2 w-full max-w-sm" />
+                <button type="button" className="m3-btn m3-btn--text" onClick={clearInvitationMusic}>
+                  Remove music
+                </button>
+              </>
+            ) : null}
+          </M3FileField>
 
-      <div className="min-w-0 lg:sticky lg:top-8">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/55">Live preview</p>
-        <div
-          className="max-h-[min(85vh,920px)] min-h-[280px] w-full overflow-y-auto overflow-x-hidden rounded-sm border border-[#181818]/20 shadow-[0_12px_40px_rgba(0,0,0,0.06)]"
-          style={invitationPageCanvasStripStyle}
-        >
-          {/* Scale-down preview: identical design, smaller viewport */}
-          <div className="w-full origin-top scale-[0.72] px-4 pb-8 pt-4 [width:calc(100%/0.72)]">
-            <div className="relative w-full min-w-0 font-sans text-[#181818]" style={invitationFrameStyle}>
-              {musicPreviewSrc ? <InvitationMusic language={language} src={musicPreviewSrc} /> : null}
-              <InvitationHeroBody
-                coupleNames={coupleNames}
-                language={language}
-                eventDateLabel={previewEventDateLabel}
-                venueLabel={previewVenueLabel}
-                photoSrc={photoSrc}
-                topMonogramLetters={previewTopMonogram}
-                detailsDateTime={previewDetailsDateTime}
-                detailsLocation={previewDetailsLocation}
-                note={note.trim() || undefined}
-              />
-
-              <section
-                id="rsvp"
-                aria-label="RSVP preview"
-                className="w-[calc(100%+2*var(--invite-gutter,12px))] max-w-none -mx-[var(--invite-gutter,12px)]"
-              >
-                <div className="h-6 w-full shrink-0 bg-transparent" aria-hidden />
-                <div
-                  className="w-full p-[var(--invite-gutter,12px)] pb-12 text-[#FCFCF6]"
-                  style={invitationRsvpBandStyle}
+          <div className="m3-form-actions">
+            <div className="m3-form-actions__secondary">
+              {editWeddingId ? (
+                <Link
+                  href={`/preview/${editWeddingId}`}
+                  className="m3-btn m3-btn--outlined"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <div className="mx-auto max-w-[520px] text-center">
-                    <div className="flex flex-col gap-[16px]">
-                      <h3
-                        className="text-[clamp(28px,6vw,40px)] font-normal leading-[1.05] tracking-[0.02em] text-[#FAF6F2]"
-                        style={{ fontFamily: "var(--font-heading)" }}
-                      >
-                        {previewT.willYouAttend}
-                      </h3>
-                      <p className={inviteMetaCaptionClass}>
-                        {toAllCapsNoAccents(previewT.pleaseRespondBy)}
-                      </p>
-                    </div>
-                    <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#FCFCF6]/55">
-                      {toAllCapsNoAccents(previewT.previewOnly)}
-                    </p>
-                    <div className="pointer-events-none mt-8 flex flex-col items-center gap-4 opacity-[0.72]">
-                      <SolidSilkButton type="button" wrapperClassName="h-[52px] w-full max-w-[360px]">
-                        {toAllCapsNoAccents(previewT.confirm)}
-                      </SolidSilkButton>
-                      <OutlineSilkButton
-                        type="button"
-                        wrapperClassName="h-[52px] w-full max-w-[360px]"
-                        buttonClassName="text-[#FAF6F2]/85 hover:text-[#FAF6F2]"
-                      >
-                        {toAllCapsNoAccents(previewT.unable)}
-                      </OutlineSilkButton>
-                    </div>
-                  </div>
-                </div>
-              </section>
+                  Preview
+                </Link>
+              ) : null}
+              <button type="submit" className="m3-btn m3-btn--filled">
+                {isEdit ? "Save changes" : "Save invitation"}
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </form>
+
+      <AdminInvitationLivePreview
+        coupleNames={previewCoupleNames}
+        language={previewLanguage}
+        invitationTheme={previewInvitationTheme}
+        weddingDate={previewWeddingDate}
+        weddingTime={previewWeddingTime}
+        venueName={previewVenueName}
+        churchName={previewChurchName}
+        streetAddress={previewStreetAddress}
+        rsvpDeadline={previewRsvpDeadline}
+        note={previewNote}
+        photoSrc={heroPreviewSrc}
+      />
     </div>
   );
 }

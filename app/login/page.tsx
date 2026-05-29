@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const returnPath = next?.startsWith("/") && !next.startsWith("//") ? next : null;
 
   return (
-    <main className="full-width-section min-h-screen bg-transparent py-16 text-[#1A1A1A]">
+    <main className="full-width-section app-shell-canvas min-h-screen py-16 text-[#1A1A1A]">
       <div className="main-content">
         <div className="w-full max-w-sm">
           <h1 className="text-xl font-medium">Log in</h1>
