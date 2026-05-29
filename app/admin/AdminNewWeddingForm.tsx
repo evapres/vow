@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import type { ChangeEvent, FormEvent } from "react";
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
@@ -10,10 +11,18 @@ import M3FilledSelect from "@/app/components/m3/M3FilledSelect";
 import M3FilledTextField from "@/app/components/m3/M3FilledTextField";
 import M3ThemePicker from "@/app/components/m3/M3ThemePicker";
 import { compressHeroImageFile } from "@/lib/compressHeroImage";
+import { defaultCoupleInitialsForLanguage, GREEK_DEFAULT_MONOGRAM } from "@/lib/coupleInitials";
+import { formLoadErrorMessage } from "@/lib/formLoadErrorMessage";
 import { parseInvitationThemeId, type InvitationThemeId } from "@/lib/invitationThemes";
 
-import AdminInvitationLivePreview from "./AdminInvitationLivePreview";
 import { createWedding, updateWedding } from "./actions";
+
+const AdminInvitationLivePreview = dynamic(() => import("./AdminInvitationLivePreview"), {
+  ssr: false,
+  loading: () => (
+    <div className="m3-form-preview min-h-[320px] min-w-0 rounded-sm bg-[#181818]/5" aria-hidden />
+  ),
+});
 
 export type AdminWeddingFormInitial = {
   coupleNames: string;
@@ -28,6 +37,8 @@ export type AdminWeddingFormInitial = {
   note: string;
   invitationMusicUrl?: string | null;
   invitationTheme?: InvitationThemeId;
+  coupleInitialLeft?: string;
+  coupleInitialRight?: string;
 };
 
 type AdminNewWeddingFormProps = {
@@ -48,6 +59,8 @@ function adminFormPlaceholders(language: "en" | "el") {
       churchName: "π.χ. Άγιος Δημήτριος",
       streetAddress: "π.χ. Λεωφ. Συγγρού 100, 117 45, Αθήνα",
       note: "π.χ. Θα ακολουθήσει δεξίωση στο χώρο",
+      coupleInitialLeft: "Β",
+      coupleInitialRight: "Λ",
     };
   }
   return {
@@ -56,6 +69,8 @@ function adminFormPlaceholders(language: "en" | "el") {
     churchName: "e.g. St. Demetrius Church",
     streetAddress: `e.g. ${PREVIEW_SAMPLE_DETAILS_LOCATION}`,
     note: "e.g. Reception to follow",
+    coupleInitialLeft: "e.g. N",
+    coupleInitialRight: "e.g. E",
   };
 }
 
@@ -84,6 +99,8 @@ function applyFormInitial(
     setRsvpDeadline: (v: string) => void;
     setNote: (v: string) => void;
     setMusicPreviewSrc: (v: string | null) => void;
+    setCoupleInitialLeft: (v: string) => void;
+    setCoupleInitialRight: (v: string) => void;
   },
 ) {
   setters.setCoupleNames(data.coupleNames);
@@ -98,10 +115,19 @@ function applyFormInitial(
   setters.setRsvpDeadline(data.rsvpDeadline ? data.rsvpDeadline.slice(0, 10) : "");
   setters.setNote(data.note);
   setters.setMusicPreviewSrc(data.invitationMusicUrl?.trim() || null);
+  const initials =
+    data.language === "el" &&
+    !data.coupleInitialLeft?.trim() &&
+    !data.coupleInitialRight?.trim()
+      ? GREEK_DEFAULT_MONOGRAM
+      : defaultCoupleInitialsForLanguage(data.language);
+  setters.setCoupleInitialLeft(data.coupleInitialLeft?.trim() || initials.left);
+  setters.setCoupleInitialRight(data.coupleInitialRight?.trim() || initials.right);
 }
 
 export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNewWeddingFormProps) {
   const isEdit = Boolean(editWeddingId);
+  const [clientReady, setClientReady] = useState(() => !editWeddingId);
   const [isSaving, startTransition] = useTransition();
   const [formLoading, setFormLoading] = useState(() => Boolean(editWeddingId) && !initial);
   const [formLoadError, setFormLoadError] = useState<string | null>(null);
@@ -120,6 +146,12 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     initial?.rsvpDeadline ? initial.rsvpDeadline.slice(0, 10) : "",
   );
   const [note, setNote] = useState(initial?.note ?? "");
+  const [coupleInitialLeft, setCoupleInitialLeft] = useState(
+    () => initial?.coupleInitialLeft?.trim() || defaultCoupleInitialsForLanguage(initial?.language ?? "en").left,
+  );
+  const [coupleInitialRight, setCoupleInitialRight] = useState(
+    () => initial?.coupleInitialRight?.trim() || defaultCoupleInitialsForLanguage(initial?.language ?? "en").right,
+  );
   const [musicPreviewSrc, setMusicPreviewSrc] = useState<string | null>(
     () => initial?.invitationMusicUrl?.trim() || null,
   );
@@ -136,12 +168,18 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const previewStreetAddress = useDeferredValue(streetAddress);
   const previewRsvpDeadline = useDeferredValue(rsvpDeadline);
   const previewNote = useDeferredValue(note);
+  const previewCoupleInitialLeft = useDeferredValue(coupleInitialLeft);
+  const previewCoupleInitialRight = useDeferredValue(coupleInitialRight);
 
   const placeholders = useMemo(() => adminFormPlaceholders(language), [language]);
 
   const heroBlobUrlRef = useRef<string | null>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
   const musicFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setClientReady(true);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -182,12 +220,15 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
           setRsvpDeadline,
           setNote,
           setMusicPreviewSrc,
+          setCoupleInitialLeft,
+          setCoupleInitialRight,
         });
         setFormLoading(false);
       })
       .catch((e: unknown) => {
         if (cancelled) return;
-        setFormLoadError(e instanceof Error ? e.message : "Could not load invitation.");
+        const raw = e instanceof Error ? e.message : "Could not load invitation.";
+        setFormLoadError(formLoadErrorMessage(raw));
         setFormLoading(false);
       });
 
@@ -256,6 +297,8 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     fd.set("street_address", streetAddress);
     fd.set("rsvp_deadline", rsvpDeadline);
     fd.set("note", note);
+    fd.set("couple_initial_left", coupleInitialLeft);
+    fd.set("couple_initial_right", coupleInitialRight);
 
     const heroFile = heroFileInputRef.current?.files?.[0];
     if (heroFile && heroFile.size > 0) {
@@ -281,7 +324,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     });
   }
 
-  if (formLoading) {
+  if (!clientReady || formLoading) {
     return (
       <div className="m3-form-card px-4 py-8 text-sm text-[#181818]/70" aria-busy="true">
         Loading invitation…
@@ -315,7 +358,14 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             name="language"
             label="Language"
             value={language}
-            onChange={(e) => setLanguage(e.target.value === "el" ? "el" : "en")}
+            onChange={(e) => {
+              const next = e.target.value === "el" ? "el" : "en";
+              setLanguage(next);
+              if (next === "el" && !coupleInitialLeft.trim() && !coupleInitialRight.trim()) {
+                setCoupleInitialLeft(GREEK_DEFAULT_MONOGRAM.left);
+                setCoupleInitialRight(GREEK_DEFAULT_MONOGRAM.right);
+              }
+            }}
           >
             <option value="en">English</option>
             <option value="el">Greek</option>
@@ -333,6 +383,33 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             onClear={() => setCoupleNames("")}
             placeholder={placeholders.coupleNames}
           />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <M3FilledTextField
+              id="couple_initial_left"
+              name="couple_initial_left"
+              label="First initial"
+              type="text"
+              clearable
+              value={coupleInitialLeft}
+              onChange={(e) => setCoupleInitialLeft(e.target.value)}
+              onClear={() => setCoupleInitialLeft("")}
+              placeholder={placeholders.coupleInitialLeft}
+              maxLength={3}
+            />
+            <M3FilledTextField
+              id="couple_initial_right"
+              name="couple_initial_right"
+              label="Second initial"
+              type="text"
+              clearable
+              value={coupleInitialRight}
+              onChange={(e) => setCoupleInitialRight(e.target.value)}
+              onClear={() => setCoupleInitialRight("")}
+              placeholder={placeholders.coupleInitialRight}
+              maxLength={3}
+            />
+          </div>
 
           <M3FilledTextField
             id="wedding_date"
@@ -487,6 +564,8 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
         rsvpDeadline={previewRsvpDeadline}
         note={previewNote}
         photoSrc={heroPreviewSrc}
+        coupleInitialLeft={previewCoupleInitialLeft}
+        coupleInitialRight={previewCoupleInitialRight}
       />
     </div>
   );

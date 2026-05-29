@@ -4,6 +4,7 @@ import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/Invitatio
 import InvitationMusic from "@/app/components/InvitationMusic";
 import RSVPSection from "@/app/components/RSVPSection";
 import { formatDetailsDateTime, formatHeaderDateLabel } from "@/lib/invitationDisplay";
+import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { createClient } from "@/lib/supabase/server";
 import { isHouseholdRsvpRecorded } from "@/lib/invite/householdRsvpRecorded";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
@@ -66,6 +67,12 @@ export default async function Page({ params }: PageProps) {
             eventDateLabel={formatHeaderDateLabel(dateRaw, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
+            topMonogramLetters={resolveCoupleMonogramLetters({
+              coupleNames: wedding.couple_names ?? "",
+              coupleInitialLeft: wedding.couple_initial_left,
+              coupleInitialRight: wedding.couple_initial_right,
+              language,
+            })}
             detailsDateTime={formatDetailsDateTime(dateRaw, language)}
             detailsLocation={detailsLocationFromWedding(wedding)}
             note={wedding.note}

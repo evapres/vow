@@ -7,6 +7,7 @@ import OutlineSilkButton from "@/app/components/OutlineSilkButton";
 import SolidSilkButton from "@/app/components/SolidSilkButton";
 import AdminInvitationFitPreview from "@/app/components/m3/AdminInvitationFitPreview";
 import { proportionalInvitationVars } from "@/lib/adminInvitationPreview";
+import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 import {
   combineWeddingDateAndTime,
@@ -24,18 +25,10 @@ const PREVIEW_SAMPLE_DATE_FOR_HEADER = "2026-07-11";
 const PREVIEW_SAMPLE_VENUE = "ISLAND";
 const PREVIEW_SAMPLE_DETAILS_LOCATION = "George Town, Brighton, BN1 3HG";
 
-function previewTopMonogramFromCoupleNames(names: string): { left: string; right: string } {
-  const parts = names.split("&").map((p) => p.trim());
-  const left = parts[0]?.[0];
-  const right = parts[1]?.[0];
-  if (left && right) {
-    return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
-  }
-  return { left: "A", right: "B" };
-}
-
 export type AdminInvitationLivePreviewProps = {
   coupleNames: string;
+  coupleInitialLeft?: string;
+  coupleInitialRight?: string;
   language: "en" | "el";
   invitationTheme: InvitationThemeId;
   weddingDate: string;
@@ -50,6 +43,8 @@ export type AdminInvitationLivePreviewProps = {
 
 function AdminInvitationLivePreview({
   coupleNames,
+  coupleInitialLeft,
+  coupleInitialRight,
   language,
   invitationTheme,
   weddingDate,
@@ -79,10 +74,16 @@ function AdminInvitationLivePreview({
     ? formatHeaderDateLabel(weddingDate, language)
     : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
   const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
-  const previewTopMonogram = useMemo(() => {
-    if (language === "el") return undefined;
-    return previewTopMonogramFromCoupleNames(coupleNames);
-  }, [coupleNames, language]);
+  const previewTopMonogram = useMemo(
+    () =>
+      resolveCoupleMonogramLetters({
+        coupleNames,
+        coupleInitialLeft,
+        coupleInitialRight,
+        language,
+      }),
+    [coupleNames, coupleInitialLeft, coupleInitialRight, language],
+  );
 
   const rsvpLine = useMemo(
     () => formatRsvpDeadlineLabel(rsvpDeadline, language) || "—",

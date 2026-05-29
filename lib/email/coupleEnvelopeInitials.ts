@@ -1,4 +1,5 @@
 import { toAllCapsNoAccents } from "@/lib/invitationDisplay";
+import { normalizeCoupleInitialLetter } from "@/lib/coupleInitials";
 
 /** Split on common “two names” separators (matches admin copy like "Nikos & Eva" or "Nikos και Eva"). */
 const COUPLE_NAME_SPLIT = /\s*(?:&|\+|\/|\band\b|και)\s*/i;
@@ -11,7 +12,14 @@ function firstLetterInitial(segment: string): string {
 }
 
 /** Short monogram for the envelope flap, e.g. `"Nikos & Eva"` → `"N&E"`. */
-export function coupleEnvelopeInitialsAmpersand(coupleNames: string): string {
+export function coupleEnvelopeInitialsAmpersand(
+  coupleNames: string,
+  overrides?: { left?: string | null; right?: string | null },
+): string {
+  const overrideLeft = normalizeCoupleInitialLetter(overrides?.left);
+  const overrideRight = normalizeCoupleInitialLetter(overrides?.right);
+  if (overrideLeft && overrideRight) return `${overrideLeft}&${overrideRight}`;
+
   const raw = (coupleNames ?? "").trim();
   if (!raw) return "";
   if (raw.toLowerCase() === "couple") return "A&B";

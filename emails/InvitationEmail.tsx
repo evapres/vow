@@ -354,6 +354,8 @@ export type InvitationEmailProps = {
   /** Fallback when {@link venueAddress} is empty; shown as a single line. */
   location?: string;
   inviteUrl?: string;
+  coupleInitialLeft?: string;
+  coupleInitialRight?: string;
 };
 
 function defaultMapUrl(venueName: string, venueAddress: string): string {
@@ -378,6 +380,8 @@ export default function InvitationEmail({
   mapUrl,
   location,
   inviteUrl = "https://example.com/invite/your-token",
+  coupleInitialLeft,
+  coupleInitialRight,
 }: InvitationEmailProps = {}) {
   const forAddressee = (householdName?.trim() || coupleNames).trim();
   const previewText = `Save the Date — ${coupleNames}`;
@@ -464,7 +468,10 @@ export default function InvitationEmail({
                           {cardDateLine}
                         </Text>
                         <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
-                          {coupleEnvelopeInitialsAmpersand((coupleNames ?? "").trim() || "Couple")}
+                          {coupleEnvelopeInitialsAmpersand((coupleNames ?? "").trim() || "Couple", {
+                            left: coupleInitialLeft,
+                            right: coupleInitialRight,
+                          })}
                         </Text>
                       </Column>
                     </Row>

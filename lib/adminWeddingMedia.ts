@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AdminWeddingMediaKind = "hero" | "music";
 
+export { isMissingInvitationThemeColumn } from "@/lib/supabaseMissingColumn";
+
 const COLUMN_BY_KIND: Record<AdminWeddingMediaKind, "hero_image_url" | "invitation_music_url"> = {
   hero: "hero_image_url",
   music: "invitation_music_url",
@@ -22,15 +24,6 @@ export function adminMediaUrlForEdit(
     return `/api/admin/wedding/${weddingId}/${kind}`;
   }
   return u;
-}
-
-export function isMissingInvitationThemeColumn(error: {
-  message?: string;
-  code?: string;
-  details?: string;
-}): boolean {
-  const text = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
-  return text.includes("invitation_theme") || error.code === "PGRST204";
 }
 
 export async function loadOwnedWeddingMedia(

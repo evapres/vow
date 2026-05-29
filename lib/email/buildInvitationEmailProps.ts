@@ -9,6 +9,7 @@ import {
   splitDetailsDateTimeLines,
 } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
+import { resolveCoupleMonogramLetters } from "../coupleInitials";
 import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
 export type WeddingLike = {
@@ -22,6 +23,8 @@ export type WeddingLike = {
   street_address?: string | null;
   rsvp_deadline: string | null;
   hero_image_url: string | null;
+  couple_initial_left?: string | null;
+  couple_initial_right?: string | null;
 };
 
 type HouseholdLike = {
@@ -74,6 +77,12 @@ export async function buildInvitationEmailProps(input: {
   const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
   const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(siteOrigin);
   const envelopeCardDateDisplay = formatEnvelopeCardDate(wedding.wedding_date) || undefined;
+  const monogram = resolveCoupleMonogramLetters({
+    coupleNames,
+    coupleInitialLeft: wedding.couple_initial_left,
+    coupleInitialRight: wedding.couple_initial_right,
+    language: wedding.language === "el" ? "el" : "en",
+  });
 
   return {
     householdName: household?.household_name?.trim() || undefined,
@@ -91,5 +100,7 @@ export async function buildInvitationEmailProps(input: {
     venueAddress: locationDisplayLine || undefined,
     location: locForEmailOut || undefined,
     inviteUrl,
+    coupleInitialLeft: monogram?.left,
+    coupleInitialRight: monogram?.right,
   };
 }

@@ -7,6 +7,7 @@ import {
   formatHeaderDateLabel,
   toAllCapsNoAccents,
 } from "@/lib/invitationDisplay";
+import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { createClient } from "@/lib/supabase/server";
 import { getInvitationTheme, parseInvitationThemeId } from "@/lib/invitationThemes";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
@@ -19,14 +20,6 @@ function footerYear(weddingDate: string | null | undefined): string {
   if (!weddingDate) return String(new Date().getFullYear());
   const d = new Date(weddingDate);
   return Number.isNaN(d.getTime()) ? String(new Date().getFullYear()) : String(d.getFullYear());
-}
-
-function topMonogramFromCoupleNames(names: string): { left: string; right: string } {
-  const parts = names.split("&").map((p) => p.trim());
-  const left = parts[0]?.[0];
-  const right = parts[1]?.[0];
-  if (left && right) return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
-  return { left: "A", right: "B" };
 }
 
 export default async function PreviewWeddingPage({ params }: PageProps) {
@@ -82,9 +75,12 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
             eventDateLabel={formatHeaderDateLabel(wedding.wedding_date, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
-            topMonogramLetters={
-              language === "el" ? undefined : topMonogramFromCoupleNames(wedding.couple_names)
-            }
+            topMonogramLetters={resolveCoupleMonogramLetters({
+              coupleNames: wedding.couple_names ?? "",
+              coupleInitialLeft: wedding.couple_initial_left,
+              coupleInitialRight: wedding.couple_initial_right,
+              language,
+            })}
             detailsDateTime={formatDetailsDateTime(wedding.wedding_date, language)}
             detailsLocation={detailsLocationFromWedding(wedding)}
             note={wedding.note}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import SolidSilkButton from "@/app/components/SolidSilkButton";
 import { buildAuthCallbackUrl } from "@/lib/auth/authCallbackUrl";
@@ -24,8 +24,11 @@ export default function LoginForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [devLink, setDevLink] = useState<string | null>(null);
   const [devLinkLoading, setDevLinkLoading] = useState(false);
+  const [showDevLogin, setShowDevLogin] = useState(false);
 
-  const isLocal = isLocalDevHost();
+  useEffect(() => {
+    setShowDevLogin(isLocalDevHost());
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +54,7 @@ export default function LoginForm() {
 
     setStatus("sent");
     setMessage(
-      isLocal
+      showDevLogin
         ? `Email sent. The link should return to ${redirectTo}. If the email still opens thevow.vip, Supabase ignored localhost — use “Get local login link” below instead.`
         : "Check your email for the login link. Open it once in this same browser.",
     );
@@ -94,7 +97,7 @@ export default function LoginForm() {
         {status === "loading" ? "Sending…" : "Send magic link"}
       </SolidSilkButton>
 
-      {isLocal ? (
+      {showDevLogin ? (
         <button
           type="button"
           disabled={!email.trim() || devLinkLoading}

@@ -10,7 +10,8 @@ import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { validateInvitationStepForm } from "@/lib/weddingProgress";
-import { isMissingInvitationThemeColumn } from "@/lib/adminWeddingMedia";
+import { isMissingInvitationThemeColumn } from "@/lib/supabaseMissingColumn";
+import { isMissingCoupleInitialsColumns } from "@/lib/supabaseMissingColumn";
 import { persistHeroImageFile } from "@/lib/heroImageUpload";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
 
@@ -47,11 +48,23 @@ async function persistWeddingUpdate(
   patch: Record<string, unknown>,
 ) {
   const db = dbAfterAuth(supabase);
-  let { error } = await db.from("weddings").update(patch).eq("id", weddingId).eq("user_id", userId);
+  let patchToApply = { ...patch };
+  let { error } = await db.from("weddings").update(patchToApply).eq("id", weddingId).eq("user_id", userId);
 
-  if (error && isMissingInvitationThemeColumn(error) && "invitation_theme" in patch) {
-    const { invitation_theme: _theme, ...withoutTheme } = patch;
-    ({ error } = await db.from("weddings").update(withoutTheme).eq("id", weddingId).eq("user_id", userId));
+  if (error && isMissingInvitationThemeColumn(error) && "invitation_theme" in patchToApply) {
+    const { invitation_theme: _theme, ...withoutTheme } = patchToApply;
+    patchToApply = withoutTheme;
+    ({ error } = await db.from("weddings").update(patchToApply).eq("id", weddingId).eq("user_id", userId));
+  }
+
+  if (
+    error &&
+    isMissingCoupleInitialsColumns(error) &&
+    ("couple_initial_left" in patchToApply || "couple_initial_right" in patchToApply)
+  ) {
+    const { couple_initial_left: _left, couple_initial_right: _right, ...withoutInitials } = patchToApply;
+    patchToApply = withoutInitials;
+    ({ error } = await db.from("weddings").update(patchToApply).eq("id", weddingId).eq("user_id", userId));
   }
 
   return error;
@@ -62,11 +75,23 @@ async function persistWeddingInsert(
   row: Record<string, unknown>,
 ) {
   const db = dbAfterAuth(supabase);
-  let result = await db.from("weddings").insert(row).select("id").single();
+  let rowToInsert = { ...row };
+  let result = await db.from("weddings").insert(rowToInsert).select("id").single();
 
-  if (result.error && isMissingInvitationThemeColumn(result.error) && "invitation_theme" in row) {
-    const { invitation_theme: _theme, ...withoutTheme } = row;
-    result = await db.from("weddings").insert(withoutTheme).select("id").single();
+  if (result.error && isMissingInvitationThemeColumn(result.error) && "invitation_theme" in rowToInsert) {
+    const { invitation_theme: _theme, ...withoutTheme } = rowToInsert;
+    rowToInsert = withoutTheme;
+    result = await db.from("weddings").insert(rowToInsert).select("id").single();
+  }
+
+  if (
+    result.error &&
+    isMissingCoupleInitialsColumns(result.error) &&
+    ("couple_initial_left" in rowToInsert || "couple_initial_right" in rowToInsert)
+  ) {
+    const { couple_initial_left: _left, couple_initial_right: _right, ...withoutInitials } = rowToInsert;
+    rowToInsert = withoutInitials;
+    result = await db.from("weddings").insert(rowToInsert).select("id").single();
   }
 
   return result;
@@ -117,6 +142,8 @@ export async function createWedding(formData: FormData) {
     street_address ?? "",
   );
   const note = optionalText(formData.get("note"));
+  const couple_initial_left = optionalText(formData.get("couple_initial_left"));
+  const couple_initial_right = optionalText(formData.get("couple_initial_right"));
 
   let heroFileToUpload: File | null = null;
   const heroFile = formData.get("hero_image");
@@ -149,6 +176,8 @@ export async function createWedding(formData: FormData) {
     invitation_music_url,
     rsvp_deadline: rsvpDeadline,
     note,
+    couple_initial_left,
+    couple_initial_right,
   });
 
   if (error || !data) {
@@ -241,6 +270,8 @@ export async function updateWedding(formData: FormData) {
     street_address ?? "",
   );
   const note = optionalText(formData.get("note"));
+  const couple_initial_left = optionalText(formData.get("couple_initial_left"));
+  const couple_initial_right = optionalText(formData.get("couple_initial_right"));
   const clearHero = formData.get("clear_hero") === "1";
 
   const patch: Record<string, unknown> = {
@@ -254,6 +285,8 @@ export async function updateWedding(formData: FormData) {
     location,
     rsvp_deadline: rsvpDeadline,
     note,
+    couple_initial_left,
+    couple_initial_right,
   };
 
   const heroFile = formData.get("hero_image");

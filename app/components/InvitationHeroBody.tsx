@@ -9,6 +9,7 @@ import {
   toAllCapsNoAccents,
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
+import { monogramLettersFromCoupleNames } from "@/lib/coupleInitials";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 
 import { invitationPolaroidPaperStyle } from "./invitationDarkBandStyle";
@@ -130,17 +131,8 @@ const inviteCelebrateWrapClass =
 const inviteCelebrateWrapAdminClass =
   "px-[var(--invite-gutter)] pb-[var(--invite-block-edge)] pt-[var(--invite-hero-details-gap)] text-center";
 
-/** All hero photos (uploaded or default): soft B&W even when the source is color. */
-const heroPhotoFilterClass =
-  "object-cover object-center grayscale contrast-[0.82] brightness-[1.1]";
-
-function monogramInitials(coupleNames: string): { left: string; right: string } | null {
-  const parts = coupleNames.split("&").map((p) => p.trim());
-  const left = parts[0]?.[0] ?? "";
-  const right = parts[1]?.[0] ?? "";
-  if (!left || !right) return null;
-  return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
-}
+/** Uploaded hero photos: B&W only (no contrast/brightness adjustment). */
+const heroPhotoFilterClass = "object-cover object-center grayscale";
 
 export default function InvitationHeroBody({
   coupleNames,
@@ -163,7 +155,7 @@ export default function InvitationHeroBody({
   /** Remote, data, and blob URLs are not served as static files — use `<img>`. */
   const shouldUseNativeImg = useNativeImgForPhoto || !src.startsWith("/");
 
-  const initials = monogramInitials(coupleNames);
+  const initials = monogramLettersFromCoupleNames(coupleNames);
   const topMonogram =
     language === "el" && !topMonogramLetters ? null : (topMonogramLetters ?? initials);
   const namePair = coupleNames.includes("&")

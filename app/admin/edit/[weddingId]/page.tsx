@@ -7,6 +7,7 @@ import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitation
 import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
 import InvitationWorkflowTabs from "@/app/components/admin/InvitationWorkflowTabs";
 import { createClient } from "@/lib/supabase/server";
+import { loadOwnedWeddingEditPageRow } from "@/lib/adminWeddingFormLoad";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
 type PageProps = {
@@ -36,16 +37,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
     redirect("/login");
   }
 
-  // Light select only — hero/music load client-side via /api/admin/wedding/[id]/form
-  // so large stored media never blows up the RSC response after save.
-  const { data: wedding, error } = await supabase
-    .from("weddings")
-    .select(
-      "id, couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, location, invitation_theme",
-    )
-    .eq("id", weddingId)
-    .eq("user_id", user.id)
-    .single();
+  const { data: wedding, error } = await loadOwnedWeddingEditPageRow(supabase, weddingId, user.id);
 
   if (error || !wedding) {
     notFound();
@@ -53,8 +45,8 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
 
   const saved = sp.saved === "1";
   const formError = sp.error ? safeDecode(sp.error) : null;
-  const step1Complete = isInvitationStepComplete(wedding);
-  const step1Missing = step1Complete ? [] : invitationStepMissingFields(wedding);
+  const step1Complete = isInvitationStepComplete(wedding as Parameters<typeof isInvitationStepComplete>[0]);
+  const step1Missing = step1Complete ? [] : invitationStepMissingFields(wedding as Parameters<typeof invitationStepMissingFields>[0]);
 
   return (
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
