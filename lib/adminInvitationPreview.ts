@@ -30,5 +30,5 @@ export function proportionalInvitationVars(
     "--invite-block-edge": `${blockEdge}px`,
     "--invite-preview-rsvp-title": `${rsvpTitle}px`,
     "--invite-preview-rsvp-gap": `${rsvpGap}px`,
-  };
+  } as CSSProperties;
 }
