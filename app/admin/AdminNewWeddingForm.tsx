@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import type { ChangeEvent } from "react";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { inviteHeroDefaultSrc } from "@/app/components/InvitationHeroBody";
 import M3FileField from "@/app/components/m3/M3FileField";
 import M3FilledSelect from "@/app/components/m3/M3FilledSelect";
 import M3FilledTextField from "@/app/components/m3/M3FilledTextField";
 import M3ThemePicker from "@/app/components/m3/M3ThemePicker";
+import { compressHeroImageFile } from "@/lib/compressHeroImage";
 import { parseInvitationThemeId, type InvitationThemeId } from "@/lib/invitationThemes";
 
 import AdminInvitationLivePreview from "./AdminInvitationLivePreview";
@@ -64,8 +65,13 @@ function initialHeroSrc(initial: AdminWeddingFormInitial | undefined): string {
   return inviteHeroDefaultSrc;
 }
 
+function isDefaultHeroSrc(src: string): boolean {
+  return src === inviteHeroDefaultSrc || src.endsWith("/invite-hero-couple.png");
+}
+
 export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNewWeddingFormProps) {
   const isEdit = Boolean(editWeddingId);
+  const [isSaving, startTransition] = useTransition();
   const [coupleNames, setCoupleNames] = useState(initial?.coupleNames ?? "");
   const [language, setLanguage] = useState<"en" | "el">(initial?.language ?? "en");
   const [invitationTheme, setInvitationTheme] = useState<InvitationThemeId>(() =>
@@ -156,9 +162,51 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     setHeroPreviewSrc(url);
   };
 
+  async function buildSubmitFormData(): Promise<FormData> {
+    const fd = new FormData();
+    if (isEdit && editWeddingId) fd.set("wedding_id", editWeddingId);
+    if (isEdit) {
+      fd.set("clear_hero", clearHeroForSubmit ? "1" : "0");
+      fd.set("clear_music", clearMusicForSubmit ? "1" : "0");
+    }
+    fd.set("invitation_theme", invitationTheme);
+    fd.set("couple_names", coupleNames);
+    fd.set("language", language);
+    fd.set("wedding_date", weddingDate);
+    fd.set("wedding_time", weddingTime);
+    fd.set("venue_name", venueName);
+    fd.set("church_name", churchName);
+    fd.set("street_address", streetAddress);
+    fd.set("rsvp_deadline", rsvpDeadline);
+    fd.set("note", note);
+
+    const heroFile = heroFileInputRef.current?.files?.[0];
+    if (heroFile && heroFile.size > 0) {
+      fd.set("hero_image", await compressHeroImageFile(heroFile));
+    }
+
+    const musicFile = musicFileInputRef.current?.files?.[0];
+    if (musicFile && musicFile.size > 0) {
+      fd.set("invitation_music", musicFile);
+    }
+
+    return fd;
+  }
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    startTransition(() => {
+      void (async () => {
+        const fd = await buildSubmitFormData();
+        if (isEdit) await updateWedding(fd);
+        else await createWedding(fd);
+      })();
+    });
+  }
+
   return (
     <div className="m3-admin-form m3-admin-split grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,2fr)] lg:gap-12">
-      <form action={isEdit ? updateWedding : createWedding} className="min-w-0">
+      <form onSubmit={handleSubmit} encType="multipart/form-data" className="min-w-0">
         <div className="m3-form-card space-y-6">
           {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}
           {isEdit ? <input type="hidden" name="clear_hero" value={clearHeroForSubmit ? "1" : "0"} /> : null}
@@ -264,7 +312,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             onChange={onHeroFileChange}
             supportingText="JPEG or PNG, up to 4MB. Optional."
           >
-            {heroPreviewSrc !== inviteHeroDefaultSrc ? (
+            {heroPreviewSrc !== inviteHeroDefaultSrc && !isDefaultHeroSrc(heroPreviewSrc) ? (
               <button type="button" className="m3-btn m3-btn--text" onClick={clearHeroImage}>
                 Remove image
               </button>
@@ -326,8 +374,8 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
                   Preview
                 </Link>
               ) : null}
-              <button type="submit" className="m3-btn m3-btn--filled">
-                {isEdit ? "Save changes" : "Save invitation"}
+              <button type="submit" className="m3-btn m3-btn--filled" disabled={isSaving}>
+                {isSaving ? "Saving…" : isEdit ? "Save changes" : "Save invitation"}
               </button>
             </div>
           </div>

@@ -82,7 +82,9 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
             eventDateLabel={formatHeaderDateLabel(wedding.wedding_date, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
-            topMonogramLetters={topMonogramFromCoupleNames(wedding.couple_names)}
+            topMonogramLetters={
+              language === "el" ? undefined : topMonogramFromCoupleNames(wedding.couple_names)
+            }
             detailsDateTime={formatDetailsDateTime(wedding.wedding_date, language)}
             detailsLocation={detailsLocationFromWedding(wedding)}
             note={wedding.note}

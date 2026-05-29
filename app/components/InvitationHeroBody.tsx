@@ -164,7 +164,8 @@ export default function InvitationHeroBody({
   const shouldUseNativeImg = useNativeImgForPhoto || !src.startsWith("/");
 
   const initials = monogramInitials(coupleNames);
-  const topMonogram = topMonogramLetters ?? initials;
+  const topMonogram =
+    language === "el" && !topMonogramLetters ? null : (topMonogramLetters ?? initials);
   const namePair = coupleNames.includes("&")
     ? coupleNames
         .split("&")
@@ -195,14 +196,9 @@ export default function InvitationHeroBody({
     .split("&")
     .map((p) => p.trim())
     .filter(Boolean);
-  const namesLower = coupleNames.toLowerCase();
-  const isNestorEvangeliaDemo =
-    namePartsForGreek.length === 2 &&
-    namesLower.includes("nestor") &&
-    namesLower.includes("evangelia");
 
-  const greekLeft = isNestorEvangeliaDemo ? "Νέστορας" : namePartsForGreek[0] || coupleNames || "Μας";
-  const greekRight = isNestorEvangeliaDemo ? "Ευαγγελία" : namePartsForGreek[1] || "";
+  const greekLeft = namePartsForGreek[0] || coupleNames || "Μας";
+  const greekRight = namePartsForGreek[1] || "";
 
   const namesClass = adminPreview
     ? heroNamesPreviewClass

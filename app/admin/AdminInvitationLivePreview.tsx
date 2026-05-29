@@ -79,7 +79,10 @@ function AdminInvitationLivePreview({
     ? formatHeaderDateLabel(weddingDate, language)
     : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
   const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
-  const previewTopMonogram = useMemo(() => previewTopMonogramFromCoupleNames(coupleNames), [coupleNames]);
+  const previewTopMonogram = useMemo(() => {
+    if (language === "el") return undefined;
+    return previewTopMonogramFromCoupleNames(coupleNames);
+  }, [coupleNames, language]);
 
   const rsvpLine = useMemo(
     () => formatRsvpDeadlineLabel(rsvpDeadline, language) || "—",
