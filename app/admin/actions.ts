@@ -10,6 +10,7 @@ import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { validateInvitationStepForm } from "@/lib/weddingProgress";
+import { isMissingInvitationThemeColumn } from "@/lib/weddingHeroAdmin";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
 
 function getServiceRoleClientOrNull() {
@@ -36,6 +37,38 @@ function optionalText(value: FormDataEntryValue | null): string | null {
   if (value == null) return null;
   const s = String(value).trim();
   return s.length > 0 ? s : null;
+}
+
+async function persistWeddingUpdate(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  weddingId: string,
+  userId: string,
+  patch: Record<string, unknown>,
+) {
+  const db = dbAfterAuth(supabase);
+  let { error } = await db.from("weddings").update(patch).eq("id", weddingId).eq("user_id", userId);
+
+  if (error && isMissingInvitationThemeColumn(error) && "invitation_theme" in patch) {
+    const { invitation_theme: _theme, ...withoutTheme } = patch;
+    ({ error } = await db.from("weddings").update(withoutTheme).eq("id", weddingId).eq("user_id", userId));
+  }
+
+  return error;
+}
+
+async function persistWeddingInsert(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  row: Record<string, unknown>,
+) {
+  const db = dbAfterAuth(supabase);
+  let result = await db.from("weddings").insert(row).select("id").single();
+
+  if (result.error && isMissingInvitationThemeColumn(result.error) && "invitation_theme" in row) {
+    const { invitation_theme: _theme, ...withoutTheme } = row;
+    result = await db.from("weddings").insert(withoutTheme).select("id").single();
+  }
+
+  return result;
 }
 
 export async function createWedding(formData: FormData) {
@@ -109,25 +142,21 @@ export async function createWedding(formData: FormData) {
     );
   }
 
-  const { data, error } = await supabase
-    .from("weddings")
-    .insert({
-      user_id: user.id,
-      couple_names: coupleNames,
-      language,
-      invitation_theme,
-      wedding_date: weddingDate,
-      venue_name,
-      church_name,
-      street_address,
-      location,
-      hero_image_url: heroImageUrl,
-      invitation_music_url,
-      rsvp_deadline: rsvpDeadline,
-      note,
-    })
-    .select("id")
-    .single();
+  const { data, error } = await persistWeddingInsert(supabase, {
+    user_id: user.id,
+    couple_names: coupleNames,
+    language,
+    invitation_theme,
+    wedding_date: weddingDate,
+    venue_name,
+    church_name,
+    street_address,
+    location,
+    hero_image_url: heroImageUrl,
+    invitation_music_url,
+    rsvp_deadline: rsvpDeadline,
+    note,
+  });
 
   if (error || !data) {
     redirect(
@@ -238,7 +267,7 @@ export async function updateWedding(formData: FormData) {
     );
   }
 
-  const { error } = await supabase.from("weddings").update(patch).eq("id", weddingId).eq("user_id", user.id);
+  const error = await persistWeddingUpdate(supabase, weddingId, user.id, patch);
 
   if (error) {
     redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent(error.message));

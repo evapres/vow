@@ -130,6 +130,10 @@ const inviteCelebrateWrapClass =
 const inviteCelebrateWrapAdminClass =
   "px-[var(--invite-gutter)] pb-[var(--invite-block-edge)] pt-[var(--invite-hero-details-gap)] text-center";
 
+/** All hero photos (uploaded or default): soft B&W even when the source is color. */
+const heroPhotoFilterClass =
+  "object-cover object-center grayscale contrast-[0.82] brightness-[1.1]";
+
 function monogramInitials(coupleNames: string): { left: string; right: string } | null {
   const parts = coupleNames.split("&").map((p) => p.trim());
   const left = parts[0]?.[0] ?? "";
@@ -286,7 +290,7 @@ export default function InvitationHeroBody({
                     <img
                       src={src}
                       alt={photoAlt}
-                      className="absolute inset-0 h-full w-full object-cover object-center grayscale"
+                      className={`absolute inset-0 h-full w-full ${heroPhotoFilterClass}`}
                     />
                   ) : (
                     <Image
@@ -295,7 +299,7 @@ export default function InvitationHeroBody({
                       fill
                       priority
                       sizes="(max-width: 1024px) 94vw, 450px"
-                      className="object-cover object-center grayscale"
+                      className={heroPhotoFilterClass}
                     />
                   )}
                 </div>

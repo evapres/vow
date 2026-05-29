@@ -9,6 +9,7 @@ import InvitationWorkflowTabs from "@/app/components/admin/InvitationWorkflowTab
 import { createClient } from "@/lib/supabase/server";
 import { splitWeddingDateTimeForForm } from "@/lib/invitationDisplay";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
+import { heroImageUrlForAdminEdit } from "@/lib/weddingHeroAdmin";
 import { hydrateLocationFormFields } from "@/lib/weddingLocation";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
@@ -62,7 +63,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
     venueName: locFields.venueName,
     churchName: locFields.churchName,
     streetAddress: locFields.streetAddress,
-    heroImageUrl: wedding.hero_image_url ?? null,
+    heroImageUrl: heroImageUrlForAdminEdit(weddingId, wedding.hero_image_url),
     rsvpDeadline: rsvp,
     note: wedding.note ?? "",
     invitationMusicUrl: wedding.invitation_music_url ?? null,
