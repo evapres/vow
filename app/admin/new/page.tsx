@@ -39,13 +39,7 @@ export default async function AdminNewWeddingPage({ searchParams }: PageProps) {
         <main className="admin-shell-main">
           <AdminShellHeader />
           <div className="mb-8 border-b border-[#181818]/20 pb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#181818]/60">
-              Admin
-            </p>
-            <h1 className="mt-2 text-3xl font-medium tracking-[0.02em]">New invitation</h1>
-            <p className="mt-2 text-sm text-[#181818]/65">
-              Creates a separate wedding in Supabase. Your other invitations stay unchanged.
-            </p>
+            <h1 className="text-3xl font-medium tracking-[0.02em]">New invitation</h1>
             <p className="mt-3">
               <Link
                 href="/admin/invitations"

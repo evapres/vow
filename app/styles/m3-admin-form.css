@@ -847,17 +847,17 @@
   border-radius: var(--m3-shape-corner-md);
   box-shadow: 0 1px 2px rgba(32, 27, 29, 0.06), 0 4px 24px rgba(32, 27, 29, 0.04);
   min-height: 280px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .m3-form-preview__viewport {
   box-sizing: border-box;
   width: 100%;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 8px;
+  padding: 8%;
 }
 
 .m3-form-preview__fit {
@@ -889,11 +889,45 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    border-radius: var(--m3-shape-corner-md);
+    scrollbar-gutter: stable;
+    --form-scrollbar-radius: var(--m3-shape-corner-md);
+    --form-scrollbar-track-bg: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface-container-high));
+    --form-scrollbar-thumb-bg: color-mix(in srgb, var(--m3-on-surface) 32%, transparent);
+    --form-scrollbar-thumb-bg-hover: color-mix(in srgb, var(--m3-on-surface) 44%, transparent);
+    scrollbar-width: thin;
+    scrollbar-color: var(--form-scrollbar-thumb-bg) var(--form-scrollbar-track-bg);
+  }
+
+  .m3-admin-split .m3-form-card::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .m3-admin-split .m3-form-card::-webkit-scrollbar-track {
+    margin: 6px 2px;
+    background-color: var(--form-scrollbar-track-bg);
+    border-radius: var(--form-scrollbar-radius);
+  }
+
+  .m3-admin-split .m3-form-card::-webkit-scrollbar-thumb {
+    background-color: var(--form-scrollbar-thumb-bg);
+    border-radius: var(--form-scrollbar-radius);
+    border: 2px solid var(--form-scrollbar-track-bg);
+    background-clip: padding-box;
+    min-height: 32px;
+  }
+
+  .m3-admin-split .m3-form-card::-webkit-scrollbar-thumb:hover {
+    background-color: var(--form-scrollbar-thumb-bg-hover);
+  }
+
+  .m3-admin-split .m3-form-card::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   .m3-form-preview {
     width: 100%;
-    min-width: min(100%, 560px);
+    min-width: min(100%, 32rem);
   }
 
   .m3-form-preview-panel {

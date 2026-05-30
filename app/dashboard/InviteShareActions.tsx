@@ -110,27 +110,31 @@ export default function InviteShareActions({
     flash("Link copied — paste into a DM.");
   }, [flash, isMobile, onCopy]);
 
+  const shareBtnBlock = `${shareBtnClass} w-full min-w-0`;
+
   return (
     <div className="mt-2 space-y-2">
-      <div className="flex flex-wrap gap-1.5">
-        {nativeShareAvailable ? (
-          <button type="button" className="m3-btn m3-btn--filled m3-btn--compact" onClick={() => void onWebShare()}>
-            Share…
-          </button>
-        ) : null}
-        <button type="button" className={shareBtnClass} onClick={() => void onCopy()}>
+      <div className="grid max-w-[18rem] grid-cols-3 gap-1.5">
+        <button
+          type="button"
+          className="m3-btn m3-btn--filled m3-btn--compact w-full min-w-0"
+          onClick={() => (nativeShareAvailable ? void onWebShare() : void onCopy())}
+        >
+          Share…
+        </button>
+        <button type="button" className={shareBtnBlock} onClick={() => void onCopy()}>
           Copy link
         </button>
-        <button type="button" className={shareBtnClass} onClick={onMessenger}>
+        <button type="button" className={shareBtnBlock} onClick={onMessenger}>
           Messenger
         </button>
-        <button type="button" className={shareBtnClass} onClick={onWhatsApp}>
+        <button type="button" className={shareBtnBlock} onClick={onWhatsApp}>
           WhatsApp
         </button>
-        <button type="button" className={shareBtnClass} onClick={onEmail}>
+        <button type="button" className={shareBtnBlock} onClick={onEmail}>
           Email
         </button>
-        <button type="button" className={shareBtnClass} onClick={() => void onInstagram()}>
+        <button type="button" className={shareBtnBlock} onClick={() => void onInstagram()}>
           Instagram
         </button>
       </div>

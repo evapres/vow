@@ -9,7 +9,7 @@ import {
   toAllCapsNoAccents,
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
-import { monogramLettersFromCoupleNames } from "@/lib/coupleInitials";
+import { monogramLettersFromCoupleNames, splitCoupleNameParts } from "@/lib/coupleInitials";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 
 import { invitationPolaroidPaperStyle } from "./invitationDarkBandStyle";
@@ -44,10 +44,6 @@ const inviteTopMonogramInitialCompactClass =
 
 const inviteTopMonogramAmpersandCompactClass =
   "font-serif text-[18px] font-normal leading-none [font-family:var(--font-heading)]";
-
-/** English invite line after names. */
-const heroInviteLightClass =
-  "text-[18px] font-light leading-[26px] tracking-normal sm:text-[22px] sm:leading-[32px] md:text-[32px] md:leading-[48px]";
 
 const heroInviteCompactClass = "text-[13px] font-light leading-[18px] tracking-normal";
 
@@ -85,24 +81,6 @@ export type InvitationHeroBodyProps = {
   adminPreview?: boolean;
 };
 
-/** Mobile-scale type only — used when `adminPreview` (avoids sm/md/lg inside a scaled panel). */
-const inviteTopMonogramInitialPreviewClass =
-  "font-serif text-[36px] font-normal leading-none [font-family:var(--font-heading)]";
-
-const inviteTopMonogramAmpersandPreviewClass =
-  "font-serif text-[22px] font-normal leading-none [font-family:var(--font-heading)]";
-
-const heroNamesPreviewClass =
-  "font-serif text-[30px] font-light leading-[36px] tracking-[3px] [font-family:var(--font-heading)]";
-
-const heroInvitePreviewClass = "text-[18px] font-light leading-[26px] tracking-normal";
-
-const inviteHeroTopBarPreviewClass =
-  "font-serif text-[12px] font-light tracking-[1px] [font-family:var(--font-heading)]";
-
-const inviteCelebrateLinePreviewClass =
-  "text-[20px] font-light leading-[28px] tracking-[0.5px] [font-family:var(--font-noto-serif)]";
-
 /** Full literal class strings so Tailwind includes spacing utilities (dynamic `gutter` breaks JIT). */
 const inviteSectionBleedClass =
   "w-[calc(100%+2*var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px)))] max-w-none -mx-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))]";
@@ -110,26 +88,21 @@ const inviteSectionBleedClass =
 const inviteMonogramWrapClass =
   "flex w-full flex-col items-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-4 pt-14 sm:pb-4 sm:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)]";
 
-const inviteMonogramWrapAdminClass =
-  "flex w-full flex-col items-center px-[var(--invite-gutter)] pb-2 pt-[max(3.5rem,calc(var(--invite-gutter)+10px))]";
-
 const inviteMonogramWrapCompactClass =
   "flex w-full flex-col items-center px-[var(--invite-gutter)] pb-2 pt-8";
 
 const inviteHeroRowClass =
   "flex w-full flex-col items-center justify-center gap-12 px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+10px)] sm:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)] lg:flex-row lg:items-center lg:justify-center lg:gap-16 lg:pb-[var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))] lg:pl-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))+clamp(1.5rem,4vw,3rem))] lg:pr-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] lg:pt-[calc(var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))-10px)]";
 
-const inviteHeroRowAdminClass =
-  "flex w-full flex-col items-center justify-center gap-[var(--invite-hero-details-gap)] px-[var(--invite-gutter)] pb-[var(--invite-hero-details-gap)] pt-[calc(var(--invite-gutter)+10px)]";
+/** Admin live preview at desktop reference width — matches invite `lg:` row layout. */
+const inviteHeroRowDesktopPreviewClass =
+  "flex w-full flex-row items-center justify-center gap-12 px-[var(--invite-gutter)] pb-[var(--invite-hero-details-gap)] pt-[calc(var(--invite-gutter)-10px)] pl-[calc(var(--invite-gutter)+1.25rem)] pr-[var(--invite-gutter)]";
 
 const inviteHeroRowCompactClass =
   "flex w-full flex-row items-center justify-center gap-3 px-[var(--invite-gutter)] pb-5 pt-2";
 
 const inviteCelebrateWrapClass =
   "px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center";
-
-const inviteCelebrateWrapAdminClass =
-  "px-[var(--invite-gutter)] pb-[var(--invite-block-edge)] pt-[var(--invite-hero-details-gap)] text-center";
 
 /** Uploaded hero photos: B&W only (no contrast/brightness adjustment). */
 const heroPhotoFilterClass = "object-cover object-center grayscale";
@@ -158,12 +131,6 @@ export default function InvitationHeroBody({
   const initials = monogramLettersFromCoupleNames(coupleNames);
   const topMonogram =
     language === "el" && !topMonogramLetters ? null : (topMonogramLetters ?? initials);
-  const namePair = coupleNames.includes("&")
-    ? coupleNames
-        .split("&")
-        .map((s) => s.trim())
-        .join(" & ")
-    : coupleNames;
 
   const dateComma = detailsDateTime.indexOf(",");
   const dateHead = dateComma >= 0 ? detailsDateTime.slice(0, dateComma).trim() : "";
@@ -174,60 +141,42 @@ export default function InvitationHeroBody({
   const locLast = locParts.length > 1 ? locParts.pop() : "";
   const locLead = locParts.join(", ");
 
-  const t =
-    language === "el"
-      ? {
-          kindlyRespondBelow: "RSVP",
-        }
-      : {
-          inviteYouToAttend: "invite you to attend ",
-          kindlyRespondBelow: "RSVP",
-        };
+  const kindlyRespondBelow = "RSVP";
 
-  const namePartsForGreek = coupleNames
-    .split(/\s*(?:&|\+|\/|\band\b|και)\s*/i)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const namePartsForInvite = splitCoupleNameParts(coupleNames);
+  const inviteNameLeft = namePartsForInvite[0] ?? "";
+  const inviteNameRight = namePartsForInvite[1] ?? "";
+  const showInviteCoupleNames = Boolean(inviteNameLeft || inviteNameRight);
+  const showInviteAmpersand = Boolean(inviteNameLeft && inviteNameRight);
 
-  const greekLeft = namePartsForGreek[0] ?? "";
-  const greekRight = namePartsForGreek[1] ?? "";
-  const showGreekCoupleNames = Boolean(greekLeft || greekRight);
+  const inviteMessage =
+    language === "el" ? "σας προσκαλούν στο γάμο τους." : "invite you to attend their wedding.";
 
-  const namesClass = adminPreview
-    ? heroNamesPreviewClass
-    : compactPreview
-      ? heroNamesCompactClass
-      : heroNamesClass;
-  const inviteLineClass = adminPreview
-    ? heroInvitePreviewClass
-    : compactPreview
-      ? heroInviteCompactClass
-      : heroInviteLightClass;
-  const monogramInitialClass = adminPreview
-    ? inviteTopMonogramInitialPreviewClass
-    : compactPreview
-      ? inviteTopMonogramInitialCompactClass
-      : inviteTopMonogramInitialClass;
-  const monogramAmpersandClass = adminPreview
-    ? inviteTopMonogramAmpersandPreviewClass
-    : compactPreview
-      ? inviteTopMonogramAmpersandCompactClass
-      : inviteTopMonogramAmpersandClass;
-  const topBarClass = adminPreview ? inviteHeroTopBarPreviewClass : inviteHeroTopBarClass;
-  const celebrateLineClass = adminPreview ? inviteCelebrateLinePreviewClass : inviteCelebrateLineClass;
+  const namesClass = compactPreview ? heroNamesCompactClass : heroNamesClass;
+  /** Invite sentence below stacked names — same Noto style as Greek on full invites. */
+  const inviteMessageClass = compactPreview
+    ? heroInviteCompactClass
+    : inviteNotoSerifLight18Class;
+  const monogramInitialClass = compactPreview
+    ? inviteTopMonogramInitialCompactClass
+    : inviteTopMonogramInitialClass;
+  const monogramAmpersandClass = compactPreview
+    ? inviteTopMonogramAmpersandCompactClass
+    : inviteTopMonogramAmpersandClass;
+  const topBarClass = inviteHeroTopBarClass;
+  const celebrateLineClass = inviteCelebrateLineClass;
 
-  const sectionClass = compactPreview ? "w-full max-w-none" : inviteSectionBleedClass;
-  const monogramWrapClass = adminPreview
-    ? inviteMonogramWrapAdminClass
-    : compactPreview
-      ? inviteMonogramWrapCompactClass
-      : inviteMonogramWrapClass;
+  const sectionClass =
+    compactPreview || adminPreview ? "w-full max-w-none" : inviteSectionBleedClass;
+  const monogramWrapClass = compactPreview
+    ? inviteMonogramWrapCompactClass
+    : inviteMonogramWrapClass;
   const heroRowClass = adminPreview
-    ? inviteHeroRowAdminClass
+    ? inviteHeroRowDesktopPreviewClass
     : compactPreview
       ? inviteHeroRowCompactClass
       : inviteHeroRowClass;
-  const celebrateWrapClass = adminPreview ? inviteCelebrateWrapAdminClass : inviteCelebrateWrapClass;
+  const celebrateWrapClass = inviteCelebrateWrapClass;
 
   return (
     <section aria-label="Invitation" className={sectionClass}>
@@ -263,7 +212,7 @@ export default function InvitationHeroBody({
         {/* Hero: polaroid + copy — centered as a group; polaroid matches 450² at 1440 card width */}
         <div className={heroRowClass}>
           <div
-            className={`flex shrink-0 justify-center ${adminPreview ? "mb-4" : compactPreview ? "" : "max-lg:mb-4 translate-y-[10px] lg:translate-y-0"}`}
+            className={`flex shrink-0 justify-center ${compactPreview ? "" : adminPreview ? "" : "max-lg:mb-4 translate-y-[10px] lg:translate-y-0"}`}
           >
             <div
               className="flex h-[var(--invite-polaroid)] w-[var(--invite-polaroid)] max-w-full shrink-0 flex-col shadow-[0_28px_64px_rgba(0,0,0,0.42)]"
@@ -304,55 +253,56 @@ export default function InvitationHeroBody({
           <div
             className={`flex min-w-0 flex-col items-center text-center ${compactPreview ? "w-full flex-1" : "w-full max-w-xl"}`}
           >
-            <p style={{ fontFamily: "var(--font-heading)" }}>
-              {language === "el" ? (
-                <span
-                  className={`inline-flex flex-col items-center ${adminPreview ? "gap-3" : "gap-4 sm:gap-6"}`}
-                >
-                  {showGreekCoupleNames ? (
-                    <span className="flex flex-col items-center">
-                      {greekLeft ? (
-                        <span className={namesClass}>{toAllCapsNoAccents(greekLeft)}</span>
-                      ) : null}
-                      {greekLeft && greekRight ? <span className={namesClass}>&</span> : null}
-                      {greekRight ? (
-                        <span className={namesClass}>{toAllCapsNoAccents(greekRight)}</span>
-                      ) : null}
-                    </span>
-                  ) : null}
-                  <span className={inviteNotoSerifLight18Class}>
-                    {toAllCapsNoAccents("σας προσκαλούν στο γάμο τους.")}
+            <p className="w-full text-center" style={{ fontFamily: "var(--font-heading)" }}>
+              <span
+                className={`mx-auto flex w-full max-w-xl flex-col items-center ${compactPreview ? "gap-3" : "gap-4 sm:gap-6"}`}
+              >
+                {showInviteCoupleNames ? (
+                  <span className="flex w-full flex-col items-center gap-0">
+                    {inviteNameLeft ? (
+                      <span className={`${namesClass} block w-full text-center`}>
+                        {toAllCapsNoAccents(inviteNameLeft)}
+                      </span>
+                    ) : null}
+                    {showInviteAmpersand ? (
+                      <span className={`${namesClass} block w-full text-center`}>&</span>
+                    ) : null}
+                    {inviteNameRight ? (
+                      <span className={`${namesClass} block w-full text-center`}>
+                        {toAllCapsNoAccents(inviteNameRight)}
+                      </span>
+                    ) : null}
                   </span>
+                ) : null}
+                <span className={`${inviteMessageClass} block w-full text-center`}>
+                  {toAllCapsNoAccents(inviteMessage)}
                 </span>
-              ) : (
-                <>
-                  <span className={namesClass}>{toAllCapsNoAccents(namePair)}</span>{" "}
-                  <span className={inviteLineClass}>
-                    {t.inviteYouToAttend}their wedding.
-                  </span>
-                </>
-              )}
-            </p>
-            <KindlyRespondButton
-              className={
-                compactPreview ? "mt-4" : adminPreview ? "mt-6" : "mt-10 sm:mt-14 lg:hidden"
-              }
-            >
-              <span aria-hidden="true" className="text-[16px] font-normal leading-none">
-                ↓
               </span>
-              {toAllCapsNoAccents(t.kindlyRespondBelow)}
-            </KindlyRespondButton>
+            </p>
+            {!adminPreview ? (
+              <KindlyRespondButton
+                className={
+                  compactPreview ? "mt-4" : "mt-10 sm:mt-14 lg:hidden"
+                }
+              >
+                <span aria-hidden="true" className="text-[16px] font-normal leading-none">
+                  ↓
+                </span>
+                {toAllCapsNoAccents(kindlyRespondBelow)}
+              </KindlyRespondButton>
+            ) : null}
           </div>
         </div>
 
-        {!compactPreview && !adminPreview ? (
-          <div className="hidden w-full justify-center px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-6 lg:flex">
+        {!compactPreview ? (
+          <div
+            className={`w-full justify-center px-[var(--invite-gutter)] pb-6 ${adminPreview ? "flex" : "hidden lg:flex"}`}
+          >
             <KindlyRespondButton>
               <span aria-hidden="true" className="text-[16px] font-normal leading-none">
                 ↓
               </span>
-              {toAllCapsNoAccents(t.kindlyRespondBelow)}
+              {toAllCapsNoAccents(kindlyRespondBelow)}
             </KindlyRespondButton>
           </div>
         ) : null}

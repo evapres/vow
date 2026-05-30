@@ -6,7 +6,10 @@ import InvitationHeroBody from "@/app/components/InvitationHeroBody";
 import OutlineSilkButton from "@/app/components/OutlineSilkButton";
 import SolidSilkButton from "@/app/components/SolidSilkButton";
 import AdminInvitationFitPreview from "@/app/components/m3/AdminInvitationFitPreview";
-import { proportionalInvitationVars } from "@/lib/adminInvitationPreview";
+import {
+  ADMIN_PREVIEW_REFERENCE_WIDTH_PX,
+  proportionalInvitationVars,
+} from "@/lib/adminInvitationPreview";
 import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 import {
@@ -18,7 +21,7 @@ import {
 } from "@/lib/invitationDisplay";
 import { celebrateLocationLineFromParts } from "@/lib/weddingLocation";
 
-const adminPreviewFrameStyle = proportionalInvitationVars();
+const adminPreviewFrameStyle = proportionalInvitationVars(ADMIN_PREVIEW_REFERENCE_WIDTH_PX);
 
 const PREVIEW_SAMPLE_DETAILS_DATETIME = "Saturday, July 11 2026 at 8:00 PM";
 const PREVIEW_SAMPLE_DATE_FOR_HEADER = "2026-07-11";
@@ -129,7 +132,7 @@ function AdminInvitationLivePreview({
           <section
             id="rsvp"
             aria-label="RSVP preview"
-            className="m3-form-preview__rsvp w-[calc(100%+2*var(--invite-gutter))] max-w-none -mx-[var(--invite-gutter)]"
+            className="m3-form-preview__rsvp w-full max-w-full"
           >
             <div className="h-4 w-full shrink-0 bg-transparent" aria-hidden />
             <div

@@ -5,7 +5,14 @@ export type CoupleMonogramLetters = { left: string; right: string };
 export const GREEK_DEFAULT_MONOGRAM: CoupleMonogramLetters = { left: "Β", right: "Λ" };
 
 /** Split on common “two names” separators (e.g. "Nikos & Eva", "Nikos και Eva"). */
-const COUPLE_NAME_SPLIT = /\s*(?:&|\+|\/|\band\b|και)\s*/i;
+export const COUPLE_NAME_SPLIT = /\s*(?:&|\+|\/|\band\b|και)\s*/i;
+
+export function splitCoupleNameParts(coupleNames: string): string[] {
+  return coupleNames
+    .split(COUPLE_NAME_SPLIT)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
 
 export function defaultCoupleInitialsForLanguage(language: "en" | "el"): CoupleMonogramLetters {
   return language === "el" ? GREEK_DEFAULT_MONOGRAM : { left: "", right: "" };
@@ -20,7 +27,7 @@ export function normalizeCoupleInitialLetter(raw: string | null | undefined): st
 }
 
 export function monogramLettersFromCoupleNames(coupleNames: string): CoupleMonogramLetters | null {
-  const parts = coupleNames.split(COUPLE_NAME_SPLIT).map((p) => p.trim()).filter(Boolean);
+  const parts = splitCoupleNameParts(coupleNames);
   const left = parts[0]?.match(/\p{L}/u)?.[0];
   const right = parts[1]?.match(/\p{L}/u)?.[0];
   if (!left || !right) return null;

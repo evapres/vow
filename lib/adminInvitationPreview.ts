@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
-/** Renders the invite at this logical width, then scales down to fit the preview panel. */
-export const ADMIN_PREVIEW_REFERENCE_WIDTH_PX = 480;
+/** Logical invite width for the admin editor preview (desktop layout, then scaled to fit the panel). */
+export const ADMIN_PREVIEW_REFERENCE_WIDTH_PX = 880;
 
 /** Matches `InvitationFrame` — 15.5rem floor is why the couple photo reads large on the real invite. */
 const POLAROID_MIN_PX = 248;

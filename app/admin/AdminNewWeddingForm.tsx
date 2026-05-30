@@ -341,7 +341,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   }
 
   return (
-    <div className="m3-admin-form m3-admin-split grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,2fr)] lg:gap-12">
+    <div className="m3-admin-form m3-admin-split grid gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-12">
       <form onSubmit={handleSubmit} encType="multipart/form-data" className="min-w-0">
         <div className="m3-form-card space-y-6">
           {isEdit && editWeddingId ? <input type="hidden" name="wedding_id" value={editWeddingId} /> : null}

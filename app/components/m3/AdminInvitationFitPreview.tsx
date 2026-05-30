@@ -23,16 +23,18 @@ type AdminInvitationFitPreviewProps = {
   children: ReactNode;
 };
 
-const VIEWPORT_INSET_PX = 8;
+/** Matches `.m3-form-preview__viewport { padding: 8% }` — % padding uses the viewport width. */
+const VIEWPORT_PADDING_RATIO = 0.08;
 
 function measureFit(viewport: HTMLElement, content: HTMLElement): FitLayout | null {
-  const vw = viewport.clientWidth - VIEWPORT_INSET_PX * 2;
+  const pad = viewport.clientWidth * VIEWPORT_PADDING_RATIO;
+  const vw = viewport.clientWidth - pad * 2;
   const cw = content.scrollWidth;
   const ch = content.scrollHeight;
   if (vw <= 0 || cw <= 0 || ch <= 0) return null;
 
   const scale = Math.min(vw / cw, 1);
-  const viewportHeight = ch * scale + VIEWPORT_INSET_PX * 2;
+  const viewportHeight = ch * scale + pad * 2;
 
   return { scale, width: cw, height: ch, viewportHeight };
 }
