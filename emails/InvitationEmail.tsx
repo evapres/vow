@@ -18,6 +18,7 @@ import {
 } from "@/lib/coupleInitials";
 import type { InvitationLanguage } from "@/lib/invitationDisplay";
 import {
+  ENVELOPE_BLOCK_MIN_HEIGHT_PX,
   ENVELOPE_CARD_TEXT_PADDING_TOP_PCT,
   ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX,
   ENVELOPE_INVITE_LINE,
@@ -31,9 +32,6 @@ const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
 /** Design width for envelope hero — keeps % padding in sync with `background-size: 100% auto`. */
 const ENVELOPE_DISPLAY_W = ENVELOPE_LAYOUT_DESIGN_WIDTH_PX;
-
-/** Envelope art block height at {@link ENVELOPE_DISPLAY_W} (px). */
-const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
 
 /** Cream panel radius — matches site M3 form cards (`--m3-shape-corner-md`). */
 const EMAIL_SHELL_BORDER_RADIUS = "12px";
@@ -56,23 +54,27 @@ function envClampFont(px: number, minPx: number): string {
 const INVITATION_ENVELOPE_MOBILE_CSS = `
 .inv-email-shell {
   border-radius: ${EMAIL_SHELL_BORDER_RADIUS} !important;
-  overflow: hidden !important;
 }
 .inv-envelope-outer,
-.inv-envelope-link,
+.inv-envelope-link {
+  width: 100% !important;
+  max-width: ${ENVELOPE_DISPLAY_W}px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
 .inv-envelope-card {
   width: 100% !important;
   max-width: ${ENVELOPE_DISPLAY_W}px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   box-sizing: border-box !important;
-}
-.inv-envelope-card {
+  overflow: visible !important;
   background-size: 100% auto !important;
   background-repeat: no-repeat !important;
   background-position: center top !important;
-  aspect-ratio: ${ENVELOPE_DISPLAY_W} / ${ENVELOPE_BLOCK_MIN_HEIGHT_PX};
-  min-height: unset !important;
+  min-height: ${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px !important;
   height: auto !important;
 }
 .inv-envelope-card-cell {
@@ -166,7 +168,6 @@ const shellBase = {
   border: "0",
   borderStyle: "none",
   borderRadius: EMAIL_SHELL_BORDER_RADIUS,
-  overflow: "hidden" as const,
 } as const;
 
 const shellSolid = { ...shellBase, backgroundColor: "#fcfaf7" } as const;
@@ -222,7 +223,6 @@ const envelopeCardOuter = {
   marginLeft: "auto",
   marginRight: "auto",
   minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
-  aspectRatio: `${ENVELOPE_DISPLAY_W} / ${ENVELOPE_BLOCK_MIN_HEIGHT_PX}`,
   padding: "0",
   backgroundColor: "transparent",
   backgroundSize: "100% auto",
@@ -236,7 +236,7 @@ const envelopeCardCell = {
   paddingTop: `${ENVELOPE_CARD_TEXT_PADDING_TOP_PCT}%`,
   paddingLeft: envWidthPct(28),
   paddingRight: envWidthPct(28),
-  paddingBottom: envWidthPct(20),
+  paddingBottom: envWidthPct(28),
   textAlign: "center" as const,
   verticalAlign: "top" as const,
 } as const;

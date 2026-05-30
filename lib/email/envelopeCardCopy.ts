@@ -6,8 +6,17 @@ export const ENVELOPE_INVITE_LINE = "You are invited";
 /** Public asset served from the site root (blank card area on template). */
 export const ENVELOPE_TEMPLATE_FILENAME = "email-invite-envelope-template.png";
 
+/** Pixel size of {@link ENVELOPE_TEMPLATE_FILENAME} (keep in sync with the file in `/public`). */
+export const ENVELOPE_TEMPLATE_WIDTH_PX = 736;
+export const ENVELOPE_TEMPLATE_HEIGHT_PX = 981;
+
 /** Reference width for envelope HTML overlay (% padding and clamp fonts). */
 export const ENVELOPE_LAYOUT_DESIGN_WIDTH_PX = 520;
+
+/** Min block height when the art is scaled to {@link ENVELOPE_LAYOUT_DESIGN_WIDTH_PX} (`background-size: 100% auto`). */
+export const ENVELOPE_BLOCK_MIN_HEIGHT_PX = Math.round(
+  (ENVELOPE_LAYOUT_DESIGN_WIDTH_PX * ENVELOPE_TEMPLATE_HEIGHT_PX) / ENVELOPE_TEMPLATE_WIDTH_PX,
+);
 
 /** Inset before “You are invited” — % of envelope cell width (`.inv-envelope-card-cell`). */
 export const ENVELOPE_CARD_TEXT_PADDING_TOP_PCT = 55;
