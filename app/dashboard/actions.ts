@@ -8,7 +8,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 import { buildInvitationEmailProps, type WeddingLike } from "@/lib/email/buildInvitationEmailProps";
-import { INVITATION_EMAIL_WEDDING_SELECT } from "@/lib/email/loadInvitationEmailPreviewContext";
+import { loadWeddingForInvitationEmail } from "@/lib/email/loadWeddingForInvitationEmail";
 import { resolvePublicSiteOrigin } from "@/lib/resolvePublicSiteOrigin";
 import { sendInvitationEmail } from "@/lib/email/sendInvitationEmail";
 
@@ -295,17 +295,19 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
     redirect("/login");
   }
 
-  const { data: wedding, error: weddingError } = await supabase
-    .from("weddings")
-    .select(`id, ${INVITATION_EMAIL_WEDDING_SELECT}`)
-    .eq("id", weddingId)
-    .eq("user_id", user.id)
-    .single();
+  const { wedding, error: weddingError } = await loadWeddingForInvitationEmail(
+    supabase,
+    weddingId,
+    user.id,
+  );
 
   if (weddingError || !wedding) {
     redirect(
       `/dashboard/${weddingId}?household_error=` +
-        encodeURIComponent("You can only send invitations for your own weddings."),
+        encodeURIComponent(
+          weddingError?.message ??
+            "You can only send invitations for your own weddings.",
+        ),
     );
   }
 
@@ -333,7 +335,7 @@ export async function sendHouseholdInvitationEmail(formData: FormData) {
   try {
     await deliverHouseholdInvitationEmail({
       mutate,
-      wedding: wedding as WeddingLike,
+      wedding,
       weddingId,
       household: household as HouseholdInviteRow,
       origin,
@@ -367,17 +369,19 @@ export async function sendAllHouseholdInvitationEmails(formData: FormData) {
     redirect("/login");
   }
 
-  const { data: wedding, error: weddingError } = await supabase
-    .from("weddings")
-    .select(`id, ${INVITATION_EMAIL_WEDDING_SELECT}`)
-    .eq("id", weddingId)
-    .eq("user_id", user.id)
-    .single();
+  const { wedding, error: weddingError } = await loadWeddingForInvitationEmail(
+    supabase,
+    weddingId,
+    user.id,
+  );
 
   if (weddingError || !wedding) {
     redirect(
       `/dashboard/${weddingId}?household_error=` +
-        encodeURIComponent("You can only send invitations for your own weddings."),
+        encodeURIComponent(
+          weddingError?.message ??
+            "You can only send invitations for your own weddings.",
+        ),
     );
   }
 
@@ -418,7 +422,7 @@ export async function sendAllHouseholdInvitationEmails(formData: FormData) {
     try {
       await deliverHouseholdInvitationEmail({
         mutate,
-        wedding: wedding as WeddingLike,
+        wedding,
         weddingId,
         household,
         origin,

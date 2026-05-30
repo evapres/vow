@@ -4,7 +4,6 @@ import {
   Container,
   Head,
   Html,
-  Img,
   Link,
   Preview,
   Row,
@@ -12,7 +11,6 @@ import {
   Text,
 } from "@react-email/components";
 
-import { coupleEnvelopeInitialsAmpersand } from "@/lib/email/coupleEnvelopeInitials";
 import { ENVELOPE_INVITE_LINE } from "@/lib/email/envelopeCardCopy";
 import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 import { splitDetailsDateTimeLines } from "@/lib/invitationDisplay";
@@ -260,19 +258,6 @@ const envelopeStack = {
   backgroundColor: "transparent",
 } as const;
 
-const heroWrap = {
-  textAlign: "center" as const,
-  margin: "4px 0 14px",
-};
-
-const heroImg = {
-  display: "block",
-  margin: "0 auto",
-  maxWidth: "100%",
-  height: "auto",
-  border: "0",
-};
-
 const headline = {
   fontFamily: serif,
   fontSize: "36px",
@@ -338,8 +323,6 @@ export type InvitationEmailProps = {
   envelopeCardImageSrc?: string;
   /** Spaced date line on the card (e.g. from ISO wedding date); omit when unknown. */
   envelopeCardDateDisplay?: string;
-  /** Full absolute URL to the hero image (required for most inboxes). */
-  heroImageAbsoluteUrl?: string;
   /** Combined line like "Saturday, July 11, 2026 at 8:00 PM" — split into date + time when possible. */
   weddingDate?: string;
   weddingDateLine?: string;
@@ -354,8 +337,8 @@ export type InvitationEmailProps = {
   /** Fallback when {@link venueAddress} is empty; shown as a single line. */
   location?: string;
   inviteUrl?: string;
-  coupleInitialLeft?: string;
-  coupleInitialRight?: string;
+  /** Saved invitation monogram on the red envelope flap (e.g. "N & E"). Omitted when unset. */
+  envelopeMonogramDisplay?: string;
 };
 
 function defaultMapUrl(venueName: string, venueAddress: string): string {
@@ -369,7 +352,6 @@ export default function InvitationEmail({
   backgroundImageAbsoluteUrl,
   envelopeCardImageSrc,
   envelopeCardDateDisplay,
-  heroImageAbsoluteUrl,
   weddingDate = "Saturday, June 14",
   weddingDateLine,
   weddingTimeLine,
@@ -380,8 +362,7 @@ export default function InvitationEmail({
   mapUrl,
   location,
   inviteUrl = "https://example.com/invite/your-token",
-  coupleInitialLeft,
-  coupleInitialRight,
+  envelopeMonogramDisplay,
 }: InvitationEmailProps = {}) {
   const forAddressee = (householdName?.trim() || coupleNames).trim();
   const previewText = `Save the Date — ${coupleNames}`;
@@ -412,10 +393,10 @@ export default function InvitationEmail({
     mapHrefExplicit ||
     (venueTitle || venueAddr ? defaultMapUrl(venueTitle, venueAddr) : "");
 
-  const heroSrc = heroImageAbsoluteUrl?.trim();
   const bgUrl = backgroundImageAbsoluteUrl?.trim();
   const envelopeSrc = envelopeCardImageSrc?.trim();
   const cardDateLine = envelopeCardDateDisplay?.trim() || "—  —  —";
+  const envelopeMonogram = envelopeMonogramDisplay?.trim() || "";
 
   const bodyStyle = {
     ...pageBase,
@@ -467,12 +448,11 @@ export default function InvitationEmail({
                         <Text className="inv-envelope-date" style={envelopeOnCardDate}>
                           {cardDateLine}
                         </Text>
-                        <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
-                          {coupleEnvelopeInitialsAmpersand((coupleNames ?? "").trim() || "Couple", {
-                            left: coupleInitialLeft,
-                            right: coupleInitialRight,
-                          })}
-                        </Text>
+                        {envelopeMonogram ? (
+                          <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
+                            {envelopeMonogram}
+                          </Text>
+                        ) : null}
                       </Column>
                     </Row>
                   </Section>
@@ -484,17 +464,6 @@ export default function InvitationEmail({
               </Link>
             )}
           </Section>
-
-          {heroSrc ? (
-            <Section style={heroWrap}>
-              <Img
-                src={heroSrc}
-                width={480}
-                alt={`Save the Date — ${coupleNames}`}
-                style={heroImg}
-              />
-            </Section>
-          ) : null}
 
           <Text style={headline}>Save the Date</Text>
           <Text style={detail}>{dateLine}</Text>

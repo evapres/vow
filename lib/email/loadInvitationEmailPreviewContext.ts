@@ -1,8 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Supabase `.select()` fragment — keep in sync with {@link buildInvitationEmailProps} wedding shape. */
-export const INVITATION_EMAIL_WEDDING_SELECT =
-  "couple_names, wedding_date, language, location, venue_name, church_name, street_address, rsvp_deadline, hero_image_url" as const;
+import type { WeddingLike } from "./buildInvitationEmailProps";
+import { loadWeddingForInvitationEmail } from "./loadWeddingForInvitationEmail";
+
+export {
+  INVITATION_EMAIL_WEDDING_SELECT,
+  INVITATION_EMAIL_WEDDING_SELECT_CORE,
+} from "./loadWeddingForInvitationEmail";
 
 /** Rows needed for {@link buildInvitationEmailProps} on the invitation preview / embed routes. */
 export async function loadInvitationEmailPreviewContext(
@@ -11,25 +15,14 @@ export async function loadInvitationEmailPreviewContext(
   weddingId: string,
   householdId?: string | null,
 ): Promise<{
-  wedding: {
-    couple_names: string | null;
-    wedding_date: string | null;
-    language: string | null;
-    location: string | null;
-    venue_name: string | null;
-    church_name: string | null;
-    street_address: string | null;
-    rsvp_deadline: string | null;
-    hero_image_url: string | null;
-  };
+  wedding: WeddingLike;
   household: { household_name: string | null; invite_token: string | null } | null;
 } | null> {
-  const { data: wedding, error: weddingError } = await supabase
-    .from("weddings")
-    .select(INVITATION_EMAIL_WEDDING_SELECT)
-    .eq("id", weddingId)
-    .eq("user_id", userId)
-    .single();
+  const { wedding, error: weddingError } = await loadWeddingForInvitationEmail(
+    supabase,
+    weddingId,
+    userId,
+  );
 
   if (weddingError || !wedding) return null;
 

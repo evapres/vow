@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import InvitationFrame from "@/app/components/InvitationFrame";
+import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
+
 import LoginEmailHelp from "./LoginEmailHelp";
 import LoginForm from "./LoginForm";
 
@@ -25,39 +28,55 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const returnPath = next?.startsWith("/") && !next.startsWith("//") ? next : null;
 
   return (
-    <main className="full-width-section app-shell-canvas min-h-screen py-16 text-[#1A1A1A]">
-      <div className="main-content">
-        <div className="w-full max-w-sm">
-          <h1 className="text-xl font-medium">Log in</h1>
-          <p className="mt-2 text-sm text-[#1A1A1A]/70">
-            Enter your email and we&apos;ll send a magic link. No password required.
-          </p>
+    <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
+      <div className="m3-admin-form flex min-h-full flex-col bg-transparent font-sans text-[var(--m3-on-background)]">
+        <main className="admin-shell-main mx-auto w-full max-w-md">
+          <div className="mb-8 border-b border-[var(--m3-outline-variant)] pb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--m3-on-surface-variant)]">
+              Admin
+            </p>
+            <h1 className="m3-page-title mt-2">Log in</h1>
+            <p className="mt-2 text-sm text-[var(--m3-on-surface-variant)]">
+              Enter your email and we&apos;ll send a magic link. No password required.
+            </p>
+          </div>
 
           {errorMessage ? (
-            <p className="mt-4 text-sm leading-relaxed text-red-700">{errorMessage}</p>
+            <div className="m3-banner m3-banner--error" role="alert">
+              <p className="m3-banner__detail">{errorMessage}</p>
+            </div>
           ) : null}
 
           {returnPath ? (
-            <p className="mt-4 text-sm text-[#1A1A1A]/70">
-              After sign-in you will return to your dashboard.
-            </p>
+            <div className="m3-banner m3-banner--info">
+              <p className="m3-banner__detail">After sign-in you will return to your dashboard.</p>
+            </div>
           ) : null}
 
-          <div className="mt-8">
-            <Suspense fallback={<p className="text-sm text-[#1A1A1A]/70">Loading…</p>}>
+          <div className="m3-form-card">
+            <Suspense
+              fallback={
+                <p className="text-sm text-[var(--m3-on-surface-variant)]" aria-busy="true">
+                  Loading…
+                </p>
+              }
+            >
               <LoginForm />
             </Suspense>
           </div>
 
           <LoginEmailHelp />
 
-          <p className="mt-8 text-sm">
-            <Link href="/" className="text-[#1A1A1A]/80 underline underline-offset-4 hover:text-[#1A1A1A]">
+          <p className="mt-8">
+            <Link
+              href="/"
+              className="text-sm font-medium text-[var(--m3-primary)] underline underline-offset-4 hover:opacity-80"
+            >
               Back to site
             </Link>
           </p>
-        </div>
+        </main>
       </div>
-    </main>
+    </InvitationFrame>
   );
 }

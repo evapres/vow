@@ -4,6 +4,9 @@ export type CoupleMonogramLetters = { left: string; right: string };
 
 export const GREEK_DEFAULT_MONOGRAM: CoupleMonogramLetters = { left: "Β", right: "Λ" };
 
+/** Split on common “two names” separators (e.g. "Nikos & Eva", "Nikos και Eva"). */
+const COUPLE_NAME_SPLIT = /\s*(?:&|\+|\/|\band\b|και)\s*/i;
+
 export function defaultCoupleInitialsForLanguage(language: "en" | "el"): CoupleMonogramLetters {
   return language === "el" ? GREEK_DEFAULT_MONOGRAM : { left: "", right: "" };
 }
@@ -17,11 +20,26 @@ export function normalizeCoupleInitialLetter(raw: string | null | undefined): st
 }
 
 export function monogramLettersFromCoupleNames(coupleNames: string): CoupleMonogramLetters | null {
-  const parts = coupleNames.split("&").map((p) => p.trim());
+  const parts = coupleNames.split(COUPLE_NAME_SPLIT).map((p) => p.trim()).filter(Boolean);
   const left = parts[0]?.match(/\p{L}/u)?.[0];
   const right = parts[1]?.match(/\p{L}/u)?.[0];
   if (!left || !right) return null;
   return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
+}
+
+export function formatCoupleMonogramDisplay(letters: CoupleMonogramLetters): string {
+  return `${letters.left} & ${letters.right}`;
+}
+
+/** Monogram from saved invitation fields only — never language/name defaults (used in emails). */
+export function formatSavedCoupleMonogramDisplay(input: {
+  coupleInitialLeft?: string | null;
+  coupleInitialRight?: string | null;
+}): string | undefined {
+  const left = normalizeCoupleInitialLetter(input.coupleInitialLeft);
+  const right = normalizeCoupleInitialLetter(input.coupleInitialRight);
+  if (!left || !right) return undefined;
+  return formatCoupleMonogramDisplay({ left, right });
 }
 
 export function resolveCoupleMonogramLetters(input: {

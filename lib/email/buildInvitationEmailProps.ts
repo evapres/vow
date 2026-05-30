@@ -9,7 +9,7 @@ import {
   splitDetailsDateTimeLines,
 } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
-import { resolveCoupleMonogramLetters } from "../coupleInitials";
+import { formatSavedCoupleMonogramDisplay } from "../coupleInitials";
 import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
 export type WeddingLike = {
@@ -22,7 +22,6 @@ export type WeddingLike = {
   church_name?: string | null;
   street_address?: string | null;
   rsvp_deadline: string | null;
-  hero_image_url: string | null;
   couple_initial_left?: string | null;
   couple_initial_right?: string | null;
 };
@@ -68,20 +67,12 @@ export async function buildInvitationEmailProps(input: {
   const inviteUrl =
     siteOrigin && token ? `${siteOrigin}/invite/${token}` : siteOrigin ? `${siteOrigin}/` : "https://example.com/";
 
-  const hero = wedding.hero_image_url?.trim();
-  const heroImageAbsoluteUrl =
-    hero && (hero.startsWith("http://") || hero.startsWith("https://") || hero.startsWith("data:"))
-      ? hero
-      : undefined;
-
   const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
   const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(siteOrigin);
   const envelopeCardDateDisplay = formatEnvelopeCardDate(wedding.wedding_date) || undefined;
-  const monogram = resolveCoupleMonogramLetters({
-    coupleNames,
+  const envelopeMonogramDisplay = formatSavedCoupleMonogramDisplay({
     coupleInitialLeft: wedding.couple_initial_left,
     coupleInitialRight: wedding.couple_initial_right,
-    language: wedding.language === "el" ? "el" : "en",
   });
 
   return {
@@ -90,7 +81,6 @@ export async function buildInvitationEmailProps(input: {
     backgroundImageAbsoluteUrl,
     envelopeCardImageSrc,
     envelopeCardDateDisplay,
-    heroImageAbsoluteUrl,
     weddingDate: combined || "Saturday, June 14",
     weddingDateLine: dateLine,
     weddingTimeLine: timeLine || undefined,
@@ -100,7 +90,6 @@ export async function buildInvitationEmailProps(input: {
     venueAddress: locationDisplayLine || undefined,
     location: locForEmailOut || undefined,
     inviteUrl,
-    coupleInitialLeft: monogram?.left,
-    coupleInitialRight: monogram?.right,
+    envelopeMonogramDisplay,
   };
 }

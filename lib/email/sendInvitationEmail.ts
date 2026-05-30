@@ -33,6 +33,12 @@ export async function sendInvitationEmail({ to, emailProps }: SendInvitationEmai
   });
 
   if (error) {
-    throw new Error(error.message ?? "Resend failed to send invitation email");
+    const detail = error.message ?? "Resend failed to send invitation email";
+    if (detail.toLowerCase().includes("validation") || detail.toLowerCase().includes("domain")) {
+      throw new Error(
+        `${detail} Check that invitations@thevow.vip is verified in Resend and RESEND_API_KEY is set on Vercel.`,
+      );
+    }
+    throw new Error(detail);
   }
 }
