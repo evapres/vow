@@ -13,13 +13,24 @@ export const ENVELOPE_TEMPLATE_HEIGHT_PX = 981;
 /** Reference width for envelope HTML overlay (% padding and clamp fonts). */
 export const ENVELOPE_LAYOUT_DESIGN_WIDTH_PX = 520;
 
-/** Min block height when the art is scaled to {@link ENVELOPE_LAYOUT_DESIGN_WIDTH_PX} (`background-size: 100% auto`). */
+/** Scales the envelope PNG in the email block (1 = full width; below 1 = shorter/smaller art). */
+export const ENVELOPE_ART_SCALE = 0.9;
+
+/** `background-size` for the envelope hero — width % must match {@link ENVELOPE_ART_SCALE}. */
+export const ENVELOPE_BACKGROUND_SIZE = `${Math.round(ENVELOPE_ART_SCALE * 100)}% auto` as const;
+
+/** Trims empty transparent pixels below the art in the PNG (reduces gap before “Save the Date”). */
+export const ENVELOPE_BLOCK_HEIGHT_TRIM = 0.88;
+
+/** Min block height when the art is scaled to layout width × {@link ENVELOPE_ART_SCALE}. */
 export const ENVELOPE_BLOCK_MIN_HEIGHT_PX = Math.round(
-  (ENVELOPE_LAYOUT_DESIGN_WIDTH_PX * ENVELOPE_TEMPLATE_HEIGHT_PX) / ENVELOPE_TEMPLATE_WIDTH_PX,
+  ((ENVELOPE_LAYOUT_DESIGN_WIDTH_PX * ENVELOPE_ART_SCALE * ENVELOPE_TEMPLATE_HEIGHT_PX) /
+    ENVELOPE_TEMPLATE_WIDTH_PX) *
+    ENVELOPE_BLOCK_HEIGHT_TRIM,
 );
 
 /** Inset before “You are invited” — % of envelope cell width (`.inv-envelope-card-cell`). */
-export const ENVELOPE_CARD_TEXT_PADDING_TOP_PCT = 55;
+export const ENVELOPE_CARD_TEXT_PADDING_TOP_PCT = 34;
 
 /** Same inset in px at {@link ENVELOPE_LAYOUT_DESIGN_WIDTH_PX} (OG image overlay). */
 export const ENVELOPE_CARD_TEXT_PADDING_TOP_PX = Math.round(
@@ -27,7 +38,7 @@ export const ENVELOPE_CARD_TEXT_PADDING_TOP_PX = Math.round(
 );
 
 /** Gap from date line to initials on the burgundy flap (px at design width). */
-export const ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX = 112;
+export const ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX = 98;
 
 export function envelopeTemplateImageAbsoluteUrl(siteOrigin: string): string | undefined {
   const o = siteOrigin.trim().replace(/\/$/, "");

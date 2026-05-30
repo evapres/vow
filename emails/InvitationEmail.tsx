@@ -18,6 +18,7 @@ import {
 } from "@/lib/coupleInitials";
 import type { InvitationLanguage } from "@/lib/invitationDisplay";
 import {
+  ENVELOPE_BACKGROUND_SIZE,
   ENVELOPE_BLOCK_MIN_HEIGHT_PX,
   ENVELOPE_CARD_TEXT_PADDING_TOP_PCT,
   ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX,
@@ -55,14 +56,25 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
 .inv-email-shell {
   border-radius: ${EMAIL_SHELL_BORDER_RADIUS} !important;
 }
-.inv-envelope-outer,
+.inv-envelope-outer {
+  width: 100% !important;
+  max-width: ${ENVELOPE_DISPLAY_W}px !important;
+  margin: 0 auto !important;
+  padding-bottom: 0 !important;
+  box-sizing: border-box !important;
+}
+.inv-envelope-stack {
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .inv-envelope-link {
   width: 100% !important;
   max-width: ${ENVELOPE_DISPLAY_W}px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  margin: 0 auto !important;
+  display: block !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
   box-sizing: border-box !important;
-  overflow: visible !important;
 }
 .inv-envelope-card {
   width: 100% !important;
@@ -71,7 +83,7 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
   margin-right: auto !important;
   box-sizing: border-box !important;
   overflow: visible !important;
-  background-size: 100% auto !important;
+  background-size: ${ENVELOPE_BACKGROUND_SIZE} !important;
   background-repeat: no-repeat !important;
   background-position: center top !important;
   min-height: ${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px !important;
@@ -83,7 +95,7 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
   padding-top: ${ENVELOPE_CARD_TEXT_PADDING_TOP_PCT}% !important;
   padding-left: ${envWidthPct(28)} !important;
   padding-right: ${envWidthPct(28)} !important;
-  padding-bottom: ${envWidthPct(20)} !important;
+  padding-bottom: 0 !important;
   text-align: center !important;
   vertical-align: top !important;
 }
@@ -100,8 +112,8 @@ const INVITATION_ENVELOPE_MOBILE_CSS = `
 }
 /* Link wrapper sets color:#111 — flap initials must stay cream on burgundy. */
 .inv-email-headline {
-  margin-top: 5% !important;
-  margin-bottom: 5% !important;
+  margin-top: 0 !important;
+  margin-bottom: 22px !important;
 }
 .inv-envelope-couple {
   color: #f5efe8 !important;
@@ -201,7 +213,7 @@ const envelopeCardLink = {
 
 const envelopeHeroWrap = {
   textAlign: "center" as const,
-  margin: "0 auto 4px",
+  margin: "0 auto 0",
   maxWidth: "520px",
   backgroundColor: "transparent",
 } as const;
@@ -225,7 +237,7 @@ const envelopeCardOuter = {
   minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
   padding: "0",
   backgroundColor: "transparent",
-  backgroundSize: "100% auto",
+  backgroundSize: ENVELOPE_BACKGROUND_SIZE,
   backgroundRepeat: "no-repeat" as const,
   backgroundPosition: "center top",
   textAlign: "center" as const,
@@ -236,7 +248,7 @@ const envelopeCardCell = {
   paddingTop: `${ENVELOPE_CARD_TEXT_PADDING_TOP_PCT}%`,
   paddingLeft: envWidthPct(28),
   paddingRight: envWidthPct(28),
-  paddingBottom: envWidthPct(28),
+  paddingBottom: "0",
   textAlign: "center" as const,
   verticalAlign: "top" as const,
 } as const;
@@ -307,8 +319,8 @@ const headline = {
   fontWeight: 400 as const,
   color: "#111111",
   textAlign: "center" as const,
-  marginTop: "5%",
-  marginBottom: "5%",
+  marginTop: "0",
+  marginBottom: "22px",
   marginLeft: "0",
   marginRight: "0",
   lineHeight: "1.15",
@@ -422,7 +434,7 @@ export default function InvitationEmail({
   invitationLanguage = "en",
 }: InvitationEmailProps = {}) {
   const forAddressee = (householdName?.trim() || coupleNames).trim();
-  const previewText = `Save the Date — ${coupleNames}`;
+  const previewText = "Save the Date";
 
   const splitFromCombined = splitDetailsDateTimeLines(weddingDate);
   const dateLine = weddingDateLine ?? splitFromCombined.dateLine;
@@ -498,7 +510,7 @@ export default function InvitationEmail({
 
           <Section className="inv-envelope-outer" style={envelopeHeroWrap}>
             {envelopeSrc ? (
-              <Section style={envelopeStack}>
+              <Section className="inv-envelope-stack" style={envelopeStack}>
                 <Link className="inv-open-card-cta" href={inviteUrl} style={openCardCta}>
                   Open Card
                 </Link>
