@@ -9,7 +9,7 @@ export const INVITATION_EMAIL_WEDDING_SELECT_CORE =
   "couple_names, wedding_date, language, location, venue_name, church_name, street_address, rsvp_deadline" as const;
 
 export const INVITATION_EMAIL_WEDDING_SELECT =
-  "couple_names, wedding_date, language, location, venue_name, church_name, street_address, rsvp_deadline, couple_initial_left, couple_initial_right" as const;
+  "couple_names, wedding_date, language, location, venue_name, church_name, street_address, rsvp_deadline, couple_initial_left, couple_initial_right, hero_image_url" as const;
 
 const SELECT_ATTEMPTS = [
   INVITATION_EMAIL_WEDDING_SELECT,

@@ -5,7 +5,7 @@ import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
 
 export type SendInvitationEmailInput = {
   to: string;
-  /** Same props as `/dev/email-preview/embed` (built with {@link buildInvitationEmailProps}). */
+  /** Same props as dashboard email preview embed (built with {@link buildInvitationEmailProps}). */
   emailProps: InvitationEmailProps;
 };
 
@@ -23,12 +23,14 @@ export async function sendInvitationEmail({ to, emailProps }: SendInvitationEmai
 
   const html = await renderInvitationEmailHtml(emailProps);
   const couple = (emailProps.coupleNames ?? "").trim() || "Couple";
+  const datePart = emailProps.subjectDateDisplay?.trim();
+  const subject = datePart ? `You’re invited — ${datePart}` : `You’re invited — ${couple}`;
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
     from: "VOW <invitations@thevow.vip>",
     to: to.trim(),
-    subject: `You’re invited — ${couple}`,
+    subject,
     html,
   });
 

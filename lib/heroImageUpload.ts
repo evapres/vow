@@ -10,10 +10,10 @@ export async function persistHeroImageFile(
   file: File,
 ): Promise<string> {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Hero image must be an image file.");
+    throw new Error("Couple image must be an image file.");
   }
   if (file.size > MAX_HERO_BYTES) {
-    throw new Error("Hero image is too large (max 4MB).");
+    throw new Error("Couple image is too large (max 4MB).");
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
@@ -27,7 +27,7 @@ export async function persistHeroImageFile(
 
   if (error) {
     throw new Error(
-      `Could not upload hero image. Run the wedding-heroes storage migration in Supabase, then try again. (${error.message})`,
+      `Could not upload couple image. Run the wedding-heroes storage migration in Supabase, then try again. (${error.message})`,
     );
   }
 

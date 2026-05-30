@@ -197,13 +197,13 @@ export async function createWedding(formData: FormData) {
       if (heroError) {
         redirect(
           "/admin/new?error=" +
-            encodeURIComponent(heroError.message ?? "Invitation saved but hero image could not be stored."),
+            encodeURIComponent(heroError.message ?? "Invitation saved but couple image could not be stored."),
         );
       }
     } catch (e) {
       redirect(
         "/admin/new?error=" +
-          encodeURIComponent(e instanceof Error ? e.message : "Invitation saved but hero image upload failed."),
+          encodeURIComponent(e instanceof Error ? e.message : "Invitation saved but couple image upload failed."),
       );
     }
   }
@@ -297,7 +297,7 @@ export async function updateWedding(formData: FormData) {
     } catch (e) {
       redirect(
         `/admin/edit/${weddingId}?error=` +
-          encodeURIComponent(e instanceof Error ? e.message : "Hero image upload failed."),
+          encodeURIComponent(e instanceof Error ? e.message : "Couple image upload failed."),
       );
     }
   } else if (clearHero) {

@@ -21,7 +21,7 @@ export default function HeroSplit({
 }: HeroSplitProps) {
   return (
     <section
-      aria-label="Invitation hero"
+      aria-label="Couple image"
       className="w-[calc(100%+2*var(--invite-gutter,12px))] max-w-none -mx-[var(--invite-gutter,12px)]"
     >
       <div className="flex w-full flex-col bg-[#181818] lg:h-[clamp(360px,38vw,560px)] lg:flex-row lg:items-center lg:gap-x-8">

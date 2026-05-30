@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import RsvpsDashboardView from "../RsvpsDashboardView";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardHouseholdRows } from "../../../lib/rsvps/dashboard";
+import { publicHeroImageUrlForShare } from "@/lib/invite/heroImageForShare";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ type PageProps = {
     invitation_email_sent?: string;
     bulk_invites_sent?: string;
     household_error?: string;
+    rsvp_updated?: string;
   }>;
 };
 
@@ -49,7 +51,9 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
 
   const { data: wedding, error: weddingError } = await supabase
     .from("weddings")
-    .select("id, couple_names, wedding_date, venue_name, church_name, street_address, rsvp_deadline")
+    .select(
+      "id, couple_names, wedding_date, venue_name, church_name, street_address, rsvp_deadline, hero_image_url",
+    )
     .eq("id", weddingId)
     .eq("user_id", user.id)
     .single();
@@ -73,17 +77,20 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
   const householdDeleted = sp.household_deleted === "1";
   const invitationEmailSent = sp.invitation_email_sent === "1";
   const bulkInvitesSent = sp.bulk_invites_sent ? Number.parseInt(sp.bulk_invites_sent, 10) : 0;
+  const rsvpUpdated = sp.rsvp_updated === "1";
   return (
     <RsvpsDashboardView
       households={households}
       weddingId={weddingId}
       householdAdded={householdAdded}
       householdUpdated={householdUpdated}
+      rsvpUpdated={rsvpUpdated}
       householdDeleted={householdDeleted}
       invitationEmailSent={invitationEmailSent}
       bulkInvitesSent={Number.isFinite(bulkInvitesSent) && bulkInvitesSent > 0 ? bulkInvitesSent : undefined}
       householdError={householdError}
       inviteBaseUrl={siteOrigin}
+      shareHeroImageUrl={publicHeroImageUrlForShare(wedding.hero_image_url) ?? null}
       coupleNames={wedding.couple_names}
     />
   );

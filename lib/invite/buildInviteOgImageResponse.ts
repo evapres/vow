@@ -1,0 +1,91 @@
+import path from "node:path";
+
+import { loadOwnedWeddingMedia } from "@/lib/adminWeddingMedia";
+import { formatEnvelopeCardDate } from "@/lib/email/envelopeCardCopy";
+import { formatSavedCoupleMonogramDisplay } from "@/lib/coupleInitials";
+
+import { publicHeroImageUrlForShare } from "./heroImageForShare";
+import { getInviteByToken } from "./loadInviteByToken";
+import { renderInviteOgImage } from "./renderInviteOgImage";
+
+function imageBytesResponse(bytes: Buffer, contentType: string): Response {
+  const type = contentType.split(";")[0]?.trim() || "image/jpeg";
+  return new Response(new Uint8Array(bytes), {
+    status: 200,
+    headers: {
+      "Content-Type": type,
+      "Content-Length": String(bytes.length),
+      "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+    },
+  });
+}
+
+async function heroImageBytesForShare(wedding: {
+  id: string;
+  hero_image_url: string | null;
+}): Promise<{ bytes: Buffer; contentType: string } | null> {
+  const publicUrl = publicHeroImageUrlForShare(wedding.hero_image_url);
+  if (publicUrl) {
+    try {
+      const res = await fetch(publicUrl, { cache: "no-store" });
+      if (res.ok) {
+        const bytes = Buffer.from(await res.arrayBuffer());
+        if (bytes.length > 0) {
+          return {
+            bytes,
+            contentType: res.headers.get("content-type") || "image/jpeg",
+          };
+        }
+      }
+    } catch (error) {
+      console.error("[heroImageBytesForShare] fetch", error);
+    }
+  }
+
+  const raw = wedding.hero_image_url?.trim();
+  if (raw?.startsWith("data:")) {
+    try {
+      const media = await loadOwnedWeddingMedia(wedding.id, "hero");
+      if (media && !("redirect" in media)) {
+        return { bytes: media.bytes, contentType: media.contentType };
+      }
+    } catch (error) {
+      console.error("[heroImageBytesForShare] data url", error);
+    }
+  }
+
+  return null;
+}
+
+/** PNG/JPEG for share previews and Web Share — uses the couple image when set. */
+export async function buildInviteOgImageResponse(token: string): Promise<Response | null> {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+
+  const loaded = await getInviteByToken(trimmed);
+  if (!loaded) return null;
+
+  const { wedding } = loaded;
+
+  const hero = await heroImageBytesForShare(wedding);
+  if (hero) {
+    return imageBytesResponse(hero.bytes, hero.contentType);
+  }
+
+  const publicDir = path.join(process.cwd(), "public");
+
+  try {
+    const png = await renderInviteOgImage({
+      publicDir,
+      envelopeCardDateDisplay: formatEnvelopeCardDate(wedding.wedding_date) || "—  —  —",
+      envelopeMonogramDisplay: formatSavedCoupleMonogramDisplay({
+        coupleInitialLeft: wedding.couple_initial_left,
+        coupleInitialRight: wedding.couple_initial_right,
+      }),
+    });
+    return imageBytesResponse(png, "image/png");
+  } catch (error) {
+    console.error("[buildInviteOgImageResponse]", error);
+    return null;
+  }
+}

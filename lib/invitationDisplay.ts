@@ -23,6 +23,31 @@ export function formatHeaderDateLabel(
   return toAllCapsNoAccents(formatted);
 }
 
+/** Wedding date for invitation email subject, e.g. "11 July 2026". */
+export function formatInvitationEmailSubjectDate(input: string | null | undefined): string {
+  if (!input?.trim()) return "";
+  const parsed = parseWeddingStoredForDisplay(input.trim());
+  if (parsed) {
+    return new Intl.DateTimeFormat("en-GB", {
+      ...weddingDisplayZone,
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(parsed.instant);
+  }
+  const isoMatch = input.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!isoMatch) return "";
+  const dateOnly = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const fallback = parseWeddingStoredForDisplay(dateOnly);
+  if (!fallback) return "";
+  return new Intl.DateTimeFormat("en-GB", {
+    ...weddingDisplayZone,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(fallback.instant);
+}
+
 /** Uppercase display helper: remove all Unicode combining marks (accents), then uppercase. */
 export function toAllCapsNoAccents(value: string | null | undefined) {
   return (value ?? "")

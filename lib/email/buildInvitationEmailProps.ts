@@ -3,8 +3,10 @@ import {
   envelopeTemplateImageAbsoluteUrl,
   formatEnvelopeCardDate,
 } from "./envelopeCardCopy";
+import { EMAIL_FABRIC_BACKGROUND_PATH } from "./emailPublicAssets";
 import {
   formatDetailsDateTime,
+  formatInvitationEmailSubjectDate,
   formatRsvpBeforeEmailLine,
   splitDetailsDateTimeLines,
 } from "../invitationDisplay";
@@ -24,6 +26,7 @@ export type WeddingLike = {
   rsvp_deadline: string | null;
   couple_initial_left?: string | null;
   couple_initial_right?: string | null;
+  hero_image_url?: string | null;
 };
 
 type HouseholdLike = {
@@ -67,7 +70,9 @@ export async function buildInvitationEmailProps(input: {
   const inviteUrl =
     siteOrigin && token ? `${siteOrigin}/invite/${token}` : siteOrigin ? `${siteOrigin}/` : "https://example.com/";
 
-  const backgroundImageAbsoluteUrl = siteOrigin ? `${siteOrigin}/email-fabric-background.png` : undefined;
+  const backgroundImageAbsoluteUrl = siteOrigin
+    ? `${siteOrigin.replace(/\/$/, "")}${EMAIL_FABRIC_BACKGROUND_PATH}`
+    : undefined;
   const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(siteOrigin);
   const envelopeCardDateDisplay = formatEnvelopeCardDate(wedding.wedding_date) || undefined;
   const envelopeMonogramDisplay = formatSavedCoupleMonogramDisplay({
@@ -91,5 +96,6 @@ export async function buildInvitationEmailProps(input: {
     location: locForEmailOut || undefined,
     inviteUrl,
     envelopeMonogramDisplay,
+    subjectDateDisplay: formatInvitationEmailSubjectDate(wedding.wedding_date) || undefined,
   };
 }

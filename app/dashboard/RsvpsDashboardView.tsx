@@ -2,13 +2,20 @@ import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
 import InviteShareActions from "./InviteShareActions";
-import { deleteHousehold, sendAllHouseholdInvitationEmails, sendHouseholdInvitationEmail, updateHousehold } from "./actions";
+import {
+  deleteHousehold,
+  sendAllHouseholdInvitationEmails,
+  sendHouseholdInvitationEmail,
+  updateHousehold,
+  updateHouseholdRsvp,
+} from "./actions";
 import RsvpRealtimeRefresh from "./RsvpRealtimeRefresh";
-import type { DashboardHouseholdRow, HouseholdRsvpStatus } from "../../lib/rsvps/dashboard";
+import type { DashboardHouseholdRow } from "../../lib/rsvps/dashboard";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
 import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
 import InvitationWorkflowTabs from "@/app/components/admin/InvitationWorkflowTabs";
+import M3FilledSelect from "@/app/components/m3/M3FilledSelect";
 import M3FilledTextField from "@/app/components/m3/M3FilledTextField";
 
 type RsvpsDashboardViewProps = {
@@ -16,6 +23,7 @@ type RsvpsDashboardViewProps = {
   weddingId: string;
   householdAdded?: boolean;
   householdUpdated?: boolean;
+  rsvpUpdated?: boolean;
   householdDeleted?: boolean;
   invitationEmailSent?: boolean;
   /** Number of invitations sent in the last bulk send (from `bulk_invites_sent` query param). */
@@ -23,10 +31,11 @@ type RsvpsDashboardViewProps = {
   householdError?: string | null;
   /** e.g. https://yoursite.com — optional; falls back to relative path only. */
   inviteBaseUrl?: string;
+  shareHeroImageUrl?: string | null;
   coupleNames?: string | null;
 };
 
-function attendingLabel(status: HouseholdRsvpStatus): string {
+function attendingLabel(status: DashboardHouseholdRow["status"]): string {
   if (status === "attending") return "Attending";
   if (status === "not_attending") return "Not attending";
   return "No response yet";
@@ -43,11 +52,13 @@ export default function RsvpsDashboardView({
   weddingId,
   householdAdded,
   householdUpdated,
+  rsvpUpdated,
   householdDeleted,
   invitationEmailSent,
   bulkInvitesSent,
   householdError,
   inviteBaseUrl,
+  shareHeroImageUrl,
   coupleNames,
 }: RsvpsDashboardViewProps) {
   const counts = households.reduce(
@@ -87,6 +98,11 @@ export default function RsvpsDashboardView({
               Guest household updated.
             </div>
           ) : null}
+          {rsvpUpdated ? (
+            <div className="m3-banner m3-banner--success" role="status">
+              RSVP status saved.
+            </div>
+          ) : null}
           {householdDeleted ? (
             <div className="m3-banner m3-banner--success" role="status">
               Guest household removed.
@@ -111,8 +127,7 @@ export default function RsvpsDashboardView({
             <div className="m3-banner m3-banner--success" role="status">
               <p className="m3-banner__title">Guest added.</p>
               <p className="m3-banner__detail">
-                Share each link via Messenger or Instagram in the guest list, or use Send all invitations for
-                email.
+                Use the share buttons in the guest list, or Send all invitations for email.
               </p>
             </div>
           ) : null}
@@ -137,7 +152,7 @@ export default function RsvpsDashboardView({
               <p className="m3-data-card__title">Guest list</p>
               <div className="m3-data-card__actions">
                 <Link
-                  href={`/dev/email-preview?weddingId=${encodeURIComponent(weddingId)}`}
+                  href={`/dashboard/${encodeURIComponent(weddingId)}/email-preview`}
                   className="m3-btn m3-btn--outlined m3-btn--compact"
                 >
                   Email preview
@@ -185,23 +200,54 @@ export default function RsvpsDashboardView({
                               <p className="m3-table__muted">Invited: {row.invitedCount}</p>
                             ) : null}
                             {row.inviteToken ? (
-                              <>
-                                <p className="m3-table__mono m3-table__muted">
-                                  {inviteBaseUrl
-                                    ? `${inviteBaseUrl}/invite/${row.inviteToken}`
-                                    : `/invite/${row.inviteToken}`}
-                                </p>
-                                <InviteShareActions
-                                  inviteToken={row.inviteToken}
-                                  inviteBaseUrl={inviteBaseUrl}
-                                  coupleNames={coupleNames}
-                                  householdName={row.householdName}
-                                />
-                              </>
+                              <InviteShareActions
+                                inviteToken={row.inviteToken}
+                                inviteBaseUrl={inviteBaseUrl}
+                                shareHeroImageUrl={shareHeroImageUrl}
+                              />
                             ) : null}
                           </div>
                         </td>
-                        <td>{attendingLabel(row.status)}</td>
+                        <td>
+                          {attendingLabel(row.status)}
+                          <details className="m3-panel mt-2">
+                            <summary className="m3-panel__summary">Edit RSVP</summary>
+                            <div className="m3-panel__body">
+                              <form action={updateHouseholdRsvp} className="space-y-3">
+                                <input type="hidden" name="wedding_id" value={weddingId} />
+                                <input type="hidden" name="household_id" value={row.householdId} />
+                                <M3FilledSelect
+                                  name="status"
+                                  label="RSVP status"
+                                  defaultValue={row.status}
+                                  required
+                                >
+                                  <option value="pending">No response yet</option>
+                                  <option value="attending">Attending</option>
+                                  <option value="not_attending">Not attending</option>
+                                </M3FilledSelect>
+                                <M3FilledTextField
+                                  name="attending_count"
+                                  type="number"
+                                  min={1}
+                                  inputMode="numeric"
+                                  label="Guests attending"
+                                  defaultValue={row.attendingCount ?? row.invitedCount ?? 1}
+                                  supportingText="Used when status is Attending."
+                                />
+                                <M3FilledTextField
+                                  name="rsvp_note"
+                                  label="RSVP note"
+                                  defaultValue={row.rsvpNote ?? ""}
+                                  placeholder="Optional"
+                                />
+                                <button type="submit" className="m3-btn m3-btn--filled m3-btn--compact">
+                                  Save RSVP
+                                </button>
+                              </form>
+                            </div>
+                          </details>
+                        </td>
                         <td className="m3-table__muted">{noteCell(row)}</td>
                         <td>
                           <div className="flex flex-col gap-2">

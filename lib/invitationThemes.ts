@@ -40,7 +40,7 @@ const coverBg = {
 const classicTheme: InvitationThemeDefinition = {
   id: "classic",
   label: "Classic cream",
-  description: "Light fabric page with rich brown hero and RSVP band",
+  description: "Light fabric page with rich brown invitation header and RSVP band",
   swatchStyle: {
     backgroundImage: "url(/invite-bg-light.png)",
     ...coverBg,

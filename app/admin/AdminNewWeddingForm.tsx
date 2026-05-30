@@ -478,7 +478,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             name="hero_image"
             type="file"
             accept="image/*"
-            label="Hero image"
+            label="Couple Image"
             onChange={onHeroFileChange}
             supportingText="JPEG or PNG, up to 4MB. Optional."
           >

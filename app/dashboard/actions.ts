@@ -169,6 +169,124 @@ export async function updateHousehold(formData: FormData) {
   redirect(`/dashboard/${weddingId}?household_updated=1`);
 }
 
+type AdminRsvpStatus = "pending" | "attending" | "not_attending";
+
+function parseAdminRsvpStatus(value: string): AdminRsvpStatus | null {
+  if (value === "pending" || value === "attending" || value === "not_attending") return value;
+  return null;
+}
+
+/** Sets or clears RSVP status for a household (phone RSVPs, corrections). */
+export async function updateHouseholdRsvp(formData: FormData) {
+  const weddingId = String(formData.get("wedding_id") ?? "").trim();
+  const householdId = String(formData.get("household_id") ?? "").trim();
+  const status = parseAdminRsvpStatus(String(formData.get("status") ?? "").trim());
+  const attendingCountRaw = String(formData.get("attending_count") ?? "").trim();
+  const rsvpNote = optionalText(formData.get("rsvp_note")) ?? "";
+
+  if (!weddingId || !householdId) {
+    redirect(
+      `/dashboard/${weddingId || ""}?household_error=` +
+        encodeURIComponent("Wedding and household id are required."),
+    );
+  }
+
+  if (!status) {
+    redirect(
+      `/dashboard/${weddingId}?household_error=` +
+        encodeURIComponent("RSVP status must be attending, not attending, or no response yet."),
+    );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  const { data: household, error: householdError } = await supabase
+    .from("households")
+    .select("id, invited_count, invite_token")
+    .eq("id", householdId)
+    .eq("wedding_id", weddingId)
+    .limit(1)
+    .maybeSingle();
+
+  if (householdError || !household) {
+    redirect(
+      `/dashboard/${weddingId}?household_error=` +
+        encodeURIComponent("Household not found (or you don't have access)."),
+    );
+  }
+
+  const { data: wedding, error: weddingError } = await supabase
+    .from("weddings")
+    .select("id")
+    .eq("id", weddingId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (weddingError || !wedding) {
+    redirect(
+      `/dashboard/${weddingId}?household_error=` +
+        encodeURIComponent("You can only edit guests on your own weddings."),
+    );
+  }
+
+  const mutate = dbAfterAuth(supabase);
+
+  if (status === "pending") {
+    const { error: deleteError } = await mutate
+      .from("rsvps")
+      .delete()
+      .eq("household_id", householdId)
+      .eq("wedding_id", weddingId);
+
+    if (deleteError) {
+      redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(deleteError.message));
+    }
+  } else {
+    const invitedDefault =
+      household.invited_count != null && household.invited_count >= 1
+        ? household.invited_count
+        : 1;
+
+    let attending_count: number | null = null;
+    if (status === "attending") {
+      const parsed = attendingCountRaw.length > 0 ? Number(attendingCountRaw) : NaN;
+      const n =
+        Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : invitedDefault;
+      attending_count = n;
+    }
+
+    const { error: upsertError } = await mutate.from("rsvps").upsert(
+      {
+        household_id: householdId,
+        wedding_id: weddingId,
+        attending: status === "attending",
+        attending_count,
+        notes: rsvpNote,
+      },
+      { onConflict: "household_id,wedding_id" },
+    );
+
+    if (upsertError) {
+      redirect(`/dashboard/${weddingId}?household_error=` + encodeURIComponent(upsertError.message));
+    }
+  }
+
+  const token = household.invite_token?.trim();
+  if (token) {
+    revalidatePath(`/invite/${token}`, "page");
+  }
+  revalidatePath(`/dashboard/${weddingId}`);
+  redirect(`/dashboard/${weddingId}?rsvp_updated=1`);
+}
+
 /** Deletes a household (and its RSVPs) for the wedding the current user owns. */
 export async function deleteHousehold(formData: FormData) {
   const weddingId = String(formData.get("wedding_id") ?? "").trim();

@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
 import Footer from "@/app/components/Footer";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import InvitationHero, { inviteHeroDefaultSrc } from "@/app/components/InvitationHero";
@@ -5,7 +8,8 @@ import InvitationMusic from "@/app/components/InvitationMusic";
 import RSVPSection from "@/app/components/RSVPSection";
 import { formatDetailsDateTime, formatHeaderDateLabel } from "@/lib/invitationDisplay";
 import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
-import { createClient } from "@/lib/supabase/server";
+import { inviteMetadataForToken } from "@/lib/invite/inviteOpenGraph";
+import { getInviteByToken } from "@/lib/invite/loadInviteByToken";
 import { isHouseholdRsvpRecorded } from "@/lib/invite/householdRsvpRecorded";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
@@ -14,38 +18,20 @@ type PageProps = {
   params: Promise<{ token: string }>;
 };
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { token } = await params;
+  return inviteMetadataForToken(token);
+}
+
 export default async function Page({ params }: PageProps) {
   const { token } = await params;
-  const supabase = await createClient();
+  const loaded = await getInviteByToken(token);
 
-  const { data: household, error: householdError } = await supabase
-    .from("households")
-    .select("*")
-    .eq("invite_token", token)
-    .single();
-
-  if (householdError || !household) {
-    return (
-      <main className="full-width-section min-h-screen bg-transparent text-[#181818]">
-        <div className="main-content pb-8 pt-0 sm:py-8">Invitation not found.</div>
-      </main>
-    );
+  if (!loaded) {
+    notFound();
   }
 
-  const { data: wedding, error: weddingError } = await supabase
-    .from("weddings")
-    .select("*")
-    .eq("id", household.wedding_id)
-    .single();
-
-  if (weddingError || !wedding) {
-    return (
-      <main className="full-width-section min-h-screen bg-transparent text-[#181818]">
-        <div className="main-content pb-8 pt-0 sm:py-8">Wedding not found.</div>
-      </main>
-    );
-  }
-
+  const { household, wedding } = loaded;
   const dateRaw = wedding.wedding_date;
   const language = (wedding.language === "el" ? "el" : "en") as "en" | "el";
   const rsvpAlreadyRecorded = await isHouseholdRsvpRecorded(wedding.id, household.id);
@@ -55,13 +41,13 @@ export default async function Page({ params }: PageProps) {
     <InvitationFrame
       theme={invitationTheme}
       removeMobileTopPadding
-      footer={<Footer coupleNames={wedding.couple_names} year="2026" />}
+      footer={<Footer coupleNames={wedding.couple_names ?? ""} year="2026" />}
     >
       <InvitationMusic language={language} src={wedding.invitation_music_url} />
       <div className="flex min-h-full flex-col bg-transparent font-sans text-[#181818]">
         <main className="flex-1">
           <InvitationHero
-            coupleNames={wedding.couple_names}
+            coupleNames={wedding.couple_names ?? ""}
             language={language}
             theme={invitationTheme}
             eventDateLabel={formatHeaderDateLabel(dateRaw, language)}
@@ -82,7 +68,7 @@ export default async function Page({ params }: PageProps) {
             rsvpDeadline={wedding.rsvp_deadline || "—"}
             weddingId={wedding.id}
             householdId={household.id}
-            householdName={household.household_name}
+            householdName={household.household_name ?? ""}
             language={language}
             theme={invitationTheme}
             rsvpAlreadyRecorded={rsvpAlreadyRecorded}

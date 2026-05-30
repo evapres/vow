@@ -140,7 +140,7 @@ export default function InvitationHeroBody({
   eventDateLabel,
   venueLabel,
   photoSrc = inviteHeroDefaultSrc,
-  photoAlt = "Couple",
+  photoAlt = "Couple image",
   useNativeImgForPhoto = false,
   topMonogramLetters,
   detailsDateTime,
@@ -185,12 +185,13 @@ export default function InvitationHeroBody({
         };
 
   const namePartsForGreek = coupleNames
-    .split("&")
+    .split(/\s*(?:&|\+|\/|\band\b|και)\s*/i)
     .map((p) => p.trim())
     .filter(Boolean);
 
-  const greekLeft = namePartsForGreek[0] || coupleNames || "Μας";
-  const greekRight = namePartsForGreek[1] || "";
+  const greekLeft = namePartsForGreek[0] ?? "";
+  const greekRight = namePartsForGreek[1] ?? "";
+  const showGreekCoupleNames = Boolean(greekLeft || greekRight);
 
   const namesClass = adminPreview
     ? heroNamesPreviewClass
@@ -308,19 +309,17 @@ export default function InvitationHeroBody({
                 <span
                   className={`inline-flex flex-col items-center ${adminPreview ? "gap-3" : "gap-4 sm:gap-6"}`}
                 >
-                  <span className="flex flex-col items-center">
-                    <span className={namesClass}>
-                      {toAllCapsNoAccents(greekLeft)}
+                  {showGreekCoupleNames ? (
+                    <span className="flex flex-col items-center">
+                      {greekLeft ? (
+                        <span className={namesClass}>{toAllCapsNoAccents(greekLeft)}</span>
+                      ) : null}
+                      {greekLeft && greekRight ? <span className={namesClass}>&</span> : null}
+                      {greekRight ? (
+                        <span className={namesClass}>{toAllCapsNoAccents(greekRight)}</span>
+                      ) : null}
                     </span>
-                    {greekRight ? (
-                      <>
-                        <span className={namesClass}>&</span>
-                        <span className={namesClass}>
-                          {toAllCapsNoAccents(greekRight)}
-                        </span>
-                      </>
-                    ) : null}
-                  </span>
+                  ) : null}
                   <span className={inviteNotoSerifLight18Class}>
                     {toAllCapsNoAccents("σας προσκαλούν στο γάμο τους.")}
                   </span>

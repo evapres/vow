@@ -21,12 +21,19 @@ const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 /** Design width for envelope hero — keeps % padding in sync with `background-size: 100% auto`. */
 const ENVELOPE_DISPLAY_W = 520;
 
+/** Cream panel radius — matches site M3 form cards (`--m3-shape-corner-md`). */
+const EMAIL_SHELL_BORDER_RADIUS = "12px";
+
 /**
  * Gmail often ignores max-width on the wrapping `<a>`, so the card grew to full content width (~600px+).
  * % padding-top/bottom then explode. Cap `.inv-envelope-card` (and wrappers) at {@link ENVELOPE_DISPLAY_W}.
  */
 /** Envelope layout: desktop Gmail uses % top padding on the inner `<td>`; mobile uses its own block. */
 const INVITATION_ENVELOPE_MOBILE_CSS = `
+.inv-email-shell {
+  border-radius: ${EMAIL_SHELL_BORDER_RADIUS} !important;
+  overflow: hidden !important;
+}
 .inv-envelope-card {
   max-width: ${ENVELOPE_DISPLAY_W}px !important;
   margin-left: auto !important;
@@ -120,6 +127,8 @@ const shellBase = {
   padding: "40px 28px",
   border: "0",
   borderStyle: "none",
+  borderRadius: EMAIL_SHELL_BORDER_RADIUS,
+  overflow: "hidden" as const,
 } as const;
 
 const shellSolid = { ...shellBase, backgroundColor: "#fcfaf7" } as const;
@@ -339,6 +348,8 @@ export type InvitationEmailProps = {
   inviteUrl?: string;
   /** Saved invitation monogram on the red envelope flap (e.g. "N & E"). Omitted when unset. */
   envelopeMonogramDisplay?: string;
+  /** Wedding date for outbound subject, e.g. "11 July 2026". */
+  subjectDateDisplay?: string;
 };
 
 function defaultMapUrl(venueName: string, venueAddress: string): string {

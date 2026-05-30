@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   buildInviteSharePayload,
@@ -9,6 +9,9 @@ import {
   copyInviteSharePayload,
   facebookMessengerSendDialogUrl,
   isMobileUserAgent,
+  mailtoShareUrl,
+  messengerShareUrl,
+  messengerWebShareUrl,
   webShareInvite,
   whatsappShareUrl,
 } from "@/lib/share/invitationShare";
@@ -16,17 +19,23 @@ import {
 type InviteShareActionsProps = {
   inviteToken: string;
   inviteBaseUrl?: string;
-  coupleNames?: string | null;
-  householdName?: string | null;
+  shareHeroImageUrl?: string | null;
 };
 
 const shareBtnClass = "m3-btn m3-btn--outlined m3-btn--compact";
 
+function openShareTarget(url: string, options?: { sameTab?: boolean }) {
+  if (options?.sameTab) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export default function InviteShareActions({
   inviteToken,
   inviteBaseUrl,
-  coupleNames,
-  householdName,
+  shareHeroImageUrl,
 }: InviteShareActionsProps) {
   const [status, setStatus] = useState<string | null>(null);
 
@@ -36,106 +45,96 @@ export default function InviteShareActions({
   );
 
   const sharePayload = useMemo(
-    () => buildInviteSharePayload({ inviteUrl, coupleNames, householdName }),
-    [inviteUrl, coupleNames, householdName],
+    () => buildInviteSharePayload({ inviteUrl, shareImageUrl: shareHeroImageUrl }),
+    [inviteUrl, shareHeroImageUrl],
   );
 
-  const showWebShare = canUseWebShare();
+  const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setNativeShareAvailable(canUseWebShare(sharePayload));
+    setIsMobile(isMobileUserAgent());
+  }, [sharePayload]);
 
   const flash = useCallback((message: string) => {
     setStatus(message);
-    window.setTimeout(() => setStatus(null), 2800);
+    window.setTimeout(() => setStatus(null), 3200);
   }, []);
 
   const onCopy = useCallback(async () => {
     const ok = await copyInviteSharePayload(sharePayload);
-    flash(ok ? "Invitation copied — paste anywhere." : "Could not copy. Select the link and copy manually.");
+    flash(ok ? "Link copied." : "Could not copy — select the link and copy manually.");
   }, [flash, sharePayload]);
 
   const onWebShare = useCallback(async () => {
     try {
-      await webShareInvite(sharePayload);
+      await webShareInvite(sharePayload, inviteToken);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       await onCopy();
+      flash("Share unavailable — link copied instead.");
     }
-  }, [onCopy, sharePayload]);
+  }, [flash, onCopy, inviteToken, sharePayload]);
 
-  const onMessenger = useCallback(async () => {
+  const onMessenger = useCallback(() => {
     const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim();
 
-    if (isMobileUserAgent()) {
-      await copyInviteSharePayload(sharePayload);
-      const deepLink = `fb-messenger://share?link=${encodeURIComponent(inviteUrl)}`;
-      const openedAt = Date.now();
-      window.location.href = deepLink;
-      window.setTimeout(() => {
-        if (Date.now() - openedAt < 2000) {
-          if (appId) {
-            window.open(facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl), "_blank", "noopener,noreferrer");
-          } else {
-            flash("Copied — open Messenger and paste the invitation.");
-          }
-        }
-      }, 800);
+    if (isMobile) {
+      openShareTarget(messengerShareUrl(inviteUrl), { sameTab: true });
       return;
     }
 
-    if (appId) {
-      window.open(facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl), "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    await copyInviteSharePayload(sharePayload);
-    window.open("https://www.messenger.com/", "_blank", "noopener,noreferrer");
-    flash("Copied — paste the invitation into a Messenger chat.");
-  }, [flash, inviteUrl, sharePayload]);
+    const url = appId
+      ? facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl)
+      : messengerWebShareUrl(inviteUrl);
+    openShareTarget(url);
+  }, [inviteUrl, isMobile]);
 
   const onWhatsApp = useCallback(() => {
-    const waUrl = whatsappShareUrl(sharePayload.text);
-    window.open(waUrl, "_blank", "noopener,noreferrer");
+    openShareTarget(whatsappShareUrl(inviteUrl));
+  }, [inviteUrl]);
+
+  const onEmail = useCallback(() => {
+    window.location.href = mailtoShareUrl(sharePayload);
   }, [sharePayload]);
 
   const onInstagram = useCallback(async () => {
-    await copyInviteSharePayload(sharePayload);
-
-    if (isMobileUserAgent()) {
-      const openedAt = Date.now();
-      window.location.href = "instagram://direct-inbox";
-      window.setTimeout(() => {
-        if (Date.now() - openedAt < 2500) {
-          flash("Copied — open Instagram DMs and paste the link.");
-        }
-      }, 1200);
+    await onCopy();
+    if (isMobile) {
+      openShareTarget("instagram://direct-inbox", { sameTab: true });
+      flash("Link copied — pick a chat and paste.");
       return;
     }
-
-    window.open("https://www.instagram.com/direct/inbox/", "_blank", "noopener,noreferrer");
-    flash("Copied — paste the link in an Instagram DM.");
-  }, [flash, sharePayload]);
+    openShareTarget("https://www.instagram.com/direct/inbox/");
+    flash("Link copied — paste into a DM.");
+  }, [flash, isMobile, onCopy]);
 
   return (
     <div className="mt-2 space-y-2">
-      <p className="m3-field-label">Share invitation</p>
       <div className="flex flex-wrap gap-1.5">
-        <button type="button" className={shareBtnClass} onClick={() => void onCopy()}>
-          Copy link
-        </button>
-        {showWebShare ? (
-          <button type="button" className={shareBtnClass} onClick={() => void onWebShare()}>
+        {nativeShareAvailable ? (
+          <button type="button" className="m3-btn m3-btn--filled m3-btn--compact" onClick={() => void onWebShare()}>
             Share…
           </button>
         ) : null}
-        <button type="button" className={shareBtnClass} onClick={() => void onMessenger()}>
+        <button type="button" className={shareBtnClass} onClick={() => void onCopy()}>
+          Copy link
+        </button>
+        <button type="button" className={shareBtnClass} onClick={onMessenger}>
           Messenger
         </button>
-        <button type="button" className={shareBtnClass} onClick={() => void onWhatsApp()}>
+        <button type="button" className={shareBtnClass} onClick={onWhatsApp}>
           WhatsApp
+        </button>
+        <button type="button" className={shareBtnClass} onClick={onEmail}>
+          Email
         </button>
         <button type="button" className={shareBtnClass} onClick={() => void onInstagram()}>
           Instagram
         </button>
       </div>
+
       {status ? <p className="m3-field-support">{status}</p> : null}
     </div>
   );

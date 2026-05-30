@@ -1,7 +1,13 @@
+import { INVITE_LINK_PREVIEW_MESSAGE } from "./inviteShareCopy";
+import { inviteOgImagePath } from "@/lib/invite/inviteOgImagePath";
+
 export type InviteSharePayload = {
   title: string;
+  /** Short message without the URL (URL is passed separately for previews). */
   text: string;
   url: string;
+  /** Absolute HTTPS couple image — attached when sharing if provided. */
+  shareImageUrl?: string;
 };
 
 export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteToken: string): string {
@@ -14,40 +20,110 @@ export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteTok
 
 export function buildInviteSharePayload(args: {
   inviteUrl: string;
-  coupleNames?: string | null;
-  householdName?: string | null;
+  shareImageUrl?: string | null;
 }): InviteSharePayload {
-  const couple = args.coupleNames?.trim() || "We";
-  const guest = args.householdName?.trim();
-  const greeting = guest ? `${guest}, you're invited` : "You're invited";
-  const text = `${greeting} to ${couple}'s wedding.\n\n${args.inviteUrl}`;
-
+  const shareImageUrl = args.shareImageUrl?.trim() || undefined;
   return {
-    title: `${couple} — Wedding invitation`,
-    text,
+    title: INVITE_LINK_PREVIEW_MESSAGE,
+    text: INVITE_LINK_PREVIEW_MESSAGE,
     url: args.inviteUrl,
+    shareImageUrl,
   };
 }
 
-export function canUseWebShare(): boolean {
-  return typeof navigator !== "undefined" && typeof navigator.share === "function";
+export function inviteShareClipboardText(payload: InviteSharePayload): string {
+  return `${payload.text}\n\n${payload.url}`;
+}
+
+export function canUseWebShare(payload?: InviteSharePayload): boolean {
+  if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+    return false;
+  }
+  if (!payload) return true;
+
+  const candidates: ShareData[] = [
+    { title: payload.title, text: payload.text, url: payload.url },
+    { title: payload.title, url: payload.url },
+    { url: payload.url },
+  ];
+
+  if (typeof navigator.canShare !== "function") return true;
+
+  return candidates.some((data) => {
+    try {
+      return navigator.canShare(data);
+    } catch {
+      return false;
+    }
+  });
 }
 
 export async function copyInviteSharePayload(payload: InviteSharePayload): Promise<boolean> {
   try {
-    await navigator.clipboard.writeText(payload.text);
+    await navigator.clipboard.writeText(inviteShareClipboardText(payload));
     return true;
   } catch {
     return false;
   }
 }
 
-export async function webShareInvite(payload: InviteSharePayload): Promise<void> {
-  await navigator.share({
-    title: payload.title,
-    text: payload.text,
-    url: payload.url,
-  });
+/**
+ * Native share sheet — attaches the couple image when available, else the generated preview PNG.
+ */
+export async function webShareInvite(
+  payload: InviteSharePayload,
+  inviteToken?: string,
+): Promise<void> {
+  const imageCandidates: string[] = [];
+  if (payload.shareImageUrl) imageCandidates.push(payload.shareImageUrl);
+  if (inviteToken?.trim()) {
+    imageCandidates.push(new URL(inviteOgImagePath(inviteToken), payload.url).href);
+  }
+
+  for (const imageUrl of imageCandidates) {
+    try {
+      const res = await fetch(imageUrl, { cache: "no-store" });
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      if (!blob.size) continue;
+      const ext = blob.type.includes("png") ? "png" : "jpg";
+      const file = new File([blob], `wedding-invitation.${ext}`, {
+        type: blob.type || "image/jpeg",
+      });
+      const withFile: ShareData = {
+        files: [file],
+        title: payload.title,
+        text: payload.text,
+        url: payload.url,
+      };
+      if (typeof navigator.canShare !== "function" || navigator.canShare(withFile)) {
+        await navigator.share(withFile);
+        return;
+      }
+    } catch {
+      // Try next image source.
+    }
+  }
+
+  const attempts: ShareData[] = [
+    { title: payload.title, text: payload.text, url: payload.url },
+    { title: payload.title, url: payload.url },
+    { url: payload.url },
+  ];
+
+  for (const data of attempts) {
+    if (typeof navigator.canShare === "function") {
+      try {
+        if (!navigator.canShare(data)) continue;
+      } catch {
+        continue;
+      }
+    }
+    await navigator.share(data);
+    return;
+  }
+
+  await navigator.share({ url: payload.url });
 }
 
 export function isMobileUserAgent(): boolean {
@@ -55,7 +131,7 @@ export function isMobileUserAgent(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-/** Opens Messenger with the invite link pre-filled — works on mobile (deep link) and desktop (m.me). */
+/** Opens Messenger with the invite link — mobile deep link or desktop send dialog. */
 export function messengerShareUrl(inviteUrl: string): string {
   if (isMobileUserAgent()) {
     return `fb-messenger://share?link=${encodeURIComponent(inviteUrl)}`;
@@ -63,7 +139,6 @@ export function messengerShareUrl(inviteUrl: string): string {
   return `https://www.facebook.com/dialog/send?link=${encodeURIComponent(inviteUrl)}&redirect_uri=${encodeURIComponent(inviteUrl)}`;
 }
 
-/** Facebook Send dialog when `NEXT_PUBLIC_FACEBOOK_APP_ID` is configured. */
 export function facebookMessengerSendDialogUrl(
   inviteUrl: string,
   appId: string,
@@ -77,12 +152,26 @@ export function facebookMessengerSendDialogUrl(
   return `https://www.facebook.com/dialog/send?${params.toString()}`;
 }
 
-/** Opens Instagram direct inbox when the app is installed (user pastes from clipboard). */
-export function instagramDirectInboxHref(): string {
-  return "instagram://direct-inbox";
+/** WhatsApp — URL in body so clients show the link preview card. */
+export function whatsappShareUrl(inviteUrl: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(inviteUrl)}`;
 }
 
-/** WhatsApp share — works on mobile and desktop (wa.me). */
-export function whatsappShareUrl(text: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+export function mailtoShareUrl(payload: InviteSharePayload): string {
+  const subject = encodeURIComponent(payload.title);
+  const body = encodeURIComponent(inviteShareClipboardText(payload));
+  return `mailto:?subject=${subject}&body=${body}`;
+}
+
+/** Desktop/web Messenger send dialog (no app id required). */
+export function messengerWebShareUrl(inviteUrl: string): string {
+  const params = new URLSearchParams({
+    link: inviteUrl,
+    redirect_uri: inviteUrl,
+  });
+  return `https://www.facebook.com/dialog/send?${params.toString()}`;
+}
+
+export function instagramDirectInboxHref(): string {
+  return "instagram://direct-inbox";
 }

@@ -12,6 +12,7 @@ function supabaseStorageRemotePattern() {
 }
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["sharp"],
   images: {
     domains: ["images.unsplash.com"],
     remotePatterns: supabaseStorageRemotePattern(),

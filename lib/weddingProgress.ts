@@ -49,7 +49,7 @@ export const INVITATION_STEP_REQUIRED_LABELS = [
 ] as const;
 
 export function invitationStepRequiredNotice(): string {
-  return `Required to open the RSVP dashboard: ${INVITATION_STEP_REQUIRED_LABELS.join(", ")}. Hero image, note, and music are optional.`;
+  return `Required to open the RSVP dashboard: ${INVITATION_STEP_REQUIRED_LABELS.join(", ")}. Couple image, note, and music are optional.`;
 }
 
 export type InvitationStepFormInput = {
