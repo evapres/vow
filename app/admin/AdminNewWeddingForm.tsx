@@ -11,10 +11,15 @@ import M3FilledSelect from "@/app/components/m3/M3FilledSelect";
 import M3FilledTextField from "@/app/components/m3/M3FilledTextField";
 import M3ThemePicker from "@/app/components/m3/M3ThemePicker";
 import { compressHeroImageFile } from "@/lib/compressHeroImage";
-import { defaultCoupleInitialsForLanguage, GREEK_DEFAULT_MONOGRAM } from "@/lib/coupleInitials";
+import {
+  buildCoupleNames,
+  parseCoupleNames,
+  type GreekArticle,
+} from "@/lib/coupleNamesForm";
 import { formLoadErrorMessage } from "@/lib/formLoadErrorMessage";
 import { parseInvitationThemeId, type InvitationThemeId } from "@/lib/invitationThemes";
 
+import CoupleNamesFormFields from "./CoupleNamesFormFields";
 import { createWedding, updateWedding } from "./actions";
 
 const AdminInvitationLivePreview = dynamic(() => import("./AdminInvitationLivePreview"), {
@@ -37,8 +42,6 @@ export type AdminWeddingFormInitial = {
   note: string;
   invitationMusicUrl?: string | null;
   invitationTheme?: InvitationThemeId;
-  coupleInitialLeft?: string;
-  coupleInitialRight?: string;
 };
 
 type AdminNewWeddingFormProps = {
@@ -53,24 +56,22 @@ const PREVIEW_SAMPLE_DETAILS_LOCATION = "George Town, Brighton, BN1 3HG";
 function adminFormPlaceholders(language: "en" | "el") {
   if (language === "el") {
     return {
-      coupleNames: "π.χ. Ο Βασίλης & η Λυδία",
+      person1Name: "π.χ. Βασίλης",
+      person2Name: "π.χ. Λυδία",
       /** Venue sample stays English on Greek invitations. */
       venueName: `e.g. ${PREVIEW_SAMPLE_VENUE}`,
       churchName: "π.χ. Άγιος Δημήτριος",
       streetAddress: "π.χ. Λεωφ. Συγγρού 100, 117 45, Αθήνα",
       note: "π.χ. Θα ακολουθήσει δεξίωση στο χώρο",
-      coupleInitialLeft: "Β",
-      coupleInitialRight: "Λ",
     };
   }
   return {
-    coupleNames: "e.g. Nestor & Evangelia",
+    person1Name: "e.g. Nestor",
+    person2Name: "e.g. Evangelia",
     venueName: `e.g. ${PREVIEW_SAMPLE_VENUE}`,
     churchName: "e.g. St. Demetrius Church",
     streetAddress: `e.g. ${PREVIEW_SAMPLE_DETAILS_LOCATION}`,
     note: "e.g. Reception to follow",
-    coupleInitialLeft: "e.g. N",
-    coupleInitialRight: "e.g. E",
   };
 }
 
@@ -87,7 +88,6 @@ function isDefaultHeroSrc(src: string): boolean {
 function applyFormInitial(
   data: AdminWeddingFormInitial,
   setters: {
-    setCoupleNames: (v: string) => void;
     setLanguage: (v: "en" | "el") => void;
     setInvitationTheme: (v: InvitationThemeId) => void;
     setWeddingDate: (v: string) => void;
@@ -99,11 +99,9 @@ function applyFormInitial(
     setRsvpDeadline: (v: string) => void;
     setNote: (v: string) => void;
     setMusicPreviewSrc: (v: string | null) => void;
-    setCoupleInitialLeft: (v: string) => void;
-    setCoupleInitialRight: (v: string) => void;
+    applyCoupleFields: (language: "en" | "el", coupleNames: string) => void;
   },
 ) {
-  setters.setCoupleNames(data.coupleNames);
   setters.setLanguage(data.language);
   setters.setInvitationTheme(parseInvitationThemeId(data.invitationTheme));
   setters.setWeddingDate(data.weddingDate);
@@ -115,14 +113,7 @@ function applyFormInitial(
   setters.setRsvpDeadline(data.rsvpDeadline ? data.rsvpDeadline.slice(0, 10) : "");
   setters.setNote(data.note);
   setters.setMusicPreviewSrc(data.invitationMusicUrl?.trim() || null);
-  const initials =
-    data.language === "el" &&
-    !data.coupleInitialLeft?.trim() &&
-    !data.coupleInitialRight?.trim()
-      ? GREEK_DEFAULT_MONOGRAM
-      : defaultCoupleInitialsForLanguage(data.language);
-  setters.setCoupleInitialLeft(data.coupleInitialLeft?.trim() || initials.left);
-  setters.setCoupleInitialRight(data.coupleInitialRight?.trim() || initials.right);
+  setters.applyCoupleFields(data.language, data.coupleNames);
 }
 
 export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNewWeddingFormProps) {
@@ -131,8 +122,19 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const [isSaving, startTransition] = useTransition();
   const [formLoading, setFormLoading] = useState(() => Boolean(editWeddingId) && !initial);
   const [formLoadError, setFormLoadError] = useState<string | null>(null);
-  const [coupleNames, setCoupleNames] = useState(initial?.coupleNames ?? "");
   const [language, setLanguage] = useState<"en" | "el">(initial?.language ?? "en");
+  const initialCoupleParsed = parseCoupleNames(
+    initial?.coupleNames ?? "",
+    initial?.language ?? "en",
+  );
+  const [person1Name, setPerson1Name] = useState(() => initialCoupleParsed.person1Name);
+  const [person2Name, setPerson2Name] = useState(() => initialCoupleParsed.person2Name);
+  const [person1Article, setPerson1Article] = useState<GreekArticle>(() =>
+    initialCoupleParsed.language === "el" ? initialCoupleParsed.person1Article : "ο",
+  );
+  const [person2Article, setPerson2Article] = useState<GreekArticle>(() =>
+    initialCoupleParsed.language === "el" ? initialCoupleParsed.person2Article : "ο",
+  );
   const [invitationTheme, setInvitationTheme] = useState<InvitationThemeId>(() =>
     parseInvitationThemeId(initial?.invitationTheme),
   );
@@ -146,17 +148,24 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     initial?.rsvpDeadline ? initial.rsvpDeadline.slice(0, 10) : "",
   );
   const [note, setNote] = useState(initial?.note ?? "");
-  const [coupleInitialLeft, setCoupleInitialLeft] = useState(
-    () => initial?.coupleInitialLeft?.trim() || defaultCoupleInitialsForLanguage(initial?.language ?? "en").left,
-  );
-  const [coupleInitialRight, setCoupleInitialRight] = useState(
-    () => initial?.coupleInitialRight?.trim() || defaultCoupleInitialsForLanguage(initial?.language ?? "en").right,
-  );
   const [musicPreviewSrc, setMusicPreviewSrc] = useState<string | null>(
     () => initial?.invitationMusicUrl?.trim() || null,
   );
   const [clearHeroForSubmit, setClearHeroForSubmit] = useState(false);
   const [clearMusicForSubmit, setClearMusicForSubmit] = useState(false);
+
+  const coupleNames = useMemo(() => {
+    if (language === "el") {
+      return buildCoupleNames({
+        language: "el",
+        person1Article,
+        person1Name,
+        person2Article,
+        person2Name,
+      });
+    }
+    return buildCoupleNames({ language: "en", person1Name, person2Name });
+  }, [language, person1Article, person1Name, person2Article, person2Name]);
 
   const previewCoupleNames = useDeferredValue(coupleNames);
   const previewLanguage = useDeferredValue(language);
@@ -168,10 +177,22 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const previewStreetAddress = useDeferredValue(streetAddress);
   const previewRsvpDeadline = useDeferredValue(rsvpDeadline);
   const previewNote = useDeferredValue(note);
-  const previewCoupleInitialLeft = useDeferredValue(coupleInitialLeft);
-  const previewCoupleInitialRight = useDeferredValue(coupleInitialRight);
-
   const placeholders = useMemo(() => adminFormPlaceholders(language), [language]);
+
+  function applyCoupleFields(nextLanguage: "en" | "el", storedCoupleNames: string) {
+    const parsed = parseCoupleNames(storedCoupleNames, nextLanguage);
+    if (parsed.language === "el") {
+      setPerson1Article(parsed.person1Article);
+      setPerson1Name(parsed.person1Name);
+      setPerson2Article(parsed.person2Article);
+      setPerson2Name(parsed.person2Name);
+    } else {
+      setPerson1Name(parsed.person1Name);
+      setPerson2Name(parsed.person2Name);
+      setPerson1Article("ο");
+      setPerson2Article("ο");
+    }
+  }
 
   const heroBlobUrlRef = useRef<string | null>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
@@ -208,7 +229,6 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
       .then((data) => {
         if (cancelled) return;
         applyFormInitial(data, {
-          setCoupleNames,
           setLanguage,
           setInvitationTheme,
           setWeddingDate,
@@ -220,8 +240,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
           setRsvpDeadline,
           setNote,
           setMusicPreviewSrc,
-          setCoupleInitialLeft,
-          setCoupleInitialRight,
+          applyCoupleFields,
         });
         setFormLoading(false);
       })
@@ -289,6 +308,12 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     }
     fd.set("invitation_theme", invitationTheme);
     fd.set("couple_names", coupleNames);
+    fd.set("couple_person_1_name", person1Name);
+    fd.set("couple_person_2_name", person2Name);
+    if (language === "el") {
+      fd.set("couple_person_1_article", person1Article);
+      fd.set("couple_person_2_article", person2Article);
+    }
     fd.set("language", language);
     fd.set("wedding_date", weddingDate);
     fd.set("wedding_time", weddingTime);
@@ -297,8 +322,6 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     fd.set("street_address", streetAddress);
     fd.set("rsvp_deadline", rsvpDeadline);
     fd.set("note", note);
-    fd.set("couple_initial_left", coupleInitialLeft);
-    fd.set("couple_initial_right", coupleInitialRight);
 
     const heroFile = heroFileInputRef.current?.files?.[0];
     if (heroFile && heroFile.size > 0) {
@@ -360,56 +383,56 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             value={language}
             onChange={(e) => {
               const next = e.target.value === "el" ? "el" : "en";
+              const rebuilt = buildCoupleNames(
+                next === "el"
+                  ? {
+                      language: "el",
+                      person1Article,
+                      person1Name,
+                      person2Article,
+                      person2Name,
+                    }
+                  : { language: "en", person1Name, person2Name },
+              );
               setLanguage(next);
-              if (next === "el" && !coupleInitialLeft.trim() && !coupleInitialRight.trim()) {
-                setCoupleInitialLeft(GREEK_DEFAULT_MONOGRAM.left);
-                setCoupleInitialRight(GREEK_DEFAULT_MONOGRAM.right);
-              }
+              applyCoupleFields(next, rebuilt);
             }}
           >
             <option value="en">English</option>
             <option value="el">Greek</option>
           </M3FilledSelect>
 
-          <M3FilledTextField
-            id="couple_names"
-            name="couple_names"
-            label="Couple names"
-            type="text"
-            required
-            clearable
-            value={coupleNames}
-            onChange={(e) => setCoupleNames(e.target.value)}
-            onClear={() => setCoupleNames("")}
-            placeholder={placeholders.coupleNames}
-          />
+          <input type="hidden" name="couple_names" value={coupleNames} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <M3FilledTextField
-              id="couple_initial_left"
-              name="couple_initial_left"
-              label="First initial"
-              type="text"
-              clearable
-              value={coupleInitialLeft}
-              onChange={(e) => setCoupleInitialLeft(e.target.value)}
-              onClear={() => setCoupleInitialLeft("")}
-              placeholder={placeholders.coupleInitialLeft}
-              maxLength={3}
+          {language === "el" ? (
+            <CoupleNamesFormFields
+              language="el"
+              person1Article={person1Article}
+              person1Name={person1Name}
+              person2Article={person2Article}
+              person2Name={person2Name}
+              onPerson1ArticleChange={setPerson1Article}
+              onPerson1NameChange={setPerson1Name}
+              onPerson2ArticleChange={setPerson2Article}
+              onPerson2NameChange={setPerson2Name}
+              person1NamePlaceholder={placeholders.person1Name}
+              person2NamePlaceholder={placeholders.person2Name}
             />
-            <M3FilledTextField
-              id="couple_initial_right"
-              name="couple_initial_right"
-              label="Second initial"
-              type="text"
-              clearable
-              value={coupleInitialRight}
-              onChange={(e) => setCoupleInitialRight(e.target.value)}
-              onClear={() => setCoupleInitialRight("")}
-              placeholder={placeholders.coupleInitialRight}
-              maxLength={3}
+          ) : (
+            <CoupleNamesFormFields
+              language="en"
+              person1Name={person1Name}
+              person2Name={person2Name}
+              onPerson1NameChange={setPerson1Name}
+              onPerson2NameChange={setPerson2Name}
+              person1Placeholder={placeholders.person1Name}
+              person2Placeholder={placeholders.person2Name}
             />
-          </div>
+          )}
+
+          <p className="text-xs text-[var(--m3-on-surface-variant)]">
+            Monogram initials on the invitation are taken from these names automatically.
+          </p>
 
           <M3FilledTextField
             id="wedding_date"
@@ -564,8 +587,6 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
         rsvpDeadline={previewRsvpDeadline}
         note={previewNote}
         photoSrc={heroPreviewSrc}
-        coupleInitialLeft={previewCoupleInitialLeft}
-        coupleInitialRight={previewCoupleInitialRight}
       />
     </div>
   );

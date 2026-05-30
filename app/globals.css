@@ -10,9 +10,37 @@
   /** Uniform corner radius for UI frames, inputs, and buttons. */
   --radius-app: 2px;
   /**
-   * Inner content horizontal inset (each side). Used only on `.main-content`, not on full-bleed wrappers.
+   * Inner content horizontal inset (each side). Used on `.main-content` and as the invite sm+ gutter companion.
+   * Scales: phone → tablet → iPad → desktop (percentage capped so ultra-wide stays readable).
    */
-  --page-padding: 10%;
+  --page-padding-base: 1rem;
+  --page-padding: var(--page-padding-base);
+  --app-shell-padding-y: 0.75rem;
+  --app-shell-padding-bottom: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-padding-base: 1.5rem;
+    --app-shell-padding-y: 1rem;
+    --app-shell-padding-bottom: 1.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-padding-base: 2rem;
+    --app-shell-padding-y: 1.25rem;
+    --app-shell-padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-padding-base: min(10%, 7.5rem);
+    --app-shell-padding-y: 1.5rem;
+    --app-shell-padding-bottom: 2.5rem;
+  }
 }
 
 @theme inline {
@@ -74,6 +102,19 @@ body {
     padding-right: var(--page-padding);
   }
 
+  /**
+   * Guest invitations: `--invite-gutter` handles mobile horizontal inset; outer page padding from sm up.
+   */
+  .main-content--invite-gutter {
+    --page-padding: 0;
+  }
+
+  @media (min-width: 640px) {
+    .main-content--invite-gutter {
+      --page-padding: var(--page-padding-base);
+    }
+  }
+
   .rounded-app {
     border-radius: var(--radius-app);
   }
@@ -102,15 +143,8 @@ body {
   }
 }
 
-/* App shell pages (admin, dashboard): tighter top padding than guest invitations */
+/* App shell pages (admin, dashboard): tighter vertical padding than guest invitations */
 .app-shell-canvas.full-width-section {
-  padding-top: 12px;
-  padding-bottom: 24px;
-}
-
-@media (min-width: 640px) {
-  .app-shell-canvas.full-width-section {
-    padding-top: 16px;
-    padding-bottom: 32px;
-  }
+  padding-top: var(--app-shell-padding-y);
+  padding-bottom: var(--app-shell-padding-bottom);
 }

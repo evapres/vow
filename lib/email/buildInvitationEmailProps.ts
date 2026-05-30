@@ -11,7 +11,12 @@ import {
   splitDetailsDateTimeLines,
 } from "../invitationDisplay";
 import { celebrateLocationLineFromParts, joinWeddingLocationStorage } from "../weddingLocation";
-import { formatSavedCoupleMonogramDisplay } from "../coupleInitials";
+import {
+  formatCoupleMonogramDisplay,
+  resolveCoupleMonogramLetters,
+  type CoupleMonogramLetters,
+} from "../coupleInitials";
+import type { InvitationLanguage } from "../invitationDisplay";
 import { locationLineForEmailInLatinScript } from "./locationLineForEmailEnglish";
 
 export type WeddingLike = {
@@ -75,10 +80,17 @@ export async function buildInvitationEmailProps(input: {
     : undefined;
   const envelopeCardImageSrc = envelopeTemplateImageAbsoluteUrl(siteOrigin);
   const envelopeCardDateDisplay = formatEnvelopeCardDate(wedding.wedding_date) || undefined;
-  const envelopeMonogramDisplay = formatSavedCoupleMonogramDisplay({
+  const invitationLanguage: InvitationLanguage =
+    wedding.language === "el" ? "el" : "en";
+  const envelopeMonogramLetters: CoupleMonogramLetters | undefined = resolveCoupleMonogramLetters({
+    coupleNames,
     coupleInitialLeft: wedding.couple_initial_left,
     coupleInitialRight: wedding.couple_initial_right,
+    language: invitationLanguage,
   });
+  const envelopeMonogramDisplay = envelopeMonogramLetters
+    ? formatCoupleMonogramDisplay(envelopeMonogramLetters)
+    : "";
 
   return {
     householdName: household?.household_name?.trim() || undefined,
@@ -95,7 +107,11 @@ export async function buildInvitationEmailProps(input: {
     venueAddress: locationDisplayLine || undefined,
     location: locForEmailOut || undefined,
     inviteUrl,
+    envelopeMonogramLetters,
     envelopeMonogramDisplay,
+    coupleInitialLeft: wedding.couple_initial_left,
+    coupleInitialRight: wedding.couple_initial_right,
+    invitationLanguage,
     subjectDateDisplay: formatInvitationEmailSubjectDate(wedding.wedding_date) || undefined,
   };
 }

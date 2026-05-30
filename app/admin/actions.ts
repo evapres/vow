@@ -9,6 +9,8 @@ import { invitationMusicUrlFromForm } from "@/lib/admin/invitationMusicFromForm"
 import { combineWeddingDateAndTime } from "@/lib/invitationDisplay";
 import { createClient } from "@/lib/supabase/server";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
+import { coupleInitialsForStorage } from "@/lib/coupleInitials";
+import { coupleNamesFromFormData, validateCoupleNamesForm, parseCoupleNames } from "@/lib/coupleNamesForm";
 import { validateInvitationStepForm } from "@/lib/weddingProgress";
 import { isMissingInvitationThemeColumn } from "@/lib/supabaseMissingColumn";
 import { isMissingCoupleInitialsColumns } from "@/lib/supabaseMissingColumn";
@@ -113,8 +115,8 @@ export async function createWedding(formData: FormData) {
     );
   }
 
-  const coupleNames = String(formData.get("couple_names") ?? "").trim();
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
+  const coupleNames = coupleNamesFromFormData(formData, language);
   const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
@@ -123,6 +125,11 @@ export async function createWedding(formData: FormData) {
   const church_name = optionalText(formData.get("church_name"));
   const street_address = optionalText(formData.get("street_address"));
   const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
+
+  const coupleNamesError = validateCoupleNamesForm(parseCoupleNames(coupleNames, language));
+  if (coupleNamesError) {
+    redirect("/admin/new?error=" + encodeURIComponent(coupleNamesError));
+  }
 
   const stepError = validateInvitationStepForm({
     coupleNames,
@@ -142,8 +149,7 @@ export async function createWedding(formData: FormData) {
     street_address ?? "",
   );
   const note = optionalText(formData.get("note"));
-  const couple_initial_left = optionalText(formData.get("couple_initial_left"));
-  const couple_initial_right = optionalText(formData.get("couple_initial_right"));
+  const { couple_initial_left, couple_initial_right } = coupleInitialsForStorage(coupleNames);
 
   let heroFileToUpload: File | null = null;
   const heroFile = formData.get("hero_image");
@@ -241,8 +247,8 @@ export async function updateWedding(formData: FormData) {
     redirect("/admin?error=" + encodeURIComponent("You can only edit your own weddings."));
   }
 
-  const coupleNames = String(formData.get("couple_names") ?? "").trim();
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
+  const coupleNames = coupleNamesFromFormData(formData, language);
   const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
@@ -251,6 +257,11 @@ export async function updateWedding(formData: FormData) {
   const church_name = optionalText(formData.get("church_name"));
   const street_address = optionalText(formData.get("street_address"));
   const rsvpDeadline = optionalDate(formData.get("rsvp_deadline"));
+
+  const coupleNamesError = validateCoupleNamesForm(parseCoupleNames(coupleNames, language));
+  if (coupleNamesError) {
+    redirect(`/admin/edit/${weddingId}?error=` + encodeURIComponent(coupleNamesError));
+  }
 
   const stepError = validateInvitationStepForm({
     coupleNames,
@@ -270,8 +281,7 @@ export async function updateWedding(formData: FormData) {
     street_address ?? "",
   );
   const note = optionalText(formData.get("note"));
-  const couple_initial_left = optionalText(formData.get("couple_initial_left"));
-  const couple_initial_right = optionalText(formData.get("couple_initial_right"));
+  const { couple_initial_left, couple_initial_right } = coupleInitialsForStorage(coupleNames);
   const clearHero = formData.get("clear_hero") === "1";
 
   const patch: Record<string, unknown> = {

@@ -77,7 +77,7 @@ export default async function EmailPreviewPage({ params, searchParams }: PagePro
           <InvitationEmailHtmlPreview embedSrc={embedSrc} />
 
           {household?.invite_token?.trim() ? (
-            <ShareLinkPreview inviteToken={household.invite_token} />
+            <ShareLinkPreview weddingId={weddingId} inviteToken={household.invite_token} />
           ) : null}
         </main>
       </div>

@@ -6,6 +6,20 @@ export const ENVELOPE_INVITE_LINE = "You are invited";
 /** Public asset served from the site root (blank card area on template). */
 export const ENVELOPE_TEMPLATE_FILENAME = "email-invite-envelope-template.png";
 
+/** Reference width for envelope HTML overlay (% padding and clamp fonts). */
+export const ENVELOPE_LAYOUT_DESIGN_WIDTH_PX = 520;
+
+/** Inset before “You are invited” — % of envelope cell width (`.inv-envelope-card-cell`). */
+export const ENVELOPE_CARD_TEXT_PADDING_TOP_PCT = 55;
+
+/** Same inset in px at {@link ENVELOPE_LAYOUT_DESIGN_WIDTH_PX} (OG image overlay). */
+export const ENVELOPE_CARD_TEXT_PADDING_TOP_PX = Math.round(
+  (ENVELOPE_LAYOUT_DESIGN_WIDTH_PX * ENVELOPE_CARD_TEXT_PADDING_TOP_PCT) / 100,
+);
+
+/** Gap from date line to initials on the burgundy flap (px at design width). */
+export const ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX = 112;
+
 export function envelopeTemplateImageAbsoluteUrl(siteOrigin: string): string | undefined {
   const o = siteOrigin.trim().replace(/\/$/, "");
   if (!o) return undefined;

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 
-import {
-  INVITE_LINK_PREVIEW_IMAGE_ALT,
-  INVITE_LINK_PREVIEW_MESSAGE,
-} from "@/lib/share/inviteShareCopy";
+import { buildYouAreInvitedTitle } from "@/lib/coupleNamesForm";
+import { INVITE_LINK_PREVIEW_IMAGE_ALT } from "@/lib/share/inviteShareCopy";
 
 import { publicHeroImageUrlForShare } from "./heroImageForShare";
 import { getInviteByToken } from "./loadInviteByToken";
@@ -15,12 +13,13 @@ export function buildInviteOpenGraphMetadata(args: {
   token: string;
   imageUrl: string;
   useHeroImage?: boolean;
+  coupleNames: string;
 }): Metadata {
-  const { siteOrigin, token, imageUrl, useHeroImage } = args;
+  const { siteOrigin, token, imageUrl, useHeroImage, coupleNames } = args;
   const origin = siteOrigin.replace(/\/$/, "");
   const inviteUrl = `${origin}/invite/${token}`;
-  const title = INVITE_LINK_PREVIEW_MESSAGE;
-  const description = INVITE_LINK_PREVIEW_MESSAGE;
+  const title = buildYouAreInvitedTitle(coupleNames);
+  const description = title;
 
   const imageEntry = useHeroImage
     ? { url: imageUrl, alt: INVITE_LINK_PREVIEW_IMAGE_ALT }
@@ -81,10 +80,13 @@ export async function inviteMetadataForToken(token: string): Promise<Metadata> {
     heroImageUrl: loaded.wedding.hero_image_url,
   });
 
+  const coupleNames = (loaded.wedding.couple_names ?? "").trim() || "Couple";
+
   return buildInviteOpenGraphMetadata({
     siteOrigin,
     token: trimmed,
     imageUrl,
     useHeroImage: heroPublic,
+    coupleNames,
   });
 }

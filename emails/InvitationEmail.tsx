@@ -11,7 +11,18 @@ import {
   Text,
 } from "@react-email/components";
 
-import { ENVELOPE_INVITE_LINE } from "@/lib/email/envelopeCardCopy";
+import {
+  formatCoupleMonogramDisplay,
+  resolveCoupleMonogramLetters,
+  type CoupleMonogramLetters,
+} from "@/lib/coupleInitials";
+import type { InvitationLanguage } from "@/lib/invitationDisplay";
+import {
+  ENVELOPE_CARD_TEXT_PADDING_TOP_PCT,
+  ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX,
+  ENVELOPE_INVITE_LINE,
+  ENVELOPE_LAYOUT_DESIGN_WIDTH_PX,
+} from "@/lib/email/envelopeCardCopy";
 import { INVITATION_SANS_EMAIL } from "@/lib/email/invitationTypography";
 import { splitDetailsDateTimeLines } from "@/lib/invitationDisplay";
 
@@ -19,99 +30,126 @@ const sans = INVITATION_SANS_EMAIL;
 const serif = 'Georgia, "Times New Roman", Times, serif' as const;
 
 /** Design width for envelope hero — keeps % padding in sync with `background-size: 100% auto`. */
-const ENVELOPE_DISPLAY_W = 520;
+const ENVELOPE_DISPLAY_W = ENVELOPE_LAYOUT_DESIGN_WIDTH_PX;
+
+/** Envelope art block height at {@link ENVELOPE_DISPLAY_W} (px). */
+const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
 
 /** Cream panel radius — matches site M3 form cards (`--m3-shape-corner-md`). */
 const EMAIL_SHELL_BORDER_RADIUS = "12px";
 
+/** % of envelope width — keeps card/flap text aligned when the art scales down. */
+function envWidthPct(px: number): string {
+  return `${((px / ENVELOPE_DISPLAY_W) * 100).toFixed(4)}%`;
+}
+
+/** vw clamp so type scales with viewport but never exceeds the 520px design. */
+function envClampFont(px: number, minPx: number): string {
+  const vw = ((px / ENVELOPE_DISPLAY_W) * 100).toFixed(4);
+  return `clamp(${minPx}px, ${vw}vw, ${px}px)`;
+}
+
 /**
  * Gmail often ignores max-width on the wrapping `<a>`, so the card grew to full content width (~600px+).
- * % padding-top/bottom then explode. Cap `.inv-envelope-card` (and wrappers) at {@link ENVELOPE_DISPLAY_W}.
+ * Cap `.inv-envelope-card` at {@link ENVELOPE_DISPLAY_W}; spacing uses % of that width so iPhone/iPad shrink in proportion.
  */
-/** Envelope layout: desktop Gmail uses % top padding on the inner `<td>`; mobile uses its own block. */
 const INVITATION_ENVELOPE_MOBILE_CSS = `
 .inv-email-shell {
   border-radius: ${EMAIL_SHELL_BORDER_RADIUS} !important;
   overflow: hidden !important;
 }
+.inv-envelope-outer,
+.inv-envelope-link,
 .inv-envelope-card {
+  width: 100% !important;
   max-width: ${ENVELOPE_DISPLAY_W}px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  box-sizing: border-box !important;
 }
-@media only screen and (min-width: 601px) {
-  .inv-envelope-card-cell {
-    /* Desktop / webmail — matches Gmail; % is vs. cell width (capped at ${ENVELOPE_DISPLAY_W}px). */
-    padding-top: 50% !important;
+.inv-envelope-card {
+  background-size: 100% auto !important;
+  background-repeat: no-repeat !important;
+  background-position: center top !important;
+  aspect-ratio: ${ENVELOPE_DISPLAY_W} / ${ENVELOPE_BLOCK_MIN_HEIGHT_PX};
+  min-height: unset !important;
+  height: auto !important;
+}
+.inv-envelope-card-cell {
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+  padding-top: ${ENVELOPE_CARD_TEXT_PADDING_TOP_PCT}% !important;
+  padding-left: ${envWidthPct(28)} !important;
+  padding-right: ${envWidthPct(28)} !important;
+  padding-bottom: ${envWidthPct(20)} !important;
+  text-align: center !important;
+  vertical-align: top !important;
+}
+.inv-envelope-oncard,
+.inv-envelope-date {
+  font-size: ${envClampFont(15, 9)} !important;
+  line-height: 1.45 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
+  text-shadow: 0 0 1px rgba(252, 250, 247, 0.95), 0 1px 1px rgba(252, 250, 247, 0.6) !important;
+}
+.inv-envelope-date {
+  letter-spacing: 0.08em !important;
+}
+/* Link wrapper sets color:#111 — flap initials must stay cream on burgundy. */
+.inv-email-headline {
+  margin-top: 5% !important;
+  margin-bottom: 5% !important;
+}
+.inv-envelope-couple {
+  color: #f5efe8 !important;
+  font-size: ${envClampFont(16, 10)} !important;
+  line-height: 1.35 !important;
+  margin-top: ${envWidthPct(ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX)} !important;
+  margin-right: auto !important;
+  margin-bottom: 0 !important;
+  margin-left: auto !important;
+  max-width: 96% !important;
+  letter-spacing: 0.02em !important;
+  text-align: center !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
+}
+@media only screen and (max-width: 900px) {
+  .inv-email-body-wrap {
+    padding: 32px 16px !important;
+  }
+  .inv-email-shell {
+    padding: 28px 20px !important;
+    max-width: 100% !important;
+  }
+  .inv-email-for-guest {
+    font-size: ${envClampFont(13, 11)} !important;
+  }
+  .inv-open-card-cta {
+    font-size: ${envClampFont(14, 11)} !important;
+  }
+  .inv-email-headline {
+    font-size: ${envClampFont(36, 22)} !important;
+    line-height: 1.15 !important;
+  }
+  .inv-email-detail,
+  .inv-email-venue-bold {
+    font-size: ${envClampFont(15, 11)} !important;
+    line-height: 1.5 !important;
+  }
+  .inv-email-address,
+  .inv-email-rsvp,
+  .inv-email-link-muted {
+    font-size: ${envClampFont(14, 11)} !important;
+    line-height: 1.5 !important;
   }
 }
 @media only screen and (max-width: 600px) {
+  .inv-email-body-wrap {
+    padding: 24px 12px !important;
+  }
   .inv-email-shell {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    max-width: 100% !important;
-  }
-  .inv-envelope-outer {
-    max-width: ${ENVELOPE_DISPLAY_W}px !important;
-    width: 100% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  .inv-envelope-link {
-    box-sizing: border-box !important;
-    max-width: ${ENVELOPE_DISPLAY_W}px !important;
-    width: 100% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  .inv-envelope-card {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: ${ENVELOPE_DISPLAY_W}px !important;
-    min-height: 0 !important;
-    background-size: 100% auto !important;
-    background-repeat: no-repeat !important;
-    background-position: center top !important;
-    text-align: center !important;
-  }
-  .inv-envelope-card-cell {
-    -webkit-text-size-adjust: 100% !important;
-    text-size-adjust: 100% !important;
-    /* Padding on <td> — Gmail honors this more reliably than padding on the outer <table>. */
-    padding-top: 70% !important;
-    padding-left: 5% !important;
-    padding-right: 5% !important;
-    padding-bottom: 30% !important;
-    text-align: center !important;
-    vertical-align: top !important;
-  }
-  .inv-envelope-oncard,
-  .inv-envelope-date {
-    font-size: 10px !important;
-    line-height: 1.35 !important;
-    word-wrap: break-word !important;
-    overflow-wrap: anywhere !important;
-    text-shadow: 0 0 1px rgba(252, 250, 247, 0.95), 0 1px 1px rgba(252, 250, 247, 0.6) !important;
-  }
-  .inv-envelope-date {
-    letter-spacing: 0.05em !important;
-  }
-  .inv-envelope-couple {
-    font-size: 10px !important;
-    line-height: 13px !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    font-weight: 400 !important;
-    color: #f5efe8 !important;
-    text-align: center !important;
-    margin-top: 20% !important;
-    margin-right: auto !important;
-    margin-bottom: 0 !important;
-    margin-left: auto !important;
-    max-width: 96% !important;
-    letter-spacing: 0.02em !important;
-    word-wrap: break-word !important;
-    overflow-wrap: anywhere !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
+    padding: 20px 14px !important;
   }
 }
 `.trim();
@@ -145,12 +183,6 @@ const forGuest = {
   margin: "0 0 16px",
   lineHeight: "1.5",
 };
-
-/** Envelope hero block height (HTML overlay over `email-invite-envelope-template.png`). */
-const ENVELOPE_BLOCK_MIN_HEIGHT_PX = 600;
-
-/** Top padding so invite + date sit on the beige card (px). */
-const ENVELOPE_CARD_PADDING_TOP_PX = 180;
 
 /** Clickable block: fabric / shell (fallback when no envelope image). */
 const envelopeCardLink = {
@@ -190,6 +222,7 @@ const envelopeCardOuter = {
   marginLeft: "auto",
   marginRight: "auto",
   minHeight: `${ENVELOPE_BLOCK_MIN_HEIGHT_PX}px`,
+  aspectRatio: `${ENVELOPE_DISPLAY_W} / ${ENVELOPE_BLOCK_MIN_HEIGHT_PX}`,
   padding: "0",
   backgroundColor: "transparent",
   backgroundSize: "100% auto",
@@ -198,12 +231,12 @@ const envelopeCardOuter = {
   textAlign: "center" as const,
 } as const;
 
-/** Inner `<td>` — all inset spacing so desktop Gmail matches preview browsers. */
+/** Inner `<td>` — inset spacing as % of envelope width so layout scales on phone/tablet. */
 const envelopeCardCell = {
-  paddingTop: `${ENVELOPE_CARD_PADDING_TOP_PX}px`,
-  paddingLeft: "28px",
-  paddingRight: "28px",
-  paddingBottom: "20px",
+  paddingTop: `${ENVELOPE_CARD_TEXT_PADDING_TOP_PCT}%`,
+  paddingLeft: envWidthPct(28),
+  paddingRight: envWidthPct(28),
+  paddingBottom: envWidthPct(20),
   textAlign: "center" as const,
   verticalAlign: "top" as const,
 } as const;
@@ -224,15 +257,16 @@ const envelopeOnCardDate = {
   letterSpacing: "0.08em",
 } as const;
 
+/** Couple initials on the burgundy flap (below invite + date on the card). */
 const envelopeOnFlapCouple = {
   fontFamily: sans,
   fontSize: "16px",
   fontWeight: 400 as const,
   color: "#f5efe8",
   textAlign: "center" as const,
-  marginTop: "100px",
+  marginTop: envWidthPct(ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX),
   marginRight: "0",
-  marginBottom: "-30px",
+  marginBottom: "0",
   marginLeft: "0",
   lineHeight: "1.35",
   letterSpacing: "0.02em",
@@ -273,7 +307,10 @@ const headline = {
   fontWeight: 400 as const,
   color: "#111111",
   textAlign: "center" as const,
-  margin: "4px 0 22px",
+  marginTop: "5%",
+  marginBottom: "5%",
+  marginLeft: "0",
+  marginRight: "0",
   lineHeight: "1.15",
   letterSpacing: "0.01em",
 };
@@ -346,8 +383,13 @@ export type InvitationEmailProps = {
   /** Fallback when {@link venueAddress} is empty; shown as a single line. */
   location?: string;
   inviteUrl?: string;
-  /** Saved invitation monogram on the red envelope flap (e.g. "N & E"). Omitted when unset. */
+  /** Initials on the burgundy flap (derived from couple names when possible). */
+  envelopeMonogramLetters?: CoupleMonogramLetters;
+  /** Preformatted flap line (e.g. `N & E`). */
   envelopeMonogramDisplay?: string;
+  coupleInitialLeft?: string | null;
+  coupleInitialRight?: string | null;
+  invitationLanguage?: InvitationLanguage;
   /** Wedding date for outbound subject, e.g. "11 July 2026". */
   subjectDateDisplay?: string;
 };
@@ -373,7 +415,11 @@ export default function InvitationEmail({
   mapUrl,
   location,
   inviteUrl = "https://example.com/invite/your-token",
+  envelopeMonogramLetters,
   envelopeMonogramDisplay,
+  coupleInitialLeft,
+  coupleInitialRight,
+  invitationLanguage = "en",
 }: InvitationEmailProps = {}) {
   const forAddressee = (householdName?.trim() || coupleNames).trim();
   const previewText = `Save the Date — ${coupleNames}`;
@@ -407,7 +453,18 @@ export default function InvitationEmail({
   const bgUrl = backgroundImageAbsoluteUrl?.trim();
   const envelopeSrc = envelopeCardImageSrc?.trim();
   const cardDateLine = envelopeCardDateDisplay?.trim() || "—  —  —";
-  const envelopeMonogram = envelopeMonogramDisplay?.trim() || "";
+  const coupleNamesTrimmed = (coupleNames ?? "").trim() || "Couple";
+  const monogramLetters: CoupleMonogramLetters | undefined =
+    envelopeMonogramLetters ??
+    resolveCoupleMonogramLetters({
+      coupleNames: coupleNamesTrimmed,
+      coupleInitialLeft,
+      coupleInitialRight,
+      language: invitationLanguage,
+    });
+  const flapMonogramLine =
+    envelopeMonogramDisplay?.trim() ||
+    (monogramLetters ? formatCoupleMonogramDisplay(monogramLetters) : "");
 
   const bodyStyle = {
     ...pageBase,
@@ -433,14 +490,16 @@ export default function InvitationEmail({
         <style>{INVITATION_ENVELOPE_MOBILE_CSS}</style>
       </Head>
       <Preview>{previewText}</Preview>
-      <Body style={bodyStyle}>
+      <Body className="inv-email-body-wrap" style={bodyStyle}>
         <Container className="inv-email-shell" style={shellStyle}>
-          <Text style={forGuest}>For: {forAddressee}</Text>
+          <Text className="inv-email-for-guest" style={forGuest}>
+            For: {forAddressee}
+          </Text>
 
           <Section className="inv-envelope-outer" style={envelopeHeroWrap}>
             {envelopeSrc ? (
               <Section style={envelopeStack}>
-                <Link href={inviteUrl} style={openCardCta}>
+                <Link className="inv-open-card-cta" href={inviteUrl} style={openCardCta}>
                   Open Card
                 </Link>
                 <Link className="inv-envelope-link" href={inviteUrl} style={envelopeHeroLink}>
@@ -459,11 +518,9 @@ export default function InvitationEmail({
                         <Text className="inv-envelope-date" style={envelopeOnCardDate}>
                           {cardDateLine}
                         </Text>
-                        {envelopeMonogram ? (
-                          <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
-                            {envelopeMonogram}
-                          </Text>
-                        ) : null}
+                        <Text className="inv-envelope-couple" style={envelopeOnFlapCouple}>
+                          {flapMonogramLine}
+                        </Text>
                       </Column>
                     </Row>
                   </Section>
@@ -476,24 +533,42 @@ export default function InvitationEmail({
             )}
           </Section>
 
-          <Text style={headline}>Save the Date</Text>
-          <Text style={detail}>{dateLine}</Text>
-          {timeLine ? <Text style={detail}>{timeLine}</Text> : null}
+          <Text className="inv-email-headline" style={headline}>
+            Save the Date
+          </Text>
+          <Text className="inv-email-detail" style={detail}>
+            {dateLine}
+          </Text>
+          {timeLine ? (
+            <Text className="inv-email-detail" style={detail}>
+              {timeLine}
+            </Text>
+          ) : null}
 
           <Section style={{ textAlign: "center", margin: "10px 0 0" }}>
-            <Link href={calendarUrl} style={linkMuted}>
+            <Link className="inv-email-link-muted" href={calendarUrl} style={linkMuted}>
               Add to calendar
             </Link>
           </Section>
 
-          <Text style={rsvpLine}>{rsvpDeadlineText}</Text>
+          <Text className="inv-email-rsvp" style={rsvpLine}>
+            {rsvpDeadlineText}
+          </Text>
 
-          {venueTitle ? <Text style={venueBold}>{venueTitle}</Text> : null}
-          {venueAddr ? <Text style={venueTitle ? addressLine : venueBold}>{venueAddr}</Text> : null}
+          {venueTitle ? (
+            <Text className="inv-email-venue-bold" style={venueBold}>
+              {venueTitle}
+            </Text>
+          ) : null}
+          {venueAddr ? (
+            <Text className={venueTitle ? "inv-email-address" : "inv-email-venue-bold"} style={venueTitle ? addressLine : venueBold}>
+              {venueAddr}
+            </Text>
+          ) : null}
 
           {mapHref ? (
             <Section style={{ textAlign: "center", margin: "4px 0 0" }}>
-              <Link href={mapHref} style={linkMuted}>
+              <Link className="inv-email-link-muted" href={mapHref} style={linkMuted}>
                 View map
               </Link>
             </Section>

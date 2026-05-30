@@ -4,7 +4,7 @@ import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitation
 export default function ComingSoonLanding() {
   return (
     <InvitationFrame includeInviteGutter={false} canvasStyle={invitationPageCanvasMonochromeStyle}>
-      <div className="m3-admin-form flex min-h-[min(100vh,720px)] flex-col items-center justify-center bg-transparent px-6 py-16 text-center font-sans text-[var(--m3-on-background)]">
+      <div className="m3-admin-form flex min-h-[min(100vh,720px)] flex-col items-center justify-center bg-transparent py-16 text-center font-sans text-[var(--m3-on-background)]">
         <div className="mx-auto w-fit">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG wordmark */}
           <img

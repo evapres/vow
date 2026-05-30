@@ -30,8 +30,6 @@ const PREVIEW_SAMPLE_DETAILS_LOCATION = "George Town, Brighton, BN1 3HG";
 
 export type AdminInvitationLivePreviewProps = {
   coupleNames: string;
-  coupleInitialLeft?: string;
-  coupleInitialRight?: string;
   language: "en" | "el";
   invitationTheme: InvitationThemeId;
   weddingDate: string;
@@ -46,8 +44,6 @@ export type AdminInvitationLivePreviewProps = {
 
 function AdminInvitationLivePreview({
   coupleNames,
-  coupleInitialLeft,
-  coupleInitialRight,
   language,
   invitationTheme,
   weddingDate,
@@ -78,14 +74,8 @@ function AdminInvitationLivePreview({
     : formatHeaderDateLabel(PREVIEW_SAMPLE_DATE_FOR_HEADER, language);
   const previewVenueLabel = venueName.trim() || PREVIEW_SAMPLE_VENUE;
   const previewTopMonogram = useMemo(
-    () =>
-      resolveCoupleMonogramLetters({
-        coupleNames,
-        coupleInitialLeft,
-        coupleInitialRight,
-        language,
-      }),
-    [coupleNames, coupleInitialLeft, coupleInitialRight, language],
+    () => resolveCoupleMonogramLetters({ coupleNames, language }),
+    [coupleNames, language],
   );
 
   const rsvpLine = useMemo(

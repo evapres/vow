@@ -49,8 +49,6 @@ export async function GET(_request: Request, context: RouteContext) {
     note: String(wedding.note ?? ""),
     invitationMusicUrl: adminMediaUrlForEdit(id, wedding.invitation_music_url as string | null, "music"),
     invitationTheme: parseInvitationThemeId(wedding.invitation_theme as string | null | undefined),
-    coupleInitialLeft: String(wedding.couple_initial_left ?? ""),
-    coupleInitialRight: String(wedding.couple_initial_right ?? ""),
   };
 
   return NextResponse.json(initial);

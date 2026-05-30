@@ -1,12 +1,21 @@
+"use client";
+
+import { useState } from "react";
+
+import { dashboardSharePreviewImagePath } from "@/lib/invite/dashboardSharePreviewImagePath";
 import { inviteOgImagePath } from "@/lib/invite/inviteOgImagePath";
 
 type ShareLinkPreviewProps = {
+  weddingId: string;
   inviteToken: string;
 };
 
-/** Renders the same PNG used for Messenger / WhatsApp / iMessage link previews. */
-export default function ShareLinkPreview({ inviteToken }: ShareLinkPreviewProps) {
-  const src = inviteOgImagePath(inviteToken);
+/** Renders the link-preview image (couple photo when uploaded, else envelope composite). */
+export default function ShareLinkPreview({ weddingId, inviteToken }: ShareLinkPreviewProps) {
+  const primarySrc = dashboardSharePreviewImagePath(weddingId);
+  const fallbackSrc = inviteOgImagePath(inviteToken);
+  const [src, setSrc] = useState(primarySrc);
+  const [failed, setFailed] = useState(false);
 
   return (
     <section className="m3-form-card mt-10 overflow-hidden p-0">
@@ -18,13 +27,25 @@ export default function ShareLinkPreview({ inviteToken }: ShareLinkPreviewProps)
         </p>
       </div>
       <div className="bg-[var(--m3-surface)] p-4 sm:p-6">
-        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic OG PNG route */}
+        {failed ? (
+          <p className="m3-banner m3-banner--info" role="status">
+            <span className="m3-banner__detail">
+              Preview image could not load. Try refreshing, or open the link below in a new tab.
+            </span>
+          </p>
+        ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element -- authenticated preview API */}
         <img
           src={src}
-          alt="Share link preview — wedding invitation envelope"
-          width={1200}
-          height={630}
-          className="mx-auto block w-full max-w-[520px] rounded-[var(--m3-shape-corner-sm)] border border-[var(--m3-outline-variant)] shadow-sm"
+          alt="Share link preview"
+          className="mx-auto block h-auto min-h-[120px] w-full max-w-[520px] rounded-[var(--m3-shape-corner-sm)] border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-low)] shadow-sm object-contain"
+          onError={() => {
+            if (src !== fallbackSrc) {
+              setSrc(fallbackSrc);
+              return;
+            }
+            setFailed(true);
+          }}
         />
         <p className="m3-field-support mt-4 text-center">
           <a

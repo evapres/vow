@@ -1,4 +1,4 @@
-import { INVITE_LINK_PREVIEW_MESSAGE } from "./inviteShareCopy";
+import { buildYouAreInvitedTitle } from "@/lib/coupleNamesForm";
 import { inviteOgImagePath } from "@/lib/invite/inviteOgImagePath";
 
 export type InviteSharePayload = {
@@ -20,12 +20,14 @@ export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteTok
 
 export function buildInviteSharePayload(args: {
   inviteUrl: string;
+  coupleNames: string;
   shareImageUrl?: string | null;
 }): InviteSharePayload {
   const shareImageUrl = args.shareImageUrl?.trim() || undefined;
+  const title = buildYouAreInvitedTitle(args.coupleNames);
   return {
-    title: INVITE_LINK_PREVIEW_MESSAGE,
-    text: INVITE_LINK_PREVIEW_MESSAGE,
+    title,
+    text: title,
     url: args.inviteUrl,
     shareImageUrl,
   };

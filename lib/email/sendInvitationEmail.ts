@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 import type { InvitationEmailProps } from "../../emails/InvitationEmail";
+import { buildYouAreInvitedTitle } from "@/lib/coupleNamesForm";
 import { renderInvitationEmailHtml } from "@/lib/email/renderInvitationEmail";
 
 export type SendInvitationEmailInput = {
@@ -22,9 +23,7 @@ export async function sendInvitationEmail({ to, emailProps }: SendInvitationEmai
   }
 
   const html = await renderInvitationEmailHtml(emailProps);
-  const couple = (emailProps.coupleNames ?? "").trim() || "Couple";
-  const datePart = emailProps.subjectDateDisplay?.trim();
-  const subject = datePart ? `You’re invited — ${datePart}` : `You’re invited — ${couple}`;
+  const subject = buildYouAreInvitedTitle((emailProps.coupleNames ?? "").trim() || "Couple");
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({

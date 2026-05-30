@@ -26,12 +26,29 @@ export function normalizeCoupleInitialLetter(raw: string | null | undefined): st
   return toAllCapsNoAccents(match[0]);
 }
 
+/** Strip Greek article (ο/η) so monogram uses the given name, not the article. */
+export function stripGreekArticlePrefix(segment: string): string {
+  return segment.trim().replace(/^(ο|η|Ο|Η)\s+/iu, "").trim();
+}
+
 export function monogramLettersFromCoupleNames(coupleNames: string): CoupleMonogramLetters | null {
-  const parts = splitCoupleNameParts(coupleNames);
+  const parts = splitCoupleNameParts(coupleNames).map(stripGreekArticlePrefix);
   const left = parts[0]?.match(/\p{L}/u)?.[0];
   const right = parts[1]?.match(/\p{L}/u)?.[0];
   if (!left || !right) return null;
   return { left: toAllCapsNoAccents(left), right: toAllCapsNoAccents(right) };
+}
+
+/** Initials saved with the wedding row — derived from `couple_names` when possible. */
+export function coupleInitialsForStorage(coupleNames: string): {
+  couple_initial_left: string | null;
+  couple_initial_right: string | null;
+} {
+  const derived = monogramLettersFromCoupleNames(coupleNames);
+  return {
+    couple_initial_left: derived?.left ?? null,
+    couple_initial_right: derived?.right ?? null,
+  };
 }
 
 export function formatCoupleMonogramDisplay(letters: CoupleMonogramLetters): string {
@@ -49,25 +66,56 @@ export function formatSavedCoupleMonogramDisplay(input: {
   return formatCoupleMonogramDisplay({ left, right });
 }
 
+/** Initials for the invitation email / share envelope — from names first, then saved fields. */
+export function resolveEnvelopeMonogramLetters(input: {
+  coupleNames: string;
+  coupleInitialLeft?: string | null;
+  coupleInitialRight?: string | null;
+}): CoupleMonogramLetters | null {
+  const fromNames = monogramLettersFromCoupleNames((input.coupleNames ?? "").trim());
+  if (fromNames) return fromNames;
+
+  const left = normalizeCoupleInitialLetter(input.coupleInitialLeft);
+  const right = normalizeCoupleInitialLetter(input.coupleInitialRight);
+  if (left && right) return { left, right };
+
+  return null;
+}
+
+/**
+ * Envelope monogram line (e.g. `"N & E"`) for invitation email and OG image.
+ * Prefers initials derived from `couple_names` (skips Greek articles).
+ */
+export function resolveEnvelopeMonogramDisplay(input: {
+  coupleNames: string;
+  coupleInitialLeft?: string | null;
+  coupleInitialRight?: string | null;
+}): string | undefined {
+  const letters = resolveEnvelopeMonogramLetters(input);
+  if (letters) return formatCoupleMonogramDisplay(letters);
+
+  return formatSavedCoupleMonogramDisplay({
+    coupleInitialLeft: input.coupleInitialLeft,
+    coupleInitialRight: input.coupleInitialRight,
+  });
+}
+
 export function resolveCoupleMonogramLetters(input: {
   coupleNames: string;
   coupleInitialLeft?: string | null;
   coupleInitialRight?: string | null;
   language?: "en" | "el";
 }): CoupleMonogramLetters | undefined {
+  const derived = monogramLettersFromCoupleNames(input.coupleNames);
+  if (derived) return derived;
+
   const left = normalizeCoupleInitialLetter(input.coupleInitialLeft);
   const right = normalizeCoupleInitialLetter(input.coupleInitialRight);
   if (left && right) return { left, right };
 
   if (input.language === "el") {
-    return {
-      left: left || GREEK_DEFAULT_MONOGRAM.left,
-      right: right || GREEK_DEFAULT_MONOGRAM.right,
-    };
+    return GREEK_DEFAULT_MONOGRAM;
   }
 
-  const derived = monogramLettersFromCoupleNames(input.coupleNames);
-  if (derived) return derived;
-
-  return { left: "A", right: "B" };
+  return { left: left || "A", right: right || "B" };
 }

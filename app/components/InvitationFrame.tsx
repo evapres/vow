@@ -52,7 +52,7 @@ export default function InvitationFrame({
       style={resolvedCanvas}
     >
       <div
-        className="main-content box-border w-full [--page-padding:0px] sm:[--page-padding:10%]"
+        className={`main-content box-border w-full${includeInviteGutter ? " main-content--invite-gutter" : ""}`}
         style={invitationFrameStyle}
       >
         <div className="overflow-hidden bg-transparent">

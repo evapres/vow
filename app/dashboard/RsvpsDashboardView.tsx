@@ -202,6 +202,7 @@ export default function RsvpsDashboardView({
                             {row.inviteToken ? (
                               <InviteShareActions
                                 inviteToken={row.inviteToken}
+                                coupleNames={coupleNames ?? ""}
                                 inviteBaseUrl={inviteBaseUrl}
                                 shareHeroImageUrl={shareHeroImageUrl}
                               />

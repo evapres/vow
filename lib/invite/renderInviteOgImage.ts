@@ -2,7 +2,12 @@ import path from "node:path";
 
 import sharp from "sharp";
 
-import { ENVELOPE_INVITE_LINE, ENVELOPE_TEMPLATE_FILENAME } from "@/lib/email/envelopeCardCopy";
+import {
+  ENVELOPE_CARD_TEXT_PADDING_TOP_PX,
+  ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX,
+  ENVELOPE_INVITE_LINE,
+  ENVELOPE_TEMPLATE_FILENAME,
+} from "@/lib/email/envelopeCardCopy";
 import { EMAIL_FABRIC_BACKGROUND_FILENAME } from "@/lib/email/emailPublicAssets";
 
 /** Standard Open Graph dimensions. */
@@ -14,8 +19,7 @@ const SHELL_WIDTH = 520;
 const SHELL_RADIUS = 12;
 const SHELL_PADDING_Y = 40;
 const ENVELOPE_WIDTH = 480;
-const ENVELOPE_PADDING_TOP = 180;
-const MONOGRAM_OFFSET_TOP = 100;
+const ENVELOPE_LINE_GAP = 22;
 
 function escapeXml(value: string): string {
   return value
@@ -47,9 +51,10 @@ function buildEnvelopeTextSvg(args: {
 }): string {
   const scale = args.envelopeW / 520;
   const centerX = args.envelopeX + args.envelopeW / 2;
-  const inviteY = args.envelopeY + ENVELOPE_PADDING_TOP * scale;
-  const dateY = inviteY + 22 * scale;
-  const monogramY = dateY + MONOGRAM_OFFSET_TOP * scale;
+  const lineGap = ENVELOPE_LINE_GAP * scale;
+  const inviteY = args.envelopeY + ENVELOPE_CARD_TEXT_PADDING_TOP_PX * scale;
+  const dateY = inviteY + lineGap;
+  const monogramY = dateY + ENVELOPE_FLAP_MONOGRAM_MARGIN_TOP_PX * scale;
   const date = escapeXml(args.dateLine || "—  —  —");
   const monogram = args.monogram ? escapeXml(args.monogram) : "";
 

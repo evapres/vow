@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   description: "Private modern wedding invitations.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,7 +46,7 @@ export default function RootLayout({
       className={`${bodyFont.variable} ${serifFont.variable} ${notoSerif.variable} ${specialFont.variable} h-full min-h-full bg-app-shell antialiased`}
     >
       <body className="flex min-h-full flex-col bg-app-shell font-sans">
-        <div className="px-page flex min-h-full flex-1 flex-col">{children}</div>
+        <div className="flex min-h-full flex-1 flex-col">{children}</div>
       </body>
     </html>
   );

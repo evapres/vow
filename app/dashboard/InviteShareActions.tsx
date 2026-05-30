@@ -18,6 +18,7 @@ import {
 
 type InviteShareActionsProps = {
   inviteToken: string;
+  coupleNames: string;
   inviteBaseUrl?: string;
   shareHeroImageUrl?: string | null;
 };
@@ -34,6 +35,7 @@ function openShareTarget(url: string, options?: { sameTab?: boolean }) {
 
 export default function InviteShareActions({
   inviteToken,
+  coupleNames,
   inviteBaseUrl,
   shareHeroImageUrl,
 }: InviteShareActionsProps) {
@@ -45,8 +47,8 @@ export default function InviteShareActions({
   );
 
   const sharePayload = useMemo(
-    () => buildInviteSharePayload({ inviteUrl, shareImageUrl: shareHeroImageUrl }),
-    [inviteUrl, shareHeroImageUrl],
+    () => buildInviteSharePayload({ inviteUrl, coupleNames, shareImageUrl: shareHeroImageUrl }),
+    [inviteUrl, coupleNames, shareHeroImageUrl],
   );
 
   const [nativeShareAvailable, setNativeShareAvailable] = useState(false);
