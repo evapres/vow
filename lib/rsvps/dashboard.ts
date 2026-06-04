@@ -42,6 +42,48 @@ function statusFromRsvp(rsvp: RsvpRow | undefined): HouseholdRsvpStatus {
   return "pending";
 }
 
+/** Invited headcount for one household (defaults to 1 when unset). */
+export function invitedGuestCount(row: Pick<DashboardHouseholdRow, "invitedCount">): number {
+  const n = row.invitedCount;
+  return n != null && n >= 1 ? Math.floor(n) : 1;
+}
+
+/** Guests coming for an attending household (uses RSVP count, then invited, then 1). */
+export function attendingGuestCount(
+  row: Pick<DashboardHouseholdRow, "status" | "attendingCount" | "invitedCount">,
+): number {
+  if (row.status !== "attending") return 0;
+  const fromRsvp = row.attendingCount;
+  if (fromRsvp != null && fromRsvp >= 1) return Math.floor(fromRsvp);
+  return invitedGuestCount(row);
+}
+
+export type DashboardGuestStats = {
+  invitedGuests: number;
+  attendingGuests: number;
+  notAttendingGuests: number;
+  pendingGuests: number;
+};
+
+/** Aggregate guest headcounts for dashboard stat cards. */
+export function summarizeDashboardGuestStats(rows: DashboardHouseholdRow[]): DashboardGuestStats {
+  return rows.reduce(
+    (acc, row) => {
+      const invited = invitedGuestCount(row);
+      acc.invitedGuests += invited;
+      if (row.status === "attending") {
+        acc.attendingGuests += attendingGuestCount(row);
+      } else if (row.status === "not_attending") {
+        acc.notAttendingGuests += invited;
+      } else {
+        acc.pendingGuests += invited;
+      }
+      return acc;
+    },
+    { invitedGuests: 0, attendingGuests: 0, notAttendingGuests: 0, pendingGuests: 0 },
+  );
+}
+
 /**
  * All households for a wedding with RSVP status (one row per household).
  * Uses service role when available so RLS on `rsvps` cannot hide rows after guest submits.

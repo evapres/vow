@@ -51,24 +51,10 @@ export default async function AdminNewWeddingPage({ searchParams }: PageProps) {
           </div>
 
           {created ? (
-            <div className="mb-6 border border-emerald-200/90 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950">
-              <p className="font-medium">Invitation created.</p>
-              <p className="mt-1">
-                <span className="font-medium">ID:</span> <code className="text-xs">{created}</code>
-              </p>
-              <p className="mt-3 flex flex-wrap gap-4">
-                <Link
-                  href={`/admin/edit/${created}`}
-                  className="font-medium underline underline-offset-4"
-                >
-                  Edit this invitation
-                </Link>
-                <Link
-                  href={`/dashboard/${created}`}
-                  className="font-medium underline underline-offset-4"
-                >
-                  Open dashboard
-                </Link>
+            <div className="m3-banner m3-banner--success" role="status">
+              <p className="m3-banner__title">Invitation created.</p>
+              <p className="m3-banner__detail">
+                <Link href={`/dashboard/${created}`}>Open dashboard</Link>
               </p>
             </div>
           ) : null}

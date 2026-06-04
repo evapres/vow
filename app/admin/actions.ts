@@ -366,25 +366,44 @@ export async function deleteWedding(formData: FormData) {
     );
   }
 
-  const mutate = dbAfterAuth(supabase);
+  const admin = getServiceRoleClientOrNull();
+  if (!admin) {
+    redirect(
+      "/admin/invitations?error=" +
+        encodeURIComponent(
+          "Missing SUPABASE_SERVICE_ROLE_KEY in .env.local. In Supabase → Project Settings → API, copy the service_role secret (not anon). Paste it in .env.local, save, then stop and restart npm run dev.",
+        ),
+    );
+  }
 
-  const { error: rsvpError } = await mutate.from("rsvps").delete().eq("wedding_id", weddingId);
+  const { error: rsvpError } = await admin.from("rsvps").delete().eq("wedding_id", weddingId);
   if (rsvpError) {
     redirect("/admin/invitations?error=" + encodeURIComponent(rsvpError.message));
   }
 
-  const { error: householdError } = await mutate.from("households").delete().eq("wedding_id", weddingId);
+  const { error: householdError } = await admin.from("households").delete().eq("wedding_id", weddingId);
   if (householdError) {
     redirect("/admin/invitations?error=" + encodeURIComponent(householdError.message));
   }
 
-  const { error: weddingError } = await mutate.from("weddings").delete().eq("id", weddingId).eq("user_id", user.id);
+  const { data: deletedWeddings, error: weddingError } = await admin
+    .from("weddings")
+    .delete()
+    .eq("id", weddingId)
+    .eq("user_id", user.id)
+    .select("id");
   if (weddingError) {
     redirect("/admin/invitations?error=" + encodeURIComponent(weddingError.message));
   }
+  if (!deletedWeddings?.length) {
+    redirect(
+      "/admin/invitations?error=" +
+        encodeURIComponent("Invitation was not deleted. Refresh the page — it may already be gone."),
+    );
+  }
 
-  revalidatePath("/admin/invitations");
-  revalidatePath("/admin");
+  revalidatePath("/admin/invitations", "page");
+  revalidatePath("/admin", "page");
   revalidatePath(`/admin/edit/${weddingId}`);
   revalidatePath(`/preview/${weddingId}`);
   revalidatePath(`/dashboard/${weddingId}`);

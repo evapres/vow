@@ -10,7 +10,8 @@ import {
   updateHouseholdRsvp,
 } from "./actions";
 import RsvpRealtimeRefresh from "./RsvpRealtimeRefresh";
-import type { DashboardHouseholdRow } from "../../lib/rsvps/dashboard";
+import { attendingGuestCount, type DashboardHouseholdRow } from "../../lib/rsvps/dashboard";
+import DashboardGuestStatCards from "./DashboardGuestStatCards";
 import InvitationFrame from "@/app/components/InvitationFrame";
 import { invitationPageCanvasMonochromeStyle } from "@/app/components/invitationDarkBandStyle";
 import AdminShellHeader from "@/app/components/admin/AdminShellHeader";
@@ -35,9 +36,12 @@ type RsvpsDashboardViewProps = {
   coupleNames?: string | null;
 };
 
-function attendingLabel(status: DashboardHouseholdRow["status"]): string {
-  if (status === "attending") return "Attending";
-  if (status === "not_attending") return "Not attending";
+function attendingLabel(row: DashboardHouseholdRow): string {
+  if (row.status === "attending") {
+    const n = attendingGuestCount(row);
+    return n === 1 ? "Attending (1 guest)" : `Attending (${n} guests)`;
+  }
+  if (row.status === "not_attending") return "Not attending";
   return "No response yet";
 }
 
@@ -61,15 +65,6 @@ export default function RsvpsDashboardView({
   shareHeroImageUrl,
   coupleNames,
 }: RsvpsDashboardViewProps) {
-  const counts = households.reduce(
-    (acc, row) => {
-      if (row.status === "attending") acc.yes += 1;
-      if (row.status === "not_attending") acc.no += 1;
-      return acc;
-    },
-    { yes: 0, no: 0 },
-  );
-
   const pendingInviteCount = households.filter(
     (h) => Boolean(h.email?.trim() && h.inviteToken?.trim() && !h.emailSentAt),
   ).length;
@@ -132,20 +127,7 @@ export default function RsvpsDashboardView({
             </div>
           ) : null}
 
-          <div className="m3-stat-grid">
-            <div className="m3-stat-card">
-              <p className="m3-stat-card__label">Households</p>
-              <p className="m3-stat-card__value">{households.length}</p>
-            </div>
-            <div className="m3-stat-card">
-              <p className="m3-stat-card__label">Attending</p>
-              <p className="m3-stat-card__value">{counts.yes}</p>
-            </div>
-            <div className="m3-stat-card">
-              <p className="m3-stat-card__label">Not attending</p>
-              <p className="m3-stat-card__value">{counts.no}</p>
-            </div>
-          </div>
+          <DashboardGuestStatCards households={households} />
 
           <div className="m3-form-card m3-data-card">
             <div className="m3-data-card__toolbar">
@@ -210,7 +192,7 @@ export default function RsvpsDashboardView({
                           </div>
                         </td>
                         <td>
-                          {attendingLabel(row.status)}
+                          {attendingLabel(row)}
                           <details className="m3-panel mt-2">
                             <summary className="m3-panel__summary">Edit RSVP</summary>
                             <div className="m3-panel__body">

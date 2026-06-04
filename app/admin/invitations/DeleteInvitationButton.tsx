@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useFormStatus } from "react-dom";
 
 import { deleteWedding } from "@/app/admin/actions";
 
@@ -9,31 +9,33 @@ type DeleteInvitationButtonProps = {
   coupleNames: string;
 };
 
-export default function DeleteInvitationButton({ weddingId, coupleNames }: DeleteInvitationButtonProps) {
-  const [pending, startTransition] = useTransition();
-  const label = coupleNames.trim() || "this invitation";
-
+function DeleteSubmitButton() {
+  const { pending } = useFormStatus();
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={() => {
-        if (
-          !confirm(
-            `Delete "${label}"? This permanently removes the invitation, all guest households, and RSVPs.`,
-          )
-        ) {
-          return;
-        }
-        startTransition(() => {
-          const fd = new FormData();
-          fd.set("wedding_id", weddingId);
-          void deleteWedding(fd);
-        });
-      }}
-      className="m3-btn m3-btn--danger m3-btn--compact"
-    >
+    <button type="submit" disabled={pending} className="m3-btn m3-btn--danger m3-btn--compact">
       {pending ? "Deleting…" : "Delete"}
     </button>
+  );
+}
+
+export default function DeleteInvitationButton({ weddingId, coupleNames }: DeleteInvitationButtonProps) {
+  const displayLabel = coupleNames.trim() || "this invitation";
+
+  return (
+    <form
+      action={deleteWedding}
+      onSubmit={(e) => {
+        if (
+          !confirm(
+            `Delete "${displayLabel}"? This permanently removes the invitation, all guest households, and RSVPs.`,
+          )
+        ) {
+          e.preventDefault();
+        }
+      }}
+    >
+      <input type="hidden" name="wedding_id" value={weddingId} />
+      <DeleteSubmitButton />
+    </form>
   );
 }

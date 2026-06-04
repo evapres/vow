@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import DeleteInvitationButton from "./DeleteInvitationButton";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   searchParams: Promise<{ deleted?: string; error?: string; from?: string }>;
 };
@@ -80,12 +82,7 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
           ) : null}
 
           <header className="m3-page-header">
-            <div>
-              <h1 className="m3-page-title">Invitations</h1>
-              <p className="m3-page-intro">
-                Choose an invitation to preview, edit, or open guests &amp; RSVPs.
-              </p>
-            </div>
+            <h1 className="m3-page-title">Invitations</h1>
             <Link href="/admin/new" className="m3-btn m3-btn--filled">
               Create new
             </Link>
@@ -130,11 +127,6 @@ export default async function AdminInvitationsPage({ searchParams }: PageProps) 
             <div className="m3-form-card">
               <h2 className="m3-title-large">No invitations yet</h2>
               <p className="m3-page-intro">Create your first wedding invitation to get started.</p>
-              <p className="mt-4">
-                <Link href="/admin/new" className="m3-btn m3-btn--filled">
-                  Add new invitation
-                </Link>
-              </p>
             </div>
           )}
         </main>

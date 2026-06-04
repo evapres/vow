@@ -472,10 +472,19 @@
   border: 1px solid color-mix(in srgb, #b3261e 35%, transparent);
 }
 
-.m3-banner--success {
+.m3-admin-form .m3-banner--success {
   background-color: color-mix(in srgb, #386a20 10%, var(--m3-surface-container-high));
   color: #1b3a0f;
-  border: 1px solid color-mix(in srgb, #386a20 28%, transparent);
+  border: none;
+}
+
+.m3-admin-form .m3-banner--success :where(p, a, code, span) {
+  color: inherit;
+}
+
+.m3-admin-form .m3-banner--success a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .m3-banner--info {
@@ -496,42 +505,62 @@
 
 .m3-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
 }
 
-@media (max-width: 639px) {
+/* Laptop+ — four stats in one row */
+@media (min-width: 960px) {
+  .m3-stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .m3-admin-form .m3-stat-card {
+    padding: 14px 12px;
+  }
+
+  .m3-admin-form .m3-stat-card__label {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 479px) {
   .m3-stat-grid {
     grid-template-columns: 1fr;
   }
 }
 
 .m3-admin-form .m3-stat-card {
+  min-width: 0;
   border-radius: var(--m3-shape-corner-md);
   background-color: var(--m3-surface-container-high);
   padding: 16px 20px;
   box-shadow: 0 1px 2px rgba(32, 27, 29, 0.06), 0 4px 24px rgba(32, 27, 29, 0.04);
 }
 
-.m3-stat-card__label {
+.m3-admin-form .m3-stat-card__label {
   font-family: var(--m3-font-plain);
   font-size: var(--m3-label-medium-size);
   font-weight: 500;
   line-height: var(--m3-label-medium-line);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--m3-on-surface-variant);
   margin: 0;
 }
 
-.m3-stat-card__value {
+.m3-admin-form .m3-stat-card__value {
   font-family: var(--m3-font-brand);
   font-size: 1.75rem;
   font-weight: 500;
   line-height: 1.2;
   color: var(--m3-on-surface);
   margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .m3-page-intro {

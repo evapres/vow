@@ -80,7 +80,7 @@ export default async function EditWeddingPage({ params, searchParams }: PageProp
           </div>
 
           {saved ? (
-            <div className="mb-6 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            <div className="m3-banner m3-banner--success" role="status">
               Invitation saved.
             </div>
           ) : null}
