@@ -44,31 +44,58 @@ async function inviteDbClient(): Promise<SupabaseClient> {
   return getServiceRoleClientOrNull() ?? (await createClient());
 }
 
+function normalizeInviteWedding(row: Record<string, unknown>): InvitePageWedding {
+  return {
+    id: String(row.id ?? ""),
+    couple_names: (row.couple_names as string | null) ?? null,
+    wedding_date: (row.wedding_date as string | null) ?? null,
+    language: (row.language as string | null) ?? null,
+    hero_image_url: (row.hero_image_url as string | null) ?? null,
+    hero_image_position: (row.hero_image_position as string | null) ?? "center",
+    rsvp_deadline: (row.rsvp_deadline as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    invitation_theme: (row.invitation_theme as string | null) ?? null,
+    invitation_music_url: (row.invitation_music_url as string | null) ?? null,
+    venue_name: (row.venue_name as string | null) ?? null,
+    church_name: (row.church_name as string | null) ?? null,
+    street_address: (row.street_address as string | null) ?? null,
+    location: (row.location as string | null) ?? null,
+    couple_initial_left: (row.couple_initial_left as string | null) ?? null,
+    couple_initial_right: (row.couple_initial_right as string | null) ?? null,
+  };
+}
+
 async function loadWeddingForInvite(
   supabase: SupabaseClient,
   weddingId: string,
 ): Promise<InvitePageWedding | null> {
-  const selects = [WEDDING_SELECT_FULL, WEDDING_SELECT_WITHOUT_HERO_POSITION];
+  const fullResult = await supabase
+    .from("weddings")
+    .select(WEDDING_SELECT_FULL)
+    .eq("id", weddingId)
+    .single();
 
-  for (const select of selects) {
-    const { data, error } = await supabase
-      .from("weddings")
-      .select(select)
-      .eq("id", weddingId)
-      .single();
+  if (!fullResult.error && fullResult.data) {
+    return normalizeInviteWedding(fullResult.data as Record<string, unknown>);
+  }
 
-    if (!error && data) {
-      const row = data as InvitePageWedding;
-      return {
-        ...row,
-        hero_image_position: row.hero_image_position ?? "center",
-      };
-    }
+  if (fullResult.error && !isRetryableMissingColumnError(fullResult.error)) {
+    console.error("loadInviteByToken wedding:", fullResult.error.message);
+    return null;
+  }
 
-    if (error && !isRetryableMissingColumnError(error)) {
-      console.error("loadInviteByToken wedding:", error.message);
-      return null;
-    }
+  const legacyResult = await supabase
+    .from("weddings")
+    .select(WEDDING_SELECT_WITHOUT_HERO_POSITION)
+    .eq("id", weddingId)
+    .single();
+
+  if (!legacyResult.error && legacyResult.data) {
+    return normalizeInviteWedding(legacyResult.data as Record<string, unknown>);
+  }
+
+  if (legacyResult.error) {
+    console.error("loadInviteByToken wedding:", legacyResult.error.message);
   }
 
   return null;
