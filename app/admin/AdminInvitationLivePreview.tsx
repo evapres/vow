@@ -11,6 +11,7 @@ import {
   proportionalInvitationVars,
 } from "@/lib/adminInvitationPreview";
 import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
+import { type HeroImagePosition } from "@/lib/heroImagePosition";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 import {
   combineWeddingDateAndTime,
@@ -40,6 +41,7 @@ export type AdminInvitationLivePreviewProps = {
   rsvpDeadline: string;
   note: string;
   photoSrc: string;
+  photoPosition: HeroImagePosition;
 };
 
 function AdminInvitationLivePreview({
@@ -54,6 +56,7 @@ function AdminInvitationLivePreview({
   rsvpDeadline,
   note,
   photoSrc,
+  photoPosition,
 }: AdminInvitationLivePreviewProps) {
   const previewTheme = useMemo(() => getInvitationTheme(invitationTheme), [invitationTheme]);
 
@@ -113,6 +116,7 @@ function AdminInvitationLivePreview({
             eventDateLabel={previewEventDateLabel}
             venueLabel={previewVenueLabel}
             photoSrc={photoSrc}
+            photoPosition={photoPosition}
             topMonogramLetters={previewTopMonogram}
             detailsDateTime={previewDetailsDateTime}
             detailsLocation={previewDetailsLocation}

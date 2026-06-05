@@ -9,6 +9,7 @@ import {
 } from "@/lib/invitationDisplay";
 import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { createClient } from "@/lib/supabase/server";
+import { parseHeroImagePosition } from "@/lib/heroImagePosition";
 import { getInvitationTheme, parseInvitationThemeId } from "@/lib/invitationThemes";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
 
@@ -75,6 +76,7 @@ export default async function PreviewWeddingPage({ params }: PageProps) {
             eventDateLabel={formatHeaderDateLabel(wedding.wedding_date, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
+            photoPosition={parseHeroImagePosition(wedding.hero_image_position)}
             topMonogramLetters={resolveCoupleMonogramLetters({
               coupleNames: wedding.couple_names ?? "",
               coupleInitialLeft: wedding.couple_initial_left,

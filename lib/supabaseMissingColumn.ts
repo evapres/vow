@@ -7,6 +7,15 @@ export function isMissingInvitationThemeColumn(error: {
   return text.includes("invitation_theme") || error.code === "PGRST204";
 }
 
+export function isMissingHeroImagePositionColumn(error: {
+  message?: string;
+  code?: string;
+  details?: string;
+}): boolean {
+  const text = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
+  return text.includes("hero_image_position") || error.code === "PGRST204";
+}
+
 export function isMissingCoupleInitialsColumns(error: {
   message?: string;
   code?: string;
@@ -28,6 +37,7 @@ export function isRetryableMissingColumnError(error: {
   return (
     isMissingInvitationThemeColumn(error) ||
     isMissingCoupleInitialsColumns(error) ||
+    isMissingHeroImagePositionColumn(error) ||
     error.code === "PGRST204"
   );
 }

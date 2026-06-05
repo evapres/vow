@@ -11,6 +11,7 @@ import { resolveCoupleMonogramLetters } from "@/lib/coupleInitials";
 import { inviteMetadataForToken } from "@/lib/invite/inviteOpenGraph";
 import { getInviteByToken } from "@/lib/invite/loadInviteByToken";
 import { isHouseholdRsvpRecorded } from "@/lib/invite/householdRsvpRecorded";
+import { parseHeroImagePosition } from "@/lib/heroImagePosition";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { detailsLocationFromWedding, venueLabelFromWedding } from "@/lib/weddingLocation";
 
@@ -53,6 +54,7 @@ export default async function Page({ params }: PageProps) {
             eventDateLabel={formatHeaderDateLabel(dateRaw, language)}
             venueLabel={venueLabelFromWedding(wedding)}
             photoSrc={wedding.hero_image_url || inviteHeroDefaultSrc}
+            photoPosition={parseHeroImagePosition(wedding.hero_image_position)}
             topMonogramLetters={resolveCoupleMonogramLetters({
               coupleNames: wedding.couple_names ?? "",
               coupleInitialLeft: wedding.couple_initial_left,

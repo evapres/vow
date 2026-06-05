@@ -16,6 +16,7 @@ export type InvitePageWedding = {
   wedding_date: string | null;
   language: string | null;
   hero_image_url: string | null;
+  hero_image_position: string | null;
   rsvp_deadline: string | null;
   note: string | null;
   invitation_theme: string | null;
@@ -47,7 +48,7 @@ export async function loadInviteByToken(
   const { data: wedding, error: weddingError } = await supabase
     .from("weddings")
     .select(
-      "id, couple_names, wedding_date, language, hero_image_url, rsvp_deadline, note, invitation_theme, invitation_music_url, venue_name, church_name, street_address, location, couple_initial_left, couple_initial_right",
+      "id, couple_names, wedding_date, language, hero_image_url, hero_image_position, rsvp_deadline, note, invitation_theme, invitation_music_url, venue_name, church_name, street_address, location, couple_initial_left, couple_initial_right",
     )
     .eq("id", household.wedding_id)
     .single();

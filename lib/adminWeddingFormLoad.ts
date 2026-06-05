@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isRetryableMissingColumnError } from "@/lib/supabaseMissingColumn";
 
 const FORM_SELECT_ATTEMPTS = [
+  "couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, invitation_theme, hero_image_url, hero_image_position, invitation_music_url, couple_initial_left, couple_initial_right",
   "couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, invitation_theme, hero_image_url, invitation_music_url, couple_initial_left, couple_initial_right",
   "couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, invitation_theme, hero_image_url, invitation_music_url",
   "couple_names, language, wedding_date, rsvp_deadline, note, venue_name, church_name, street_address, hero_image_url, invitation_music_url",

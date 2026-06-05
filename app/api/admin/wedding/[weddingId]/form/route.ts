@@ -4,6 +4,7 @@ import type { AdminWeddingFormInitial } from "@/app/admin/AdminNewWeddingForm";
 import { adminMediaUrlForEdit } from "@/lib/adminWeddingMedia";
 import { loadOwnedWeddingFormRow } from "@/lib/adminWeddingFormLoad";
 import { splitWeddingDateTimeForForm } from "@/lib/invitationDisplay";
+import { parseHeroImagePosition } from "@/lib/heroImagePosition";
 import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { createClient } from "@/lib/supabase/server";
 import { hydrateLocationFormFields } from "@/lib/weddingLocation";
@@ -49,6 +50,7 @@ export async function GET(_request: Request, context: RouteContext) {
     note: String(wedding.note ?? ""),
     invitationMusicUrl: adminMediaUrlForEdit(id, wedding.invitation_music_url as string | null, "music"),
     invitationTheme: parseInvitationThemeId(wedding.invitation_theme as string | null | undefined),
+    heroImagePosition: parseHeroImagePosition(wedding.hero_image_position),
   };
 
   return NextResponse.json(initial);

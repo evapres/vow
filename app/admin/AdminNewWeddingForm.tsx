@@ -17,6 +17,11 @@ import {
   type GreekArticle,
 } from "@/lib/coupleNamesForm";
 import { formLoadErrorMessage } from "@/lib/formLoadErrorMessage";
+import {
+  HERO_IMAGE_POSITION_LABELS,
+  parseHeroImagePosition,
+  type HeroImagePosition,
+} from "@/lib/heroImagePosition";
 import { parseInvitationThemeId, type InvitationThemeId } from "@/lib/invitationThemes";
 
 import CoupleNamesFormFields from "./CoupleNamesFormFields";
@@ -38,6 +43,7 @@ export type AdminWeddingFormInitial = {
   churchName: string;
   streetAddress: string;
   heroImageUrl: string | null;
+  heroImagePosition?: HeroImagePosition;
   rsvpDeadline: string;
   note: string;
   invitationMusicUrl?: string | null;
@@ -96,6 +102,7 @@ function applyFormInitial(
     setChurchName: (v: string) => void;
     setStreetAddress: (v: string) => void;
     setHeroPreviewSrc: (v: string) => void;
+    setHeroImagePosition: (v: HeroImagePosition) => void;
     setRsvpDeadline: (v: string) => void;
     setNote: (v: string) => void;
     setMusicPreviewSrc: (v: string | null) => void;
@@ -110,6 +117,7 @@ function applyFormInitial(
   setters.setChurchName(data.churchName);
   setters.setStreetAddress(data.streetAddress);
   setters.setHeroPreviewSrc(initialHeroSrc(data));
+  setters.setHeroImagePosition(parseHeroImagePosition(data.heroImagePosition));
   setters.setRsvpDeadline(data.rsvpDeadline ? data.rsvpDeadline.slice(0, 10) : "");
   setters.setNote(data.note);
   setters.setMusicPreviewSrc(data.invitationMusicUrl?.trim() || null);
@@ -144,6 +152,9 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const [churchName, setChurchName] = useState(initial?.churchName ?? "");
   const [streetAddress, setStreetAddress] = useState(initial?.streetAddress ?? "");
   const [heroPreviewSrc, setHeroPreviewSrc] = useState(() => initialHeroSrc(initial));
+  const [heroImagePosition, setHeroImagePosition] = useState<HeroImagePosition>(() =>
+    parseHeroImagePosition(initial?.heroImagePosition),
+  );
   const [rsvpDeadline, setRsvpDeadline] = useState(
     initial?.rsvpDeadline ? initial.rsvpDeadline.slice(0, 10) : "",
   );
@@ -177,6 +188,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
   const previewStreetAddress = useDeferredValue(streetAddress);
   const previewRsvpDeadline = useDeferredValue(rsvpDeadline);
   const previewNote = useDeferredValue(note);
+  const previewHeroImagePosition = useDeferredValue(heroImagePosition);
   const placeholders = useMemo(() => adminFormPlaceholders(language), [language]);
 
   function applyCoupleFields(nextLanguage: "en" | "el", storedCoupleNames: string) {
@@ -237,6 +249,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
           setChurchName,
           setStreetAddress,
           setHeroPreviewSrc,
+          setHeroImagePosition,
           setRsvpDeadline,
           setNote,
           setMusicPreviewSrc,
@@ -322,6 +335,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
     fd.set("street_address", streetAddress);
     fd.set("rsvp_deadline", rsvpDeadline);
     fd.set("note", note);
+    fd.set("hero_image_position", heroImagePosition);
 
     const heroFile = heroFileInputRef.current?.files?.[0];
     if (heroFile && heroFile.size > 0) {
@@ -512,6 +526,19 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
             ) : null}
           </M3FileField>
 
+          <M3FilledSelect
+            id="hero_image_position"
+            name="hero_image_position"
+            label="Image position"
+            value={heroImagePosition}
+            onChange={(e) => setHeroImagePosition(parseHeroImagePosition(e.target.value))}
+            supportingText="How the couple photo is cropped inside the polaroid frame."
+          >
+            <option value="center">{HERO_IMAGE_POSITION_LABELS.center}</option>
+            <option value="top">{HERO_IMAGE_POSITION_LABELS.top}</option>
+            <option value="bottom">{HERO_IMAGE_POSITION_LABELS.bottom}</option>
+          </M3FilledSelect>
+
           <M3FilledTextField
             id="rsvp_deadline"
             name="rsvp_deadline"
@@ -587,6 +614,7 @@ export default function AdminNewWeddingForm({ editWeddingId, initial }: AdminNew
         rsvpDeadline={previewRsvpDeadline}
         note={previewNote}
         photoSrc={heroPreviewSrc}
+        photoPosition={previewHeroImagePosition}
       />
     </div>
   );

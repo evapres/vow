@@ -12,8 +12,12 @@ import { parseInvitationThemeId } from "@/lib/invitationThemes";
 import { coupleInitialsForStorage } from "@/lib/coupleInitials";
 import { coupleNamesFromFormData, validateCoupleNamesForm, parseCoupleNames } from "@/lib/coupleNamesForm";
 import { validateInvitationStepForm } from "@/lib/weddingProgress";
-import { isMissingInvitationThemeColumn } from "@/lib/supabaseMissingColumn";
-import { isMissingCoupleInitialsColumns } from "@/lib/supabaseMissingColumn";
+import { parseHeroImagePosition } from "@/lib/heroImagePosition";
+import {
+  isMissingCoupleInitialsColumns,
+  isMissingHeroImagePositionColumn,
+  isMissingInvitationThemeColumn,
+} from "@/lib/supabaseMissingColumn";
 import { persistHeroImageFile } from "@/lib/heroImageUpload";
 import { joinWeddingLocationStorage } from "@/lib/weddingLocation";
 
@@ -69,6 +73,12 @@ async function persistWeddingUpdate(
     ({ error } = await db.from("weddings").update(patchToApply).eq("id", weddingId).eq("user_id", userId));
   }
 
+  if (error && isMissingHeroImagePositionColumn(error) && "hero_image_position" in patchToApply) {
+    const { hero_image_position: _pos, ...withoutPosition } = patchToApply;
+    patchToApply = withoutPosition;
+    ({ error } = await db.from("weddings").update(patchToApply).eq("id", weddingId).eq("user_id", userId));
+  }
+
   return error;
 }
 
@@ -96,6 +106,12 @@ async function persistWeddingInsert(
     result = await db.from("weddings").insert(rowToInsert).select("id").single();
   }
 
+  if (result.error && isMissingHeroImagePositionColumn(result.error) && "hero_image_position" in rowToInsert) {
+    const { hero_image_position: _pos, ...withoutPosition } = rowToInsert;
+    rowToInsert = withoutPosition;
+    result = await db.from("weddings").insert(rowToInsert).select("id").single();
+  }
+
   return result;
 }
 
@@ -118,6 +134,7 @@ export async function createWedding(formData: FormData) {
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
   const coupleNames = coupleNamesFromFormData(formData, language);
   const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
+  const hero_image_position = parseHeroImagePosition(formData.get("hero_image_position"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
   const weddingDate = combineWeddingDateAndTime(weddingDateOnly, weddingTime);
@@ -173,6 +190,7 @@ export async function createWedding(formData: FormData) {
     couple_names: coupleNames,
     language,
     invitation_theme,
+    hero_image_position,
     wedding_date: weddingDate,
     venue_name,
     church_name,
@@ -250,6 +268,7 @@ export async function updateWedding(formData: FormData) {
   const language = String(formData.get("language") ?? "en").trim() === "el" ? "el" : "en";
   const coupleNames = coupleNamesFromFormData(formData, language);
   const invitation_theme = parseInvitationThemeId(formData.get("invitation_theme"));
+  const hero_image_position = parseHeroImagePosition(formData.get("hero_image_position"));
   const weddingDateOnly = optionalDate(formData.get("wedding_date"));
   const weddingTime = optionalText(formData.get("wedding_time")) ?? "20:00";
   const weddingDate = combineWeddingDateAndTime(weddingDateOnly, weddingTime);
@@ -288,6 +307,7 @@ export async function updateWedding(formData: FormData) {
     couple_names: coupleNames,
     language,
     invitation_theme,
+    hero_image_position,
     wedding_date: weddingDate,
     venue_name,
     church_name,

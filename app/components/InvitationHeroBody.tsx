@@ -10,6 +10,11 @@ import {
   type InvitationLanguage,
 } from "@/lib/invitationDisplay";
 import { monogramLettersFromCoupleNames, splitCoupleNameParts } from "@/lib/coupleInitials";
+import {
+  heroImageObjectPositionClass,
+  parseHeroImagePosition,
+  type HeroImagePosition,
+} from "@/lib/heroImagePosition";
 import { getInvitationTheme, type InvitationThemeId } from "@/lib/invitationThemes";
 
 import { invitationPolaroidPaperStyle } from "./invitationDarkBandStyle";
@@ -62,6 +67,8 @@ export type InvitationHeroBodyProps = {
   venueLabel: string;
   /** Wedding hero URL or public path; defaults to invite couple photo. */
   photoSrc?: string;
+  /** Vertical crop focal point inside the polaroid frame. */
+  photoPosition?: HeroImagePosition;
   photoAlt?: string;
   /** Use a plain img for arbitrary remote URLs (e.g. admin live preview). */
   useNativeImgForPhoto?: boolean;
@@ -105,7 +112,9 @@ const inviteCelebrateWrapClass =
   "px-[var(--invite-gutter,clamp(12px,calc(96*100vw/1920),96px))] pb-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))+40px)] sm:pb-[var(--invite-block-edge,clamp(12px,calc(104*100vw/1440),104px))] sm:pt-[calc(var(--invite-hero-details-gap,clamp(12px,calc(80*100vw/1920),80px))-10px)] text-center";
 
 /** Uploaded hero photos: B&W only (no contrast/brightness adjustment). */
-const heroPhotoFilterClass = "object-cover object-center grayscale";
+function heroPhotoClass(position: HeroImagePosition): string {
+  return `object-cover ${heroImageObjectPositionClass(position)} grayscale`;
+}
 
 export default function InvitationHeroBody({
   coupleNames,
@@ -113,6 +122,7 @@ export default function InvitationHeroBody({
   eventDateLabel,
   venueLabel,
   photoSrc = inviteHeroDefaultSrc,
+  photoPosition = "center",
   photoAlt = "Couple image",
   useNativeImgForPhoto = false,
   topMonogramLetters,
@@ -124,6 +134,8 @@ export default function InvitationHeroBody({
   adminPreview = false,
 }: InvitationHeroBodyProps) {
   const themeStyles = getInvitationTheme(theme);
+  const resolvedPhotoPosition = parseHeroImagePosition(photoPosition);
+  const heroPhotoClassName = heroPhotoClass(resolvedPhotoPosition);
   const src = (photoSrc ?? inviteHeroDefaultSrc).trim();
   /** Remote, data, and blob URLs are not served as static files — use `<img>`. */
   const shouldUseNativeImg = useNativeImgForPhoto || !src.startsWith("/");
@@ -228,7 +240,7 @@ export default function InvitationHeroBody({
                     <img
                       src={src}
                       alt={photoAlt}
-                      className={`absolute inset-0 h-full w-full ${heroPhotoFilterClass}`}
+                      className={`absolute inset-0 h-full w-full ${heroPhotoClassName}`}
                     />
                   ) : (
                     <Image
@@ -237,7 +249,7 @@ export default function InvitationHeroBody({
                       fill
                       priority
                       sizes="(max-width: 1024px) 94vw, 450px"
-                      className={heroPhotoFilterClass}
+                      className={heroPhotoClassName}
                     />
                   )}
                 </div>
