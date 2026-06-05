@@ -7,8 +7,11 @@ import {
   buildInviteShareUrl,
   canUseWebShare,
   copyInviteSharePayload,
+  copyInviteUrl,
   facebookMessengerSendDialogUrl,
+  instagramDirectInboxHref,
   isMobileUserAgent,
+  isPublicHttpsUrl,
   mailtoShareUrl,
   messengerShareUrl,
   messengerWebShareUrl,
@@ -79,19 +82,40 @@ export default function InviteShareActions({
     }
   }, [flash, onCopy, inviteToken, sharePayload]);
 
-  const onMessenger = useCallback(() => {
-    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim();
+  const onMessenger = useCallback(async () => {
+    const copied = await copyInviteSharePayload(sharePayload);
 
-    if (isMobile) {
-      openShareTarget(messengerShareUrl(inviteUrl), { sameTab: true });
+    if (!isPublicHttpsUrl(inviteUrl)) {
+      openShareTarget(isMobile ? "fb-messenger://" : "https://www.messenger.com/");
+      flash(
+        copied
+          ? "Link copied — paste it into your Messenger chat."
+          : "Paste your invite link into Messenger manually.",
+      );
       return;
     }
 
+    if (isMobile) {
+      openShareTarget(messengerShareUrl(inviteUrl), { sameTab: true });
+      flash(
+        copied
+          ? "Opening Messenger. If the link is rejected, paste from your clipboard."
+          : "Opening Messenger…",
+      );
+      return;
+    }
+
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim();
     const url = appId
       ? facebookMessengerSendDialogUrl(inviteUrl, appId, inviteUrl)
       : messengerWebShareUrl(inviteUrl);
     openShareTarget(url);
-  }, [inviteUrl, isMobile]);
+    flash(
+      copied
+        ? "Opening Messenger. If the link is rejected, paste from your clipboard."
+        : "Opening Messenger…",
+    );
+  }, [flash, inviteUrl, isMobile, sharePayload]);
 
   const onWhatsApp = useCallback(() => {
     openShareTarget(whatsappShareUrl(inviteUrl));
@@ -102,15 +126,25 @@ export default function InviteShareActions({
   }, [sharePayload]);
 
   const onInstagram = useCallback(async () => {
-    await onCopy();
-    if (isMobile) {
-      openShareTarget("instagram://direct-inbox", { sameTab: true });
-      flash("Link copied — pick a chat and paste.");
+    const copied = await copyInviteUrl(inviteUrl);
+
+    if (!isPublicHttpsUrl(inviteUrl)) {
+      openShareTarget(instagramDirectInboxHref(isMobile), { sameTab: isMobile });
+      flash(
+        copied
+          ? "Link copied — paste it into your Instagram DM."
+          : "Paste your invite link into Instagram manually.",
+      );
       return;
     }
-    openShareTarget("https://www.instagram.com/direct/inbox/");
-    flash("Link copied — paste into a DM.");
-  }, [flash, isMobile, onCopy]);
+
+    openShareTarget(instagramDirectInboxHref(isMobile), { sameTab: isMobile });
+    flash(
+      copied
+        ? "Opening Instagram. Paste the invite link into your chat."
+        : "Opening Instagram — paste your invite link into a DM.",
+    );
+  }, [flash, inviteUrl, isMobile]);
 
   const shareBtnBlock = `${shareBtnClass} w-full min-w-0`;
 

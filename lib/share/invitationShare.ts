@@ -1,5 +1,10 @@
 import { buildYouAreInvitedTitle } from "@/lib/coupleNamesForm";
 import { inviteOgImagePath } from "@/lib/invite/inviteOgImagePath";
+import {
+  DEFAULT_PUBLIC_SITE_ORIGIN,
+  firstPublicSiteOrigin,
+  isPublicHttpsUrl,
+} from "@/lib/share/publicSiteOrigin";
 
 export type InviteSharePayload = {
   title: string;
@@ -10,12 +15,45 @@ export type InviteSharePayload = {
   shareImageUrl?: string;
 };
 
-export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteToken: string): string {
+export { DEFAULT_PUBLIC_SITE_ORIGIN, isPublicHttpsUrl } from "@/lib/share/publicSiteOrigin";
+
+/**
+ * Prefer production `NEXT_PUBLIC_SITE_URL` so share links work from localhost dashboard
+ * (Messenger / Instagram fetch the link from the public internet).
+ */
+export function resolveInviteShareOrigin(explicitBase?: string): string {
+  const windowOrigin =
+    typeof window !== "undefined" && isPublicHttpsUrl(window.location.origin)
+      ? window.location.origin
+      : undefined;
+
+  return firstPublicSiteOrigin(
+    process.env.NEXT_PUBLIC_SITE_URL,
+    explicitBase,
+    windowOrigin,
+    DEFAULT_PUBLIC_SITE_ORIGIN,
+  );
+}
+
+export function buildInvitePageUrl(origin: string | undefined, inviteToken: string): string {
   const token = inviteToken.trim();
-  const base = inviteBaseUrl?.replace(/\/$/, "") ?? "";
+  const base = (origin ?? "").trim().replace(/\/$/, "");
   if (base) return `${base}/invite/${token}`;
-  if (typeof window !== "undefined") return `${window.location.origin}/invite/${token}`;
   return `/invite/${token}`;
+}
+
+/** Public HTTPS link for Messenger / Instagram (always production when dashboard is on localhost). */
+export function buildInviteShareUrl(inviteBaseUrl: string | undefined, inviteToken: string): string {
+  return buildInvitePageUrl(resolveInviteShareOrigin(inviteBaseUrl), inviteToken);
+}
+
+/** Link for copy + open in the current environment (localhost when developing locally). */
+export function buildInviteCopyUrl(inviteBaseUrl: string | undefined, inviteToken: string): string {
+  const windowOrigin =
+    typeof window !== "undefined" ? window.location.origin.trim().replace(/\/$/, "") : "";
+  const explicit = (inviteBaseUrl ?? "").trim().replace(/\/$/, "");
+  const base = windowOrigin || explicit || resolveInviteShareOrigin(inviteBaseUrl);
+  return buildInvitePageUrl(base, inviteToken);
 }
 
 export function buildInviteSharePayload(args: {
@@ -63,6 +101,16 @@ export function canUseWebShare(payload?: InviteSharePayload): boolean {
 export async function copyInviteSharePayload(payload: InviteSharePayload): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(inviteShareClipboardText(payload));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Instagram DMs work best with a bare HTTPS URL on the clipboard. */
+export async function copyInviteUrl(url: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(url.trim());
     return true;
   } catch {
     return false;
@@ -174,6 +222,6 @@ export function messengerWebShareUrl(inviteUrl: string): string {
   return `https://www.facebook.com/dialog/send?${params.toString()}`;
 }
 
-export function instagramDirectInboxHref(): string {
-  return "instagram://direct-inbox";
+export function instagramDirectInboxHref(mobile = isMobileUserAgent()): string {
+  return mobile ? "instagram://direct-inbox" : "https://www.instagram.com/direct/inbox/";
 }

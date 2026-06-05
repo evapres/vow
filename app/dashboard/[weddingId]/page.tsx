@@ -1,10 +1,11 @@
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import RsvpsDashboardView from "../RsvpsDashboardView";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardHouseholdRows } from "../../../lib/rsvps/dashboard";
 import { publicHeroImageUrlForShare } from "@/lib/invite/heroImageForShare";
+import { resolveInviteDashboardSiteOrigin } from "@/lib/invite/resolveInviteDashboardSiteOrigin";
+import { resolveInviteOgSiteOrigin } from "@/lib/invite/resolveInviteOgSiteOrigin";
 import { invitationStepMissingFields, isInvitationStepComplete } from "@/lib/weddingProgress";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +34,10 @@ function safeDecodeParam(value: string) {
 export default async function DashboardWeddingPage({ params, searchParams }: PageProps) {
   const { weddingId } = await params;
   const sp = await searchParams;
-  const hdrs = await headers();
-  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
-  const proto = hdrs.get("x-forwarded-proto") ?? "http";
-  const siteOrigin = host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  /** Local/request origin for copy + open (localhost when developing). */
+  const dashboardOrigin = await resolveInviteDashboardSiteOrigin();
+  /** Public HTTPS origin for Messenger / Instagram / OG previews. */
+  const shareOrigin = await resolveInviteOgSiteOrigin();
 
   const supabase = await createClient();
   const {
@@ -89,7 +90,8 @@ export default async function DashboardWeddingPage({ params, searchParams }: Pag
       invitationEmailSent={invitationEmailSent}
       bulkInvitesSent={Number.isFinite(bulkInvitesSent) && bulkInvitesSent > 0 ? bulkInvitesSent : undefined}
       householdError={householdError}
-      inviteBaseUrl={siteOrigin}
+      inviteBaseUrl={dashboardOrigin}
+      shareInviteBaseUrl={shareOrigin}
       shareHeroImageUrl={publicHeroImageUrlForShare(wedding.hero_image_url) ?? null}
       coupleNames={wedding.couple_names}
     />

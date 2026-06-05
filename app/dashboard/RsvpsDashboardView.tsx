@@ -1,11 +1,10 @@
 import Link from "next/link";
 
 import AddGuestForm from "./AddGuestForm";
-import InviteShareActions from "./InviteShareActions";
+import SendInvitationDialog from "./SendInvitationDialog";
 import {
   deleteHousehold,
   sendAllHouseholdInvitationEmails,
-  sendHouseholdInvitationEmail,
   updateHousehold,
   updateHouseholdRsvp,
 } from "./actions";
@@ -30,8 +29,10 @@ type RsvpsDashboardViewProps = {
   /** Number of invitations sent in the last bulk send (from `bulk_invites_sent` query param). */
   bulkInvitesSent?: number;
   householdError?: string | null;
-  /** e.g. https://yoursite.com — optional; falls back to relative path only. */
+  /** Current site origin for copy/open (e.g. http://localhost:3000 when developing). */
   inviteBaseUrl?: string;
+  /** Public HTTPS origin for Messenger / Instagram (e.g. https://thevow.vip). */
+  shareInviteBaseUrl?: string;
   shareHeroImageUrl?: string | null;
   coupleNames?: string | null;
 };
@@ -62,6 +63,7 @@ export default function RsvpsDashboardView({
   bulkInvitesSent,
   householdError,
   inviteBaseUrl,
+  shareInviteBaseUrl,
   shareHeroImageUrl,
   coupleNames,
 }: RsvpsDashboardViewProps) {
@@ -122,7 +124,7 @@ export default function RsvpsDashboardView({
             <div className="m3-banner m3-banner--success" role="status">
               <p className="m3-banner__title">Guest added.</p>
               <p className="m3-banner__detail">
-                Use the share buttons in the guest list, or Send all invitations for email.
+                Use Send invitation on their row to email or copy the invite link.
               </p>
             </div>
           ) : null}
@@ -151,7 +153,7 @@ export default function RsvpsDashboardView({
                     }
                     className="m3-btn m3-btn--tonal m3-btn--compact"
                   >
-                    Send all invitations
+                    Send all email invitations
                   </button>
                 </form>
                 <AddGuestForm weddingId={weddingId} />
@@ -180,14 +182,6 @@ export default function RsvpsDashboardView({
                             {row.email ? <p className="m3-table__muted">{row.email}</p> : null}
                             {row.invitedCount ? (
                               <p className="m3-table__muted">Invited: {row.invitedCount}</p>
-                            ) : null}
-                            {row.inviteToken ? (
-                              <InviteShareActions
-                                inviteToken={row.inviteToken}
-                                coupleNames={coupleNames ?? ""}
-                                inviteBaseUrl={inviteBaseUrl}
-                                shareHeroImageUrl={shareHeroImageUrl}
-                              />
                             ) : null}
                           </div>
                         </td>
@@ -252,6 +246,7 @@ export default function RsvpsDashboardView({
                                     label="Guest email"
                                     defaultValue={row.email ?? ""}
                                     placeholder="guest@example.com"
+                                    supportingText="Optional. Leave blank if you share the invite link on social media."
                                   />
                                   <M3FilledTextField
                                     name="invited_count"
@@ -276,25 +271,18 @@ export default function RsvpsDashboardView({
                                 Invitation sent
                               </span>
                             ) : null}
-                            {row.email?.trim() && row.inviteToken?.trim() ? (
-                              <form action={sendHouseholdInvitationEmail}>
-                                <input type="hidden" name="wedding_id" value={weddingId} />
-                                <input type="hidden" name="household_id" value={row.householdId} />
-                                <button
-                                  type="submit"
-                                  title={
-                                    row.emailSentAt
-                                      ? "Sends the invitation email to this guest again."
-                                      : "Sends the invitation email to this guest."
-                                  }
-                                  className="m3-btn m3-btn--outlined m3-btn--compact m3-btn--block"
-                                >
-                                  {row.emailSentAt ? "Send reminder" : "Send invitation"}
-                                </button>
-                              </form>
-                            ) : null}
-                            {!row.email?.trim() ? (
-                              <p className="m3-field-support">Add an email to include in a bulk send.</p>
+                            {row.inviteToken?.trim() ? (
+                              <SendInvitationDialog
+                                weddingId={weddingId}
+                                householdId={row.householdId}
+                                inviteToken={row.inviteToken}
+                                email={row.email}
+                                emailSentAt={row.emailSentAt}
+                                coupleNames={coupleNames ?? ""}
+                                inviteBaseUrl={inviteBaseUrl}
+                                shareInviteBaseUrl={shareInviteBaseUrl}
+                                shareHeroImageUrl={shareHeroImageUrl}
+                              />
                             ) : null}
 
                             <form action={deleteHousehold}>

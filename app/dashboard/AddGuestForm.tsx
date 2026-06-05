@@ -64,7 +64,7 @@ export default function AddGuestForm({ weddingId }: AddGuestFormProps) {
               autoComplete="email"
               label="Guest email"
               placeholder="guest@example.com"
-              supportingText="Optional. Use Send invitation on their row after saving an email."
+              supportingText="Optional. Leave blank if you will share the invite link via social media."
             />
 
             <M3FilledTextField

@@ -1,13 +1,17 @@
 import { headers } from "next/headers";
 
+import {
+  DEFAULT_PUBLIC_SITE_ORIGIN,
+  firstPublicSiteOrigin,
+  normalizeSiteOrigin,
+} from "@/lib/share/publicSiteOrigin";
+
 /**
  * Public origin for invite link + OG image URLs.
- * Always prefer `NEXT_PUBLIC_SITE_URL` so share previews work when the app is opened on localhost
- * but links must be fetched by Messenger/WhatsApp from production.
+ * Always prefer a public HTTPS origin so share previews work when the dashboard runs on localhost.
  */
 export async function resolveInviteOgSiteOrigin(): Promise<string> {
-  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
+  const fromEnv = normalizeSiteOrigin(process.env.NEXT_PUBLIC_SITE_URL ?? "");
 
   const hdrs = await headers();
   const rawHost = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
@@ -15,10 +19,10 @@ export async function resolveInviteOgSiteOrigin(): Promise<string> {
   const rawProto = hdrs.get("x-forwarded-proto") ?? "";
   const proto = rawProto.split(",")[0]?.trim().toLowerCase() || "https";
   const safeProto = proto === "http" || proto === "https" ? proto : "https";
-  if (host) return `${safeProto}://${host}`;
+  const fromRequest = host ? `${safeProto}://${host}` : "";
 
-  const vercel = (process.env.VERCEL_URL ?? "").trim().replace(/\/$/, "");
-  if (vercel) return `https://${vercel}`;
+  const vercel = normalizeSiteOrigin(process.env.VERCEL_URL ?? "");
+  const fromVercel = vercel ? `https://${vercel.replace(/^https?:\/\//, "")}` : "";
 
-  return "https://thevow.vip";
+  return firstPublicSiteOrigin(fromEnv, fromRequest, fromVercel, DEFAULT_PUBLIC_SITE_ORIGIN);
 }
